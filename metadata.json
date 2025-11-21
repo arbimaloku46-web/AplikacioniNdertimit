@@ -1,0 +1,5 @@
+{
+  "name": "Ndërtimi: Construction Progress",
+  "description": "A high-end client portal for viewing weekly drone footage, photos, and 3D Gaussian Splat renders of construction projects.",
+  "requestFramePermissions": []
+}
