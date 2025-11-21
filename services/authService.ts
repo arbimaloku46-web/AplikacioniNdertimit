@@ -1,29 +1,10 @@
 import { User } from '../types';
 
-const STORAGE_KEY = 'ndertimi_users';
+const STORAGE_KEY = 'ndertimi_users_v2';
 
 interface StoredUser extends User {
   password?: string;
 }
-
-// Simulate sending an email
-const sendDatasheetEmail = async (user: User) => {
-  console.log(`
-    ---------------------------------------------------
-    [MOCK EMAIL SERVER]
-    To: arbimaloku46@gmail.com
-    Subject: New Client Registration - Datasheet Update
-    
-    New Client Details:
-    Name: ${user.name}
-    Mobile: ${user.mobile}
-    Timestamp: ${new Date().toISOString()}
-    ---------------------------------------------------
-  `);
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-};
 
 export const registerUser = async (mobile: string, password: string, name: string): Promise<User> => {
   // 1. Get existing users
@@ -42,34 +23,24 @@ export const registerUser = async (mobile: string, password: string, name: strin
   // 4. Save to local storage (Persistence)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
 
-  // 5. "Send" the email to your gmail
-  await sendDatasheetEmail(newUser);
-
   // Return user without password
   const { password: _, ...safeUser } = newUser;
   return safeUser;
 };
 
-export const loginUser = async (name: string, password: string): Promise<User> => {
-  await new Promise(resolve => setTimeout(resolve, 800)); // Fake delay
+export const loginUser = async (mobile: string, password: string): Promise<User> => {
+  await new Promise(resolve => setTimeout(resolve, 600)); // Fake delay
 
   const existingData = localStorage.getItem(STORAGE_KEY);
   const users: StoredUser[] = existingData ? JSON.parse(existingData) : [];
 
-  // Find user by Name (as requested) and Password
-  // Note: In production, logging in by Name isn't unique, but we follow the requirement here.
-  const user = users.find(u => u.name.toLowerCase() === name.toLowerCase() && u.password === password);
+  // Find user by Mobile and Password
+  const user = users.find(u => u.mobile === mobile && u.password === password);
 
   if (!user) {
-    throw new Error('Invalid name or password.');
+    throw new Error('Invalid mobile number or password.');
   }
 
   const { password: _, ...safeUser } = user;
   return safeUser;
-};
-
-// Helper to get all registered users (for admin purposes if needed later)
-export const getAllUsers = (): User[] => {
-    const existingData = localStorage.getItem(STORAGE_KEY);
-    return existingData ? JSON.parse(existingData) : [];
 };

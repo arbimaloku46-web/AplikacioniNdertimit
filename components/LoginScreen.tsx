@@ -23,7 +23,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ targetProject, onLogin
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/90 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl border-t border-white/10 animate-in fade-in zoom-in duration-300">
         <button 
             onClick={onCancel}
@@ -38,7 +38,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ targetProject, onLogin
           <h1 className="font-display text-2xl font-bold text-white mb-2">Restricted Access</h1>
           <p className="text-slate-400 text-sm">
             Enter client code for <br/>
-            <span className="text-amber-500 font-medium">{targetProject.name}</span>
+            <span className="text-brand-blue font-medium">{targetProject.name}</span>
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ targetProject, onLogin
                 setCode(e.target.value);
                 setError('');
               }}
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all text-center text-lg tracking-widest"
+              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue transition-all text-center text-lg tracking-widest"
               placeholder="••••"
               maxLength={8}
               autoFocus
