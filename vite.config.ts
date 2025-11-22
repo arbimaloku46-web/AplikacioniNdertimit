@@ -49,6 +49,22 @@ export default defineConfig(({ mode }) => {
               purpose: "any maskable"
             }
           ],
+          screenshots: [
+             {
+                src: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1000",
+                sizes: "1000x667",
+                type: "image/jpeg",
+                form_factor: "wide",
+                label: "Dashboard View"
+             },
+             {
+                src: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1000",
+                sizes: "1000x1500",
+                type: "image/jpeg",
+                form_factor: "narrow",
+                label: "Mobile View"
+             }
+          ],
           categories: ["business", "productivity"],
           shortcuts: [
             {
