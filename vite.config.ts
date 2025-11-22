@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      // Copy the .well-known folder to dist for Android verification
+      // Copy the .well-known folder to build for Android verification
       viteStaticCopy({
         targets: [
           {
@@ -68,8 +68,8 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
-      outDir: 'dist',
-      chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB to reduce noise
+      outDir: 'build', // Changed from 'dist' to 'build' for Vercel compatibility
+      chunkSizeWarningLimit: 1000,
     }
   };
 });
