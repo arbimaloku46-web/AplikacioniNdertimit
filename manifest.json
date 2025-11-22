@@ -1,4 +1,6 @@
 {
+  "id": "/",
+  "scope": "/",
   "short_name": "Ndërtimi",
   "name": "Shiko Progresin - Ndërtimi",
   "description": "Client portal for construction progress monitoring with drone footage and 3D scans.",
