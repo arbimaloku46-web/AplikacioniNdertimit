@@ -1,23 +1,61 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
-      },
-      plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    // Copy the .well-known folder to dist for Android verification
+    viteStaticCopy({
+      targets: [
+        {
+          src: '.well-known',
+          dest: '.'
         }
+      ]
+    }),
+    // Handle PWA manifest and Service Worker automatically
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      manifest: {
+        short_name: "Ndërtimi",
+        name: "Shiko Progresin - Ndërtimi",
+        description: "Client portal for construction progress monitoring with drone footage and 3D scans.",
+        theme_color: "#002147",
+        background_color: "#002147",
+        display: "standalone",
+        orientation: "portrait",
+        icons: [
+          {
+            src: "https://cdn-icons-png.flaticon.com/512/25/25694.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable"
+          },
+          {
+            src: "https://cdn-icons-png.flaticon.com/512/25/25694.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable"
+          }
+        ],
+        categories: ["business", "productivity"],
+        shortcuts: [
+          {
+            name: "My Profile",
+            short_name: "Profile",
+            description: "View your account settings",
+            url: "/?view=profile",
+            icons: [{ "src": "https://cdn-icons-png.flaticon.com/512/25/25694.png", "sizes": "192x192" }]
+          }
+        ]
       }
-    };
+    })
+  ],
+  build: {
+    outDir: 'dist',
+  }
 });

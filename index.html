@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>Shiko Progresin</title>
-    <link rel="manifest" href="/manifest.json" />
+    <meta name="description" content="A high-end client portal for viewing weekly drone footage, photos, and 3D Gaussian Splat renders of construction projects." />
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,19 +64,23 @@
         border: 1px solid rgba(34, 100, 171, 0.2);
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react/jsx-runtime": "https://aistudiocdn.com/react@^19.2.0/jsx-runtime",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "vite-plugin-pwa": "https://aistudiocdn.com/vite-plugin-pwa@^1.1.0",
+    "vite-plugin-static-copy": "https://aistudiocdn.com/vite-plugin-static-copy@^3.1.4"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
