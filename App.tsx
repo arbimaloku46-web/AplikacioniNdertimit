@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { MOCK_PROJECTS } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
 import { LoginScreen } from './components/LoginScreen';
