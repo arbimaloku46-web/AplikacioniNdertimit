@@ -2,8 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#002147" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <title>Shiko Progresin</title>
+    <link rel="manifest" href="/manifest.json" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +40,8 @@
       body {
         background-color: #002147;
         color: #e2e8f0;
+        overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
+        -webkit-tap-highlight-color: transparent; /* Removes gray tap highlight on mobile */
       }
       /* Custom scrollbar for dark theme */
       ::-webkit-scrollbar {
