@@ -6,10 +6,10 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    base: './', // Critical for Capacitor to load assets from file://
     plugins: [
       react(),
       // Copy the .well-known folder to build for Android verification
@@ -79,12 +79,12 @@ export default defineConfig(({ mode }) => {
       })
     ],
     define: {
-      // This shim allows process.env.API_KEY to work in the browser as required by the Gemini SDK
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
-      outDir: 'build', // Changed from 'dist' to 'build' for Vercel compatibility
+      outDir: 'build',
+      emptyOutDir: true,
       chunkSizeWarningLimit: 1000,
     }
   };
