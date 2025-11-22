@@ -69,6 +69,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB to reduce noise
     }
   };
 });
