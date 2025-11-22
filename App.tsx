@@ -58,6 +58,9 @@ const App: React.FC = () => {
     thumbnailUrl: ''
   });
 
+  // Install Prompt State
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
   // Translation Helper
   const text = translations[language];
 
@@ -95,6 +98,12 @@ const App: React.FC = () => {
             setIsAdmin(true);
         }
     }
+
+    // Listen for PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    });
 
     setIsDataLoaded(true);
   }, []);
@@ -171,6 +180,16 @@ const App: React.FC = () => {
       setActiveUpdateIndex(0);
       setPendingProject(null);
       setCurrentView(AppView.PROJECT_DETAIL);
+    }
+  };
+
+  const handleInstallApp = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setInstallPrompt(null);
+      }
     }
   };
 
@@ -537,7 +556,17 @@ const App: React.FC = () => {
                             <p className="text-slate-400">{isAdmin ? text.adminRole : text.clientRole}</p>
                         </div>
                     </div>
-                    <Button variant="secondary" onClick={handleLogout}>{text.signOut}</Button>
+                    <div className="flex gap-4">
+                        {installPrompt && (
+                             <Button variant="primary" onClick={handleInstallApp}>
+                                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                {text.installApp}
+                             </Button>
+                        )}
+                        <Button variant="secondary" onClick={handleLogout}>{text.signOut}</Button>
+                    </div>
                 </div>
                 
                 {/* Language Settings */}

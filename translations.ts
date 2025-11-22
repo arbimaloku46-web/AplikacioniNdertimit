@@ -45,6 +45,7 @@ export const translations = {
     adminActive: 'Admin Active',
     adminPortal: 'Admin Portal',
     clientPortal: 'Client Portal',
+    installApp: 'Install App',
     
     // Profile
     profileTitle: 'My Profile',
@@ -123,6 +124,7 @@ export const translations = {
     adminActive: 'Admin Aktiv',
     adminPortal: 'Portali Admin',
     clientPortal: 'Portali i Klientit',
+    installApp: 'Instalo Aplikacionin',
     
     // Profile
     profileTitle: 'Profili Im',

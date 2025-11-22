@@ -9,12 +9,15 @@ interface GlobalAuthProps {
   setLanguage: (lang: Language) => void;
 }
 
-type AuthView = 'LOGIN' | 'SIGNUP' | 'ADMIN_LOGIN';
+type AuthTab = 'CLIENT' | 'ADMIN';
+type AuthView = 'LOGIN' | 'SIGNUP';
 
-const ADMIN_PASSWORD = 'Ndertimi2024'; // Moved from App.tsx
+const ADMIN_PASSWORD = 'Ndertimi2024';
 
 export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLanguage }) => {
+  const [activeTab, setActiveTab] = useState<AuthTab>('CLIENT');
   const [view, setView] = useState<AuthView>('LOGIN');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -31,12 +34,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   // Translation Helper
   const text = translations[language];
 
-  // Reset form when switching views
-  const switchView = (newView: AuthView) => {
-    setView(newView);
+  const switchTab = (tab: AuthTab) => {
+    setActiveTab(tab);
+    setView('LOGIN'); // Reset to login view when switching tabs
     setError('');
     setPassword('');
-    setConfirmPassword('');
     setAdminPassword('');
   };
 
@@ -47,7 +49,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
     try {
       const user = await loginUser(mobile, password);
-      // Client login: isAdmin = false
       onLogin(user.name, rememberMe, false);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -61,10 +62,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setError('');
     setIsLoading(true);
 
-    // Simulate network delay
     setTimeout(() => {
         if (adminPassword === ADMIN_PASSWORD) {
-            // Admin login: isAdmin = true, name = 'Administrator'
             onLogin('Administrator', rememberMe, true);
         } else {
             setError('Invalid Admin Access Key');
@@ -92,7 +91,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     try {
         await registerUser(mobile, password, name);
         alert('Account created successfully! Please sign in.');
-        switchView('LOGIN');
+        setView('LOGIN');
         setPassword(''); 
         setConfirmPassword('');
     } catch (err: any) {
@@ -136,12 +135,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
       </div>
 
       {/* Right Side - Auth Forms */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-brand-dark relative">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 md:p-12 bg-brand-dark relative">
         
-        {/* Header Actions: Language & Admin Toggle */}
-        <div className="absolute top-6 right-6 flex items-center gap-4 z-30">
-            
-            {/* Language Toggle */}
+        {/* Language Toggle (Top Right) */}
+        <div className="absolute top-6 right-6 flex items-center gap-2 z-30">
+            <span className="text-slate-500 text-xs font-bold uppercase tracking-wider hidden sm:inline">{text.selectLanguage}:</span>
             <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
                 <button 
                     onClick={() => setLanguage('en')}
@@ -156,220 +154,222 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                     SQ
                 </button>
             </div>
-
-            {/* Admin/Client Toggle */}
-            <div className="h-6 w-[1px] bg-slate-800"></div>
-            
-            {view === 'ADMIN_LOGIN' ? (
-                <button 
-                    onClick={() => switchView('LOGIN')}
-                    className="text-xs font-bold text-brand-blue uppercase tracking-widest hover:text-white transition-colors"
-                >
-                    {language === 'sq' ? '← ' + text.clientAccess : '← ' + text.clientAccess}
-                </button>
-            ) : (
-                <button 
-                    onClick={() => switchView('ADMIN_LOGIN')}
-                    className="text-xs font-bold text-slate-600 uppercase tracking-widest hover:text-slate-400 transition-colors"
-                >
-                    {text.adminAccess}
-                </button>
-            )}
         </div>
 
         <div className="w-full max-w-md space-y-8 mt-12 md:mt-0">
           
-          <div className="lg:hidden flex items-center gap-3 mb-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
              <div className="w-10 h-10 bg-white rounded flex items-center justify-center shadow-lg">
                 <span className="font-display font-bold text-brand-blue text-2xl">N</span>
             </div>
             <span className="font-display font-bold text-white text-2xl">{text.appName}</span>
           </div>
 
-          <div>
-            <h2 className="text-3xl font-display font-bold text-white mb-2">
-              {view === 'LOGIN' ? text.loginTitle : view === 'SIGNUP' ? text.signupTitle : text.adminTitle}
-            </h2>
-            <p className="text-slate-400">
-              {view === 'LOGIN' 
-                ? text.loginDesc
-                : view === 'SIGNUP' 
-                    ? text.signupDesc
-                    : text.adminDesc}
-            </p>
-          </div>
+          {/* Authentication Card */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+              
+              {/* Tabs */}
+              <div className="grid grid-cols-2 border-b border-slate-800">
+                  <button 
+                    onClick={() => switchTab('CLIENT')}
+                    className={`py-4 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'CLIENT' ? 'bg-brand-blue/10 text-brand-blue border-b-2 border-brand-blue' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                  >
+                    {text.clientAccess}
+                  </button>
+                  <button 
+                    onClick={() => switchTab('ADMIN')}
+                    className={`py-4 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'ADMIN' ? 'bg-brand-blue/10 text-brand-blue border-b-2 border-brand-blue' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                  >
+                    {text.adminAccess}
+                  </button>
+              </div>
 
-          {/* --- LOGIN FORM --- */}
-          {view === 'LOGIN' && (
-             <form onSubmit={handleLogin} className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
-                <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                    <input 
-                        type="tel" 
-                        required
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                        placeholder="+355 69 XX XX XXX"
-                    />
-                </div>
-                <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
-                    <input 
-                        type="password" 
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                        placeholder="••••••••"
-                    />
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <input 
-                        type="checkbox" 
-                        id="remember"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
-                    />
-                    <label htmlFor="remember" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
-                        {text.rememberMe}
-                    </label>
-                </div>
-
-                {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
-
-                <Button type="submit" className="w-full !text-base !py-3.5" isLoading={isLoading}>
-                    {text.signInBtn}
-                </Button>
-
-                <div className="text-center">
+              <div className="p-8">
+                  
+                  <div className="mb-6 text-center">
+                    <h2 className="text-2xl font-display font-bold text-white mb-2">
+                        {activeTab === 'CLIENT' 
+                            ? (view === 'LOGIN' ? text.loginTitle : text.signupTitle)
+                            : text.adminTitle}
+                    </h2>
                     <p className="text-slate-400 text-sm">
-                        {text.firstTime}{' '}
-                        <button type="button" onClick={() => switchView('SIGNUP')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
-                            {text.createAccount}
-                        </button>
+                        {activeTab === 'CLIENT'
+                            ? (view === 'LOGIN' ? text.loginDesc : text.signupDesc)
+                            : text.adminDesc}
                     </p>
-                </div>
-             </form>
-          )}
+                  </div>
 
-          {/* --- SIGN UP FORM --- */}
-          {view === 'SIGNUP' && (
-             <form onSubmit={handleSignup} className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
-                <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.nameLabel}</label>
-                    <input 
-                        type="text" 
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                        placeholder="e.g. Arbi Maloku"
-                    />
-                </div>
+                  {/* --- CLIENT LOGIN FORM --- */}
+                  {activeTab === 'CLIENT' && view === 'LOGIN' && (
+                    <form onSubmit={handleLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
+                        <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
+                            <input 
+                                type="tel" 
+                                required
+                                value={mobile}
+                                onChange={(e) => setMobile(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                placeholder="+355 69 XX XX XXX"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
+                            <input 
+                                type="password" 
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                placeholder="••••••••"
+                            />
+                        </div>
 
-                <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                    <input 
-                        type="tel" 
-                        required
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                        placeholder="+355 69 XX XX XXX"
-                    />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
-                        <input 
-                            type="password" 
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                            placeholder="••••"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
-                        <input 
-                            type="password" 
-                            required
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                            placeholder="••••"
-                        />
-                    </div>
-                </div>
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="checkbox" 
+                                id="remember"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
+                            />
+                            <label htmlFor="remember" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
+                                {text.rememberMe}
+                            </label>
+                        </div>
 
-                {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
 
-                <Button type="submit" className="w-full !text-base !py-3.5" isLoading={isLoading}>
-                    {text.registerBtn}
-                </Button>
-
-                 <div className="text-center">
-                    <p className="text-slate-400 text-sm">
-                        {text.alreadyAccount}{' '}
-                        <button type="button" onClick={() => switchView('LOGIN')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
+                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
                             {text.signInBtn}
-                        </button>
-                    </p>
-                </div>
-             </form>
-          )}
+                        </Button>
 
-           {/* --- ADMIN LOGIN FORM --- */}
-           {view === 'ADMIN_LOGIN' && (
-             <form onSubmit={handleAdminLogin} className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
-                <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-lg p-4 mb-6">
-                    <p className="text-brand-blue text-sm font-medium flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                        {text.restrictedArea}
-                    </p>
-                    <p className="text-slate-400 text-xs mt-1">
-                        {text.restrictedDesc}
-                    </p>
-                </div>
+                        <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
+                            <p className="text-slate-400 text-sm">
+                                {text.firstTime}{' '}
+                                <button type="button" onClick={() => setView('SIGNUP')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
+                                    {text.createAccount}
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+                  )}
 
-                <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.adminKeyLabel}</label>
-                    <input 
-                        type="password" 
-                        required
-                        autoFocus
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all text-center tracking-widest font-mono text-lg"
-                        placeholder="••••••••"
-                    />
-                </div>
+                  {/* --- CLIENT SIGNUP FORM --- */}
+                  {activeTab === 'CLIENT' && view === 'SIGNUP' && (
+                    <form onSubmit={handleSignup} className="space-y-4 animate-in fade-in zoom-in duration-300">
+                        <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.nameLabel}</label>
+                            <input 
+                                type="text" 
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                placeholder="e.g. Arbi Maloku"
+                            />
+                        </div>
 
-                <div className="flex items-center gap-2">
-                    <input 
-                        type="checkbox" 
-                        id="rememberAdmin"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
-                    />
-                    <label htmlFor="rememberAdmin" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
-                        {text.keepLoggedIn}
-                    </label>
-                </div>
+                        <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
+                            <input 
+                                type="tel" 
+                                required
+                                value={mobile}
+                                onChange={(e) => setMobile(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                placeholder="+355 69 XX XX XXX"
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
+                                <input 
+                                    type="password" 
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                    placeholder="••••"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
+                                <input 
+                                    type="password" 
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                    placeholder="••••"
+                                />
+                            </div>
+                        </div>
 
-                {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
 
-                <Button type="submit" className="w-full !text-base !py-3.5" isLoading={isLoading}>
-                    {text.accessBtn}
-                </Button>
-             </form>
-          )}
+                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
+                            {text.registerBtn}
+                        </Button>
+
+                        <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
+                            <p className="text-slate-400 text-sm">
+                                {text.alreadyAccount}{' '}
+                                <button type="button" onClick={() => setView('LOGIN')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
+                                    {text.signInBtn}
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+                  )}
+
+                  {/* --- ADMIN LOGIN FORM --- */}
+                  {activeTab === 'ADMIN' && (
+                    <form onSubmit={handleAdminLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
+                        <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-lg p-4">
+                            <p className="text-brand-blue text-xs font-medium flex items-start gap-2">
+                                <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                {text.restrictedArea}
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.adminKeyLabel}</label>
+                            <input 
+                                type="password" 
+                                required
+                                autoFocus
+                                value={adminPassword}
+                                onChange={(e) => setAdminPassword(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all text-center tracking-widest font-mono text-lg"
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="checkbox" 
+                                id="rememberAdmin"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
+                            />
+                            <label htmlFor="rememberAdmin" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
+                                {text.keepLoggedIn}
+                            </label>
+                        </div>
+
+                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+
+                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
+                            {text.accessBtn}
+                        </Button>
+                    </form>
+                  )}
+              </div>
+          </div>
 
         </div>
       </div>
