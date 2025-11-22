@@ -1,18 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { WeeklyUpdate, Project } from '../types';
 
-// Helper function to get the API key safely
-const getApiKey = (): string | undefined => {
-  return process.env.API_KEY;
-};
-
 export const generateProgressReport = async (project: Project, update: WeeklyUpdate): Promise<string> => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
+  // Guideline: The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+  if (!process.env.API_KEY) {
     return "API Key not configured. Cannot generate AI report.";
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Guideline: Use process.env.API_KEY string directly when initializing the client instance.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     Act as a senior construction project manager. 
@@ -38,6 +34,7 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
       contents: prompt,
     });
 
+    // Guideline: The GenerateContentResponse object features a text property that directly returns the string output.
     return response.text || "Analysis currently unavailable.";
   } catch (error) {
     console.error("Gemini API Error:", error);
