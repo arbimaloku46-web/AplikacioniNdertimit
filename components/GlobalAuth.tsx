@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { loginUser, registerUser } from '../services/authService';
 import { Language, translations } from '../translations';
+import { COUNTRIES } from '../constants';
 
 interface GlobalAuthProps {
-  onLogin: (userName: string, rememberMe: boolean, isAdmin: boolean) => void;
+  onLogin: (userName: string, countryCode: string | undefined, rememberMe: boolean, isAdmin: boolean) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
 }
@@ -24,6 +26,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
   // Form State
   const [mobile, setMobile] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]); // Default to Albania
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
@@ -48,8 +51,14 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setIsLoading(true);
 
     try {
-      const user = await loginUser(mobile, password);
-      onLogin(user.name, rememberMe, false);
+      // Concatenate prefix and mobile for the unique identifier
+      const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
+      
+      const user = await loginUser(fullMobile, password);
+      // If the user has a saved country code, use that, otherwise use the one selected in UI
+      const countryToUse = user.countryCode || selectedCountry.code;
+      
+      onLogin(user.name, countryToUse, rememberMe, false);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -64,7 +73,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
     setTimeout(() => {
         if (adminPassword === ADMIN_PASSWORD) {
-            onLogin('Administrator', rememberMe, true);
+            onLogin('Administrator', 'AL', rememberMe, true);
         } else {
             setError('Invalid Admin Access Key');
             setIsLoading(false);
@@ -89,7 +98,10 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setIsLoading(true);
 
     try {
-        await registerUser(mobile, password, name);
+        // Concatenate prefix and mobile
+        const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
+
+        await registerUser(fullMobile, password, name, selectedCountry.code);
         alert('Account created successfully! Please sign in.');
         setView('LOGIN');
         setPassword(''); 
@@ -99,6 +111,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const country = COUNTRIES.find(c => c.code === e.target.value);
+    if (country) setSelectedCountry(country);
   };
 
   return (
@@ -169,22 +186,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
           {/* Authentication Card */}
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
               
-              {/* Tabs */}
-              <div className="grid grid-cols-2 border-b border-slate-800">
-                  <button 
-                    onClick={() => switchTab('CLIENT')}
-                    className={`py-4 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'CLIENT' ? 'bg-brand-blue/10 text-brand-blue border-b-2 border-brand-blue' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
-                  >
-                    {text.clientAccess}
-                  </button>
-                  <button 
-                    onClick={() => switchTab('ADMIN')}
-                    className={`py-4 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'ADMIN' ? 'bg-brand-blue/10 text-brand-blue border-b-2 border-brand-blue' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
-                  >
-                    {text.adminAccess}
-                  </button>
-              </div>
-
               <div className="p-8">
                   
                   <div className="mb-6 text-center">
@@ -205,14 +206,32 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                     <form onSubmit={handleLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                            <input 
-                                type="tel" 
-                                required
-                                value={mobile}
-                                onChange={(e) => setMobile(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                placeholder="+355 69 XX XX XXX"
-                            />
+                            <div className="flex gap-2">
+                                <div className="relative w-[90px] shrink-0">
+                                    <select 
+                                        value={selectedCountry.code}
+                                        onChange={handleCountryChange}
+                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate"
+                                    >
+                                        {COUNTRIES.map(country => (
+                                            <option key={country.code} value={country.code}>
+                                                {country.flag} {country.dial_code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-500 bg-slate-950 pl-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    required
+                                    value={mobile}
+                                    onChange={(e) => setMobile(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                    placeholder="Mobile Number"
+                                />
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
@@ -253,6 +272,16 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 </button>
                             </p>
                         </div>
+
+                        <div className="mt-8 flex justify-center">
+                            <button 
+                                type="button"
+                                onClick={() => switchTab('ADMIN')}
+                                className="text-slate-700 text-[10px] hover:text-slate-500 transition-colors uppercase tracking-widest font-bold"
+                            >
+                                {text.adminAccess}
+                            </button>
+                        </div>
                     </form>
                   )}
 
@@ -273,14 +302,32 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                            <input 
-                                type="tel" 
-                                required
-                                value={mobile}
-                                onChange={(e) => setMobile(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                placeholder="+355 69 XX XX XXX"
-                            />
+                            <div className="flex gap-2">
+                                <div className="relative w-[90px] shrink-0">
+                                    <select 
+                                        value={selectedCountry.code}
+                                        onChange={handleCountryChange}
+                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate"
+                                    >
+                                        {COUNTRIES.map(country => (
+                                            <option key={country.code} value={country.code}>
+                                                {country.flag} {country.dial_code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-500 bg-slate-950 pl-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    required
+                                    value={mobile}
+                                    onChange={(e) => setMobile(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                    placeholder="Mobile Number"
+                                />
+                            </div>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
@@ -376,6 +423,16 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                         <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
                             {text.accessBtn}
                         </Button>
+
+                        <div className="mt-6 text-center">
+                            <button 
+                                type="button"
+                                onClick={() => switchTab('CLIENT')}
+                                className="text-slate-500 text-sm hover:text-white transition-colors"
+                            >
+                                ← {text.backToLogin}
+                            </button>
+                        </div>
                     </form>
                   )}
               </div>

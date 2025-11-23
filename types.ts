@@ -1,4 +1,5 @@
 
+
 export interface MediaItem {
   id: string;
   type: 'photo' | 'video' | '360';
@@ -35,6 +36,7 @@ export interface Project {
 export interface User {
   name: string;
   mobile: string;
+  countryCode?: string; // ISO code e.g. 'AL'
   password?: string; // In a real app, never store plain text passwords
 }
 

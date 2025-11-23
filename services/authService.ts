@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 
 const STORAGE_KEY = 'ndertimi_users_v2';
@@ -6,18 +7,21 @@ interface StoredUser extends User {
   password?: string;
 }
 
-export const registerUser = async (mobile: string, password: string, name: string): Promise<User> => {
+export const registerUser = async (mobile: string, password: string, name: string, countryCode: string): Promise<User> => {
   // 1. Get existing users
   const existingData = localStorage.getItem(STORAGE_KEY);
   const users: StoredUser[] = existingData ? JSON.parse(existingData) : [];
+  
+  // Clean mobile input
+  const cleanMobile = mobile.replace(/\s/g, '');
 
   // 2. Check if mobile already exists
-  if (users.find(u => u.mobile === mobile)) {
+  if (users.find(u => u.mobile.replace(/\s/g, '') === cleanMobile)) {
     throw new Error('This mobile number is already registered.');
   }
 
   // 3. Create new user
-  const newUser: StoredUser = { mobile, password, name };
+  const newUser: StoredUser = { mobile: cleanMobile, password, name, countryCode };
   users.push(newUser);
 
   // 4. Save to local storage (Persistence)
@@ -33,9 +37,11 @@ export const loginUser = async (mobile: string, password: string): Promise<User>
 
   const existingData = localStorage.getItem(STORAGE_KEY);
   const users: StoredUser[] = existingData ? JSON.parse(existingData) : [];
+  
+  const cleanMobile = mobile.replace(/\s/g, '');
 
   // Find user by Mobile and Password
-  const user = users.find(u => u.mobile === mobile && u.password === password);
+  const user = users.find(u => u.mobile.replace(/\s/g, '') === cleanMobile && u.password === password);
 
   if (!user) {
     throw new Error('Invalid mobile number or password.');

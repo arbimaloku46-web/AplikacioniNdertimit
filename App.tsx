@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MOCK_PROJECTS } from './constants';
+import { MOCK_PROJECTS, COUNTRIES } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
 import { LoginScreen } from './components/LoginScreen';
 import { GlobalAuth } from './components/GlobalAuth';
@@ -14,6 +14,7 @@ import { Language, translations } from './translations';
 const STORAGE_PROJECTS_KEY = 'ndertimi_projects_data_v3';
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_SESSION_KEY = 'ndertimi_session_user_v2';
+const STORAGE_SESSION_COUNTRY = 'ndertimi_session_country_v2';
 const STORAGE_SESSION_IS_ADMIN = 'ndertimi_session_is_admin_v2';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -23,6 +24,7 @@ const App: React.FC = () => {
   // Auth & User
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>('');
+  const [userCountry, setUserCountry] = useState<string>('AL');
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
 
   // Settings
@@ -88,10 +90,12 @@ const App: React.FC = () => {
 
     // Check for saved session
     const savedSessionUser = localStorage.getItem(STORAGE_SESSION_KEY);
+    const savedSessionCountry = localStorage.getItem(STORAGE_SESSION_COUNTRY);
     const savedSessionAdmin = localStorage.getItem(STORAGE_SESSION_IS_ADMIN);
     
     if (savedSessionUser) {
         setUserName(savedSessionUser);
+        if (savedSessionCountry) setUserCountry(savedSessionCountry);
         setIsLoggedIn(true);
         if (savedSessionAdmin === 'true') {
             setIsAdmin(true);
@@ -126,13 +130,15 @@ const App: React.FC = () => {
 
   // --- HANDLERS ---
 
-  const handleGlobalLogin = (name: string, remember: boolean, adminAccess: boolean) => {
+  const handleGlobalLogin = (name: string, countryCode: string | undefined, remember: boolean, adminAccess: boolean) => {
     setUserName(name);
+    if (countryCode) setUserCountry(countryCode);
     setIsLoggedIn(true);
     setIsAdmin(adminAccess);
     
     if (remember) {
         localStorage.setItem(STORAGE_SESSION_KEY, name);
+        if (countryCode) localStorage.setItem(STORAGE_SESSION_COUNTRY, countryCode);
         if (adminAccess) {
             localStorage.setItem(STORAGE_SESSION_IS_ADMIN, 'true');
         }
@@ -146,6 +152,7 @@ const App: React.FC = () => {
     setCurrentView(AppView.HOME);
     setActiveProject(null);
     localStorage.removeItem(STORAGE_SESSION_KEY);
+    localStorage.removeItem(STORAGE_SESSION_COUNTRY);
     localStorage.removeItem(STORAGE_SESSION_IS_ADMIN);
   };
 
@@ -568,7 +575,20 @@ const App: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-3xl font-display font-bold text-white">{userName}</h2>
-                            <p className="text-slate-400">{isAdmin ? text.adminRole : text.clientRole}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                                <p className="text-slate-400">{isAdmin ? text.adminRole : text.clientRole}</p>
+                                {!isAdmin && (
+                                    <>
+                                        <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                                        <p className="text-slate-400 flex items-center gap-1 text-sm">
+                                            {(() => {
+                                                const c = COUNTRIES.find(c => c.code === userCountry);
+                                                return c ? <>{c.flag} {c.name}</> : userCountry;
+                                            })()}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-4">
