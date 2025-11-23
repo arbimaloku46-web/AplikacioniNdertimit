@@ -10,61 +10,10 @@
     <title>Shiko Progresin</title>
     <meta name="description" content="A high-end client portal for viewing weekly drone footage, photos, and 3D Gaussian Splat renders of construction projects." />
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              display: ['Space Grotesk', 'sans-serif'],
-            },
-            colors: {
-              slate: {
-                850: '#151f32',
-                950: '#020617',
-              },
-              brand: {
-                dark: '#002147',
-                blue: '#2264ab',
-              }
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      body {
-        background-color: #002147;
-        color: #e2e8f0;
-        overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
-        -webkit-tap-highlight-color: transparent; /* Removes gray tap highlight on mobile */
-      }
-      /* Custom scrollbar for dark theme */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #00152e;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #2264ab;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #1a4d85;
-      }
-      .glass-panel {
-        background: rgba(0, 33, 71, 0.6);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(34, 100, 171, 0.2);
-      }
-    </style>
-<script type="importmap">
+  <script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
