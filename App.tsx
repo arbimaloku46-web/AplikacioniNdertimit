@@ -327,6 +327,22 @@ const App: React.FC = () => {
     setNewMediaDesc('');
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        setNewMediaUrl(reader.result as string);
+        if (file.type.startsWith('video')) {
+            setNewMediaType('video');
+        } else {
+            setNewMediaType('photo');
+        }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   // --- SUB-COMPONENTS ---
 
@@ -707,16 +723,23 @@ const App: React.FC = () => {
                                 
                                 <div className="grid gap-6">
                                     <div>
-                                        <label className="text-xs text-slate-400 block mb-1 uppercase font-bold">Gaussian Splat URL (Polycam)</label>
+                                        <label className="text-xs text-slate-400 block mb-1 uppercase font-bold">3D Capture (Polycam URL or Embed Code)</label>
                                         <div className="flex gap-2">
-                                            <input 
-                                                className="flex-1 bg-brand-dark border border-slate-700 rounded px-4 py-2 text-white text-sm focus:border-brand-blue outline-none transition-colors"
+                                            <textarea 
+                                                className="flex-1 bg-brand-dark border border-slate-700 rounded px-4 py-2 text-white text-sm focus:border-brand-blue outline-none transition-colors min-h-[80px]"
                                                 value={activeProject.updates[activeUpdateIndex].splatUrl || ''} 
-                                                onChange={(e) => handleUpdateField('splatUrl', e.target.value)}
-                                                placeholder="https://poly.cam/..."
+                                                onChange={(e) => {
+                                                    let val = e.target.value;
+                                                    const srcMatch = val.match(/src=["'](.*?)["']/);
+                                                    if (val.includes('<iframe') && srcMatch && srcMatch[1]) {
+                                                        val = srcMatch[1];
+                                                    }
+                                                    handleUpdateField('splatUrl', val);
+                                                }}
+                                                placeholder="Paste Polycam URL or <iframe src='...'> code here..."
                                             />
                                         </div>
-                                        <p className="text-[10px] text-slate-500 mt-1">Paste the standard 'Share' URL from Polycam.</p>
+                                        <p className="text-[10px] text-slate-500 mt-1">System automatically extracts the URL if you paste an iframe code.</p>
                                     </div>
 
                                     <div className="border-t border-slate-800 pt-4">
@@ -732,12 +755,18 @@ const App: React.FC = () => {
                                                     <option value="video">Video</option>
                                                     <option value="360">360°</option>
                                                 </select>
-                                                <input 
-                                                    className="flex-1 bg-brand-dark border border-slate-700 rounded px-4 py-2 text-white text-sm focus:border-brand-blue outline-none"
-                                                    placeholder="Media URL..."
-                                                    value={newMediaUrl}
-                                                    onChange={(e) => setNewMediaUrl(e.target.value)}
-                                                />
+                                                <div className="flex-1 flex gap-2">
+                                                    <input 
+                                                        className="flex-1 bg-brand-dark border border-slate-700 rounded px-4 py-2 text-white text-sm focus:border-brand-blue outline-none"
+                                                        placeholder="Media URL or Upload..."
+                                                        value={newMediaUrl}
+                                                        onChange={(e) => setNewMediaUrl(e.target.value)}
+                                                    />
+                                                    <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-3 rounded border border-slate-700 flex items-center justify-center transition-colors" title="Upload from Device">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                                        <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
+                                                    </label>
+                                                </div>
                                             </div>
                                             <div className="flex gap-4">
                                                 <input 

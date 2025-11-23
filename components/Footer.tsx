@@ -18,8 +18,8 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-6">Contact</h4>
             <ul className="space-y-4 text-slate-400">
-              <li>info@shikoprogresin.com</li>
-              <li>+355 4 222 3333</li>
+              <li>projekti@ndertimi.org</li>
+              <li>+355 68 477 8194</li>
               <li>Tirana, Albania</li>
             </ul>
           </div>

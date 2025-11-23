@@ -1,9 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MediaItem } from '../types';
 
 interface MediaGridProps {
   media: MediaItem[];
 }
+
+// Internal component to handle complex zoom/pan logic
+const ZoomableImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const lastPositionRef = useRef({ x: 0, y: 0 });
+
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.5, 4));
+  const handleZoomOut = () => {
+    setScale(s => {
+      const newScale = Math.max(s - 0.5, 1);
+      if (newScale === 1) setPosition({ x: 0, y: 0 }); // Reset position if fully zoomed out
+      return newScale;
+    });
+  };
+  
+  const handleReset = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleDoubleTap = () => {
+    if (scale > 1) {
+      handleReset();
+    } else {
+      setScale(2.5);
+    }
+  };
+
+  // Handle Mouse Wheel Zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (e.deltaY < 0) {
+      setScale(s => Math.min(s + 0.2, 4));
+    } else {
+      setScale(s => {
+        const newScale = Math.max(s - 0.2, 1);
+        if (newScale === 1) setPosition({ x: 0, y: 0 });
+        return newScale;
+      });
+    }
+  };
+
+  // Pointer Events for Panning (Mouse & Touch)
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (scale === 1) return; // Only drag if zoomed in
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    lastPositionRef.current = { ...position };
+    if (containerRef.current) containerRef.current.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    
+    const deltaX = e.clientX - dragStartRef.current.x;
+    const deltaY = e.clientY - dragStartRef.current.y;
+
+    setPosition({
+      x: lastPositionRef.current.x + deltaX,
+      y: lastPositionRef.current.y + deltaY
+    });
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    if (containerRef.current) containerRef.current.releasePointerCapture(e.pointerId);
+  };
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/50 rounded-lg border border-slate-800">
+      {/* Floating Controls */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 bg-slate-900/80 backdrop-blur-md rounded-full border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <button onClick={handleZoomOut} disabled={scale <= 1} className="p-2 text-white hover:text-brand-blue disabled:opacity-30 transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+        </button>
+        <span className="text-xs font-mono text-slate-300 w-12 text-center">{Math.round(scale * 100)}%</span>
+        <button onClick={handleZoomIn} disabled={scale >= 4} className="p-2 text-white hover:text-brand-blue disabled:opacity-30 transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+        </button>
+        <div className="w-[1px] h-4 bg-slate-700 mx-1"></div>
+        <button onClick={handleReset} className="text-xs font-bold text-slate-400 hover:text-white px-2 uppercase tracking-wider">
+          Reset
+        </button>
+      </div>
+
+      {/* Image Container */}
+      <div 
+        ref={containerRef}
+        className={`relative w-full h-full flex items-center justify-center touch-none ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+        onWheel={handleWheel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onDoubleClick={handleDoubleTap}
+      >
+        <img 
+          src={src} 
+          alt={alt}
+          className="max-w-full max-h-[80vh] object-contain transition-transform duration-75 ease-linear select-none"
+          style={{ 
+            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+          }}
+          draggable={false}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
@@ -70,7 +185,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-10">
           <button 
             onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 text-slate-400 hover:text-white z-50"
+            className="absolute top-6 right-6 text-slate-400 hover:text-white z-50 bg-black/20 rounded-full p-1 hover:bg-white/10 transition-colors"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -101,14 +216,10 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
                     <div className="absolute bottom-4 right-4 text-xs text-slate-500">360° Simulated View</div>
                 </div>
              ) : (
-               <img 
-                src={selectedMedia.url} 
-                alt={selectedMedia.description}
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
-               />
+               <ZoomableImage src={selectedMedia.url} alt={selectedMedia.description} />
              )}
-             <div className="text-center mt-4">
-               <p className="text-lg font-medium text-white">{selectedMedia.description}</p>
+             <div className="text-center mt-4 relative z-40 pointer-events-none">
+               <p className="text-lg font-medium text-white drop-shadow-md">{selectedMedia.description}</p>
                {selectedMedia.type === '360' && <p className="text-slate-400 text-sm">Immersive Interior View</p>}
              </div>
           </div>

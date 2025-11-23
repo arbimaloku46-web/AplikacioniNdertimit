@@ -81,8 +81,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         return;
     }
 
-    if (password.length < 4) {
-        setError('Password must be at least 4 characters.');
+    if (password.length < 6) {
+        setError('Password must be at least 6 characters.');
         return;
     }
 
@@ -128,7 +128,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
           <div>
              <div className="glass-panel inline-block px-4 py-2 rounded-lg border border-brand-blue/30">
                 <p className="text-xs text-brand-blue uppercase tracking-widest mb-1">{text.supportContact}</p>
-                <p className="text-white font-mono text-sm">info@shikoprogresin.com</p>
+                <p className="text-white font-mono text-sm">projekti@ndertimi.org</p>
              </div>
           </div>
         </div>
@@ -267,7 +267,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                placeholder="e.g. Arbi Maloku"
+                                placeholder="Name Surname"
                             />
                         </div>
 
@@ -289,10 +289,19 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 <input 
                                     type="password" 
                                     required
+                                    minLength={6}
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (error && e.target.value.length >= 6) setError('');
+                                    }}
+                                    onBlur={() => {
+                                        if (password.length > 0 && password.length < 6) {
+                                            setError('Password must be at least 6 characters.');
+                                        }
+                                    }}
                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="••••"
+                                    placeholder="••••••"
                                 />
                             </div>
                             <div>
@@ -300,10 +309,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 <input 
                                     type="password" 
                                     required
+                                    minLength={6}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="••••"
+                                    placeholder="••••••"
                                 />
                             </div>
                         </div>
