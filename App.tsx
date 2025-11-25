@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
+import { Network } from '@capacitor/network';
 import { MOCK_PROJECTS, COUNTRIES } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
 import { LoginScreen } from './components/LoginScreen';
@@ -36,6 +37,9 @@ const App: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [userCountry, setUserCountry] = useState<string>('AL');
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
+
+  // Network
+  const [isOnline, setIsOnline] = useState<boolean>(true);
 
   // Settings
   const [language, setLanguage] = useState<Language>('en');
@@ -82,6 +86,18 @@ const App: React.FC = () => {
   // --- INITIALIZATION ---
 
   useEffect(() => {
+    // Network Listener
+    const checkNetwork = async () => {
+       const status = await Network.getStatus();
+       setIsOnline(status.connected);
+    };
+    
+    checkNetwork();
+    
+    const networkListener = Network.addListener('networkStatusChange', status => {
+       setIsOnline(status.connected);
+    });
+
     // Initialize Capacitor Features
     const initCapacitor = async () => {
       try {
@@ -143,6 +159,10 @@ const App: React.FC = () => {
       e.preventDefault();
       setInstallPrompt(e);
     });
+
+    return () => {
+        networkListener.then(h => h.remove());
+    };
   }, []);
 
   // Handle Hardware Back Button (Android)
@@ -253,7 +273,11 @@ const App: React.FC = () => {
                         ...updatedUpdates[activeUpdateIndex],
                         media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
                     };
-                    return { ...p, updates: updatedUpdates };
+                    
+                    // Update active project ref immediately
+                    const updatedProject = { ...p, updates: updatedUpdates };
+                    setActiveProject(updatedProject);
+                    return updatedProject;
                 }
                 return p;
             });
@@ -275,8 +299,6 @@ const App: React.FC = () => {
         if (allDone) {
             const timer = setTimeout(() => {
                 setUploadQueue([]);
-                const updatedProject = projects.find(p => p.id === activeProject?.id);
-                if (updatedProject) setActiveProject(updatedProject);
             }, 2000);
             return () => clearTimeout(timer);
         }
@@ -453,12 +475,29 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!activeProject || !newMediaUrl) return;
 
+    let finalThumbnail = undefined;
+    
+    // Check if it's a YouTube URL to set a better thumbnail automatically
+    if (newMediaType === 'video') {
+        const ytMatch = newMediaUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/);
+        if (ytMatch) {
+            finalThumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+        } else {
+            // For other videos, assume URL might be the thumbnail or let grid handle it (it uses <video> tag now)
+            // But we can set the URL as thumbnail if user desires, or leave generic
+            finalThumbnail = newMediaUrl; 
+        }
+    } else {
+        // For photos, the URL is the thumbnail
+        finalThumbnail = newMediaUrl;
+    }
+
     const newItem: MediaItem = {
         id: Date.now().toString(),
         type: newMediaType,
         url: newMediaUrl,
         description: newMediaDesc || 'External Link',
-        thumbnail: newMediaType === 'video' ? newMediaUrl : undefined 
+        thumbnail: finalThumbnail
     };
 
     const updatedProjects = projects.map(p => {
@@ -554,6 +593,18 @@ const App: React.FC = () => {
   );
 
   // --- MAIN VIEW LOGIC ---
+
+  if (!isOnline) {
+      return (
+          <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-center">
+              <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 text-brand-blue shadow-2xl">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+              </div>
+              <h1 className="text-3xl font-display font-bold text-white mb-4">No Internet Connection</h1>
+              <p className="text-slate-400 max-w-md">This application requires an active internet connection to access real-time construction data. Please check your network settings.</p>
+          </div>
+      );
+  }
 
   if (!isLoggedIn) {
     return <GlobalAuth onLogin={handleGlobalLogin} language={language} setLanguage={setLanguage} />;

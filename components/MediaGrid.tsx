@@ -6,6 +6,108 @@ interface MediaGridProps {
   media: MediaItem[];
 }
 
+// Helper to detect YouTube/Vimeo links
+const getVideoInfo = (url: string) => {
+  if (!url) return { type: 'file', embedUrl: '', thumbnail: null };
+
+  // YouTube (Standard, Short, Embed, youtu.be)
+  const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/);
+  if (ytMatch) {
+    return {
+      type: 'youtube',
+      id: ytMatch[1],
+      embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0&modestbranding=1`,
+      thumbnail: `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`
+    };
+  }
+  
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return {
+      type: 'vimeo',
+      id: vimeoMatch[1],
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+      thumbnail: null // Generic placeholder
+    };
+  }
+
+  // Standard Video File
+  return { type: 'file', embedUrl: url, thumbnail: null };
+};
+
+// Internal component for Video Thumbnails to handle hover state independently
+const VideoThumbnail: React.FC<{ url: string }> = ({ url }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const info = getVideoInfo(url);
+
+  const handleMouseEnter = () => {
+    if (videoRef.current && info.type === 'file') {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current && info.type === 'file') {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  if (info.type !== 'file') {
+     return (
+        <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-500">
+          {info.thumbnail ? (
+              <img src={info.thumbnail} alt="Video Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+          ) : (
+              <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                <span className="text-slate-500 font-bold tracking-widest uppercase text-xs">{info.type}</span>
+              </div>
+          )}
+          <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+           <div className="absolute top-2 right-2 bg-red-600/90 backdrop-blur px-2 py-0.5 rounded text-[10px] text-white font-bold uppercase flex items-center gap-1">
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+              {info.type}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+             </div>
+          </div>
+        </div>
+     );
+  }
+
+  return (
+    <div 
+      className="w-full h-full relative" 
+      onMouseEnter={handleMouseEnter} 
+      onMouseLeave={handleMouseLeave}
+    >
+        <video 
+            ref={videoRef}
+            src={url}
+            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"
+            muted
+            loop
+            playsInline
+            preload="auto"
+        />
+        
+        {/* Play Icon Overlay - Fades out when hovering/playing */}
+        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
+            <div className="w-12 h-12 rounded-full bg-amber-500/90 flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
+            <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+            </div>
+        </div>
+    </div>
+  );
+};
+
 // Internal component to handle complex zoom/pan logic
 const ZoomableImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
   const [scale, setScale] = useState(1);
@@ -124,91 +226,97 @@ const ZoomableImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => 
 export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
+  // Close lightbox on Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedMedia(null);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {media.map((item) => (
-          <div 
-            key={item.id} 
-            onClick={() => setSelectedMedia(item)}
-            className="group relative aspect-video bg-slate-900 rounded-lg overflow-hidden cursor-pointer border border-slate-800 hover:border-amber-500/50 transition-all"
-          >
-            {item.type === 'video' ? (
-               <div className="w-full h-full relative">
-                  <video 
-                    src={item.url} 
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                    muted
-                    loop
-                    playsInline
-                    onMouseOver={(e) => e.currentTarget.play().catch(() => {})}
-                    onMouseOut={(e) => {
-                        e.currentTarget.pause();
-                        e.currentTarget.currentTime = 0;
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/90 flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
-                      <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+        {media.map((item) => {
+           return (
+            <div 
+              key={item.id} 
+              onClick={() => setSelectedMedia(item)}
+              className="group relative aspect-video bg-slate-900 rounded-lg overflow-hidden cursor-pointer border border-slate-800 hover:border-amber-500/50 transition-all"
+            >
+              {item.type === 'video' ? (
+                 <VideoThumbnail url={item.url} />
+              ) : item.type === '360' ? (
+                  <div className="w-full h-full relative">
+                    <img 
+                      src={item.url} 
+                      alt={item.description} 
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    />
+                     <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                      </div>
                     </div>
+                     <div className="absolute top-2 right-2 bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                      360° View
+                     </div>
                   </div>
-               </div>
-            ) : item.type === '360' ? (
-                <div className="w-full h-full relative">
-                  <img 
-                    src={item.url} 
-                    alt={item.description} 
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                  />
-                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </div>
-                  </div>
-                   <div className="absolute top-2 right-2 bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                    360° View
-                   </div>
-                </div>
-            ) : (
-              <img 
-                src={item.url} 
-                alt={item.description} 
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-500"
-              />
-            )}
-            
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform">
-              <p className="text-xs text-white font-medium truncate">{item.description}</p>
+              ) : (
+                <img 
+                  src={item.url} 
+                  alt={item.description} 
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-500"
+                />
+              )}
+              
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform z-10 pointer-events-none">
+                <p className="text-xs text-white font-medium truncate">{item.description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Lightbox Modal */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-10">
+        <div 
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-10"
+            onClick={() => setSelectedMedia(null)}
+        >
           <button 
             onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 text-slate-400 hover:text-white z-50 bg-black/20 rounded-full p-1 hover:bg-white/10 transition-colors"
+            className="absolute top-6 right-6 text-slate-400 hover:text-white z-50 bg-black/20 rounded-full p-2 hover:bg-white/10 transition-colors"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
 
-          <div className="max-w-6xl w-full h-full flex flex-col items-center justify-center gap-4">
+          <div className="max-w-6xl w-full h-full flex flex-col items-center justify-center gap-4" onClick={e => e.stopPropagation()}>
              {selectedMedia.type === 'video' ? (
-               <video 
-                controls 
-                autoPlay 
-                className="w-full h-auto max-h-[80vh] rounded-lg shadow-2xl border border-slate-800"
-                src={selectedMedia.url}
-               />
+               (() => {
+                   const info = getVideoInfo(selectedMedia.url);
+                   return info.type === 'file' ? (
+                       <video 
+                        key={selectedMedia.id} // Forces re-render on video change to ensure autoPlay works
+                        controls 
+                        autoPlay
+                        playsInline
+                        className="w-full h-auto max-h-[80vh] rounded-lg shadow-2xl border border-slate-800"
+                        src={selectedMedia.url}
+                       />
+                   ) : (
+                       <iframe 
+                        src={info.embedUrl} 
+                        className="w-full aspect-video max-h-[80vh] rounded-lg shadow-2xl border border-slate-800"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                       ></iframe>
+                   );
+               })()
              ) : selectedMedia.type === '360' ? (
                 <div className="w-full h-[70vh] relative rounded-lg overflow-hidden border border-slate-800 bg-black group">
-                    {/* Simulated 360 Viewer */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                          <div className="glass-panel px-4 py-2 rounded-full text-sm text-white flex items-center gap-2">
                             <svg className="w-4 h-4 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
