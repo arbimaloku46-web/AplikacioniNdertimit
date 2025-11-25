@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MediaItem } from '../types';
 
@@ -134,12 +135,19 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
           >
             {item.type === 'video' ? (
                <div className="w-full h-full relative">
-                  <img 
-                    src={item.thumbnail || item.url} 
-                    alt={item.description} 
+                  <video 
+                    src={item.url} 
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    muted
+                    loop
+                    playsInline
+                    onMouseOver={(e) => e.currentTarget.play().catch(() => {})}
+                    onMouseOut={(e) => {
+                        e.currentTarget.pause();
+                        e.currentTarget.currentTime = 0;
+                    }}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-12 h-12 rounded-full bg-amber-500/90 flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
                       <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />

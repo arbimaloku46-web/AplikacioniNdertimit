@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { MOCK_PROJECTS, COUNTRIES } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
 import { LoginScreen } from './components/LoginScreen';
@@ -9,14 +13,20 @@ import { AIInsight } from './components/AIInsight';
 import { MediaGrid } from './components/MediaGrid';
 import { Footer } from './components/Footer';
 import { Language, translations } from './translations';
+import { dbService } from './services/db';
 
-// Changed key to v3 to force a data reset
-const STORAGE_PROJECTS_KEY = 'ndertimi_projects_data_v3';
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_SESSION_KEY = 'ndertimi_session_user_v2';
 const STORAGE_SESSION_COUNTRY = 'ndertimi_session_country_v2';
 const STORAGE_SESSION_IS_ADMIN = 'ndertimi_session_is_admin_v2';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
+
+interface UploadItem {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+}
 
 const App: React.FC = () => {
   // --- STATE ---
@@ -48,6 +58,10 @@ const App: React.FC = () => {
   const [newMediaUrl, setNewMediaUrl] = useState('');
   const [newMediaType, setNewMediaType] = useState<'photo' | 'video' | '360'>('photo');
   const [newMediaDesc, setNewMediaDesc] = useState('');
+  
+  // Admin Bulk Upload State
+  const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Admin Create Project State
   const [newProjectForm, setNewProjectForm] = useState({
@@ -68,13 +82,35 @@ const App: React.FC = () => {
   // --- INITIALIZATION ---
 
   useEffect(() => {
-    // Load Projects from Storage or Seed
-    const storedProjects = localStorage.getItem(STORAGE_PROJECTS_KEY);
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects));
-    } else {
-      setProjects(MOCK_PROJECTS);
-    }
+    // Initialize Capacitor Features
+    const initCapacitor = async () => {
+      try {
+        await ScreenOrientation.lock({ orientation: 'portrait' });
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#002147' });
+      } catch (e) {
+        console.debug('Capacitor plugins not active (web mode)');
+      }
+    };
+    initCapacitor();
+
+    // Load Projects from IndexedDB
+    const loadProjects = async () => {
+      try {
+        const storedProjects = await dbService.getProjects();
+        if (storedProjects && storedProjects.length > 0) {
+          setProjects(storedProjects);
+        } else {
+          setProjects(MOCK_PROJECTS);
+        }
+      } catch (e) {
+        console.error("Failed to load projects from DB", e);
+        setProjects(MOCK_PROJECTS);
+      } finally {
+        setIsDataLoaded(true);
+      }
+    };
+    loadProjects();
 
     // Load User's Unlocked Projects
     const storedUnlocked = localStorage.getItem(STORAGE_UNLOCKED_KEY);
@@ -107,14 +143,45 @@ const App: React.FC = () => {
       e.preventDefault();
       setInstallPrompt(e);
     });
-
-    setIsDataLoaded(true);
   }, []);
 
-  // Save projects whenever they change, but only after initial load
+  // Handle Hardware Back Button (Android)
+  useEffect(() => {
+    const backButtonListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (pendingProject) {
+        setPendingProject(null);
+        return;
+      }
+      if (showCreateProject) {
+        setShowCreateProject(false);
+        return;
+      }
+      
+      if (currentView === AppView.PROJECT_DETAIL || currentView === AppView.PROFILE) {
+        setActiveProject(null);
+        setCurrentView(AppView.HOME);
+      } else if (currentView === AppView.HOME) {
+        CapacitorApp.exitApp();
+      }
+    });
+
+    return () => {
+      backButtonListener.then(f => f.remove());
+    };
+  }, [currentView, pendingProject, showCreateProject]);
+
+  // Save projects to IndexedDB whenever they change
   useEffect(() => {
     if (isDataLoaded) {
-      localStorage.setItem(STORAGE_PROJECTS_KEY, JSON.stringify(projects));
+      const saveToDB = async () => {
+        try {
+          await dbService.saveProjects(projects);
+        } catch (error) {
+          console.error("Failed to save projects to DB:", error);
+          alert("Warning: Failed to save changes. Your device storage might be full.");
+        }
+      };
+      saveToDB();
     }
   }, [projects, isDataLoaded]);
 
@@ -127,6 +194,95 @@ const App: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentView, activeProject, isLoggedIn]);
+
+  // Process Upload Queue
+  useEffect(() => {
+    const processQueue = async () => {
+      const pendingItem = uploadQueue.find(item => item.status === 'pending');
+      if (!pendingItem || !activeProject) return;
+
+      setUploadQueue(prev => prev.map(item => 
+        item.id === pendingItem.id ? { ...item, status: 'uploading' } : item
+      ));
+
+      try {
+        const readFileWithProgress = (file: File): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+              if (e.target?.result) resolve(e.target.result as string);
+              else reject(new Error("Failed to read file"));
+            };
+            
+            reader.onerror = () => reject(new Error("File reading failed"));
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+              progress += 10;
+              setUploadQueue(prev => prev.map(item => 
+                item.id === pendingItem.id ? { ...item, progress: Math.min(progress, 90) } : item
+              ));
+              if (progress >= 90) clearInterval(interval);
+            }, 50);
+
+            reader.readAsDataURL(file);
+          });
+        };
+
+        const resultUrl = await readFileWithProgress(pendingItem.file);
+        
+        setUploadQueue(prev => prev.map(item => 
+            item.id === pendingItem.id ? { ...item, progress: 100, status: 'completed' } : item
+        ));
+
+        const type = pendingItem.file.type.startsWith('video') ? 'video' : 'photo';
+        const newItem: MediaItem = {
+            id: Date.now().toString() + Math.random().toString(),
+            type: type,
+            url: resultUrl,
+            description: pendingItem.file.name.split('.')[0],
+            thumbnail: type === 'video' ? undefined : resultUrl 
+        };
+
+        setProjects(prevProjects => {
+             return prevProjects.map(p => {
+                if (p.id === activeProject.id) {
+                    const updatedUpdates = [...p.updates];
+                    updatedUpdates[activeUpdateIndex] = {
+                        ...updatedUpdates[activeUpdateIndex],
+                        media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
+                    };
+                    return { ...p, updates: updatedUpdates };
+                }
+                return p;
+            });
+        });
+        
+        await new Promise(r => setTimeout(r, 500));
+
+      } catch (error) {
+        setUploadQueue(prev => prev.map(item => 
+            item.id === pendingItem.id ? { ...item, status: 'error' } : item
+        ));
+      }
+    };
+
+    if (uploadQueue.some(i => i.status === 'pending')) {
+        processQueue();
+    } else {
+        const allDone = uploadQueue.length > 0 && uploadQueue.every(i => i.status === 'completed' || i.status === 'error');
+        if (allDone) {
+            const timer = setTimeout(() => {
+                setUploadQueue([]);
+                const updatedProject = projects.find(p => p.id === activeProject?.id);
+                if (updatedProject) setActiveProject(updatedProject);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }
+  }, [uploadQueue, activeProject, activeUpdateIndex, projects]);
+
 
   // --- HANDLERS ---
 
@@ -157,7 +313,6 @@ const App: React.FC = () => {
   };
 
   const handleProjectSelect = (project: Project) => {
-    // If admin, bypass code
     if (isAdmin) {
         setActiveProject(project);
         setActiveUpdateIndex(0);
@@ -165,7 +320,6 @@ const App: React.FC = () => {
         return;
     }
 
-    // If already unlocked, bypass code
     if (unlockedProjectIds.includes(project.id)) {
         setActiveProject(project);
         setActiveUpdateIndex(0);
@@ -177,7 +331,6 @@ const App: React.FC = () => {
 
   const handleAuthenticationSuccess = () => {
     if (pendingProject) {
-      // Add to unlocked list
       const newUnlocked = [...unlockedProjectIds, pendingProject.id];
       setUnlockedProjectIds(newUnlocked);
       localStorage.setItem(STORAGE_UNLOCKED_KEY, JSON.stringify(newUnlocked));
@@ -199,14 +352,11 @@ const App: React.FC = () => {
     }
   };
 
-  // --- ADMIN LOGIC ---
-
   const handleDeleteProject = (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to permanently delete this project?')) {
         const updatedProjects = projects.filter(p => p.id !== projectId);
         setProjects(updatedProjects);
-        // If active, clear
         if (activeProject?.id === projectId) {
             setActiveProject(null);
             setCurrentView(AppView.HOME);
@@ -241,7 +391,6 @@ const App: React.FC = () => {
   const handleAddNewWeek = () => {
     if (!activeProject) return;
 
-    // Determine next week number
     const latestWeek = activeProject.updates.length > 0 
         ? Math.max(...activeProject.updates.map(u => u.weekNumber)) 
         : 0;
@@ -249,7 +398,6 @@ const App: React.FC = () => {
     const nextWeek = latestWeek + 1;
     const today = new Date().toISOString().split('T')[0];
 
-    // Create new update, carrying over completion stats for convenience
     const newUpdate: WeeklyUpdate = {
         weekNumber: nextWeek,
         date: today,
@@ -266,7 +414,6 @@ const App: React.FC = () => {
 
     const updatedProjects = projects.map(p => {
         if (p.id === activeProject.id) {
-            // Add to beginning of array
             return { ...p, updates: [newUpdate, ...p.updates] };
         }
         return p;
@@ -274,13 +421,12 @@ const App: React.FC = () => {
 
     setProjects(updatedProjects);
     setActiveProject(updatedProjects.find(p => p.id === activeProject.id) || null);
-    setActiveUpdateIndex(0); // Switch view to new week
+    setActiveUpdateIndex(0);
   };
 
   const handleUpdateField = (field: string, value: string | number) => {
     if (!activeProject) return;
     
-    // Deep copy projects
     const updatedProjects = projects.map(p => {
         if (p.id === activeProject.id) {
             const updatedUpdates = [...p.updates];
@@ -300,11 +446,10 @@ const App: React.FC = () => {
     });
 
     setProjects(updatedProjects);
-    // Update active project reference so UI updates immediately
     setActiveProject(updatedProjects.find(p => p.id === activeProject.id) || null);
   };
 
-  const handleAddMedia = (e: React.FormEvent) => {
+  const handleManualAddMedia = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeProject || !newMediaUrl) return;
 
@@ -312,7 +457,7 @@ const App: React.FC = () => {
         id: Date.now().toString(),
         type: newMediaType,
         url: newMediaUrl,
-        description: newMediaDesc || 'New Upload',
+        description: newMediaDesc || 'External Link',
         thumbnail: newMediaType === 'video' ? newMediaUrl : undefined 
     };
 
@@ -334,27 +479,43 @@ const App: React.FC = () => {
     setNewMediaDesc('');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleBulkFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-        setNewMediaUrl(reader.result as string);
-        if (file.type.startsWith('video')) {
-            setNewMediaType('video');
+    const files = Array.from(e.target.files) as File[];
+    const validFiles: File[] = [];
+    // Increase limit to 100MB because IndexedDB can handle it
+    const maxSizeBytes = 100 * 1024 * 1024; 
+
+    files.forEach(file => {
+        if (file.size > maxSizeBytes) {
+            alert(`File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 100MB allowed. Please use 'Add via URL' for larger files.`);
         } else {
-            setNewMediaType('photo');
+            validFiles.push(file);
         }
-    };
-    reader.readAsDataURL(file);
+    });
+
+    if (validFiles.length === 0) return;
+
+    const newItems: UploadItem[] = validFiles.map(file => ({
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        progress: 0,
+        status: 'pending'
+    }));
+
+    setUploadQueue(prev => [...prev, ...newItems]);
+    
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
 
   // --- SUB-COMPONENTS ---
 
   const AppHeader = () => (
-    <header className="bg-brand-dark/90 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 h-16 flex items-center">
+    <header className="bg-brand-dark/90 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 h-16 flex items-center safe-top">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
                 setActiveProject(null);
@@ -401,7 +562,6 @@ const App: React.FC = () => {
   return (
     <div className="bg-brand-dark min-h-screen font-sans text-slate-200 selection:bg-brand-blue/30 selection:text-brand-blue">
       
-      {/* MODAL: Login Code */}
       {pendingProject && (
         <LoginScreen 
           targetProject={pendingProject} 
@@ -410,7 +570,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* MODAL: Create Project */}
       {showCreateProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
              <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 w-full max-w-2xl shadow-2xl my-8">
@@ -462,8 +621,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* --- APP VIEWS --- */}
-
       {currentView === AppView.HOME && (
         <div className="min-h-screen flex flex-col">
             <AppHeader />
@@ -509,7 +666,6 @@ const App: React.FC = () => {
                                 onClick={() => handleProjectSelect(project)}
                                 className="group relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 cursor-pointer hover:border-brand-blue/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                             >
-                                {/* Delete Button (Admin Only) */}
                                 {isAdmin && (
                                     <button 
                                         onClick={(e) => handleDeleteProject(e, project.id)}
@@ -604,7 +760,6 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 
-                {/* Language Settings */}
                 <div className="mb-12 bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-white mb-4">{text.languageSettings}</h3>
                     <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -670,7 +825,6 @@ const App: React.FC = () => {
             
             <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
                 
-                {/* Project Title Bar */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b border-white/5">
                     <div>
                         <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-2">{activeProject.name}</h1>
@@ -691,7 +845,6 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Timeline Selector */}
                 <div className="mb-8">
                      <div className="flex items-center gap-4 overflow-x-auto pb-4 scrollbar-hide">
                         {isAdmin && (
@@ -728,10 +881,8 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     
-                    {/* Main Content: Left Column */}
                     <div className="lg:col-span-2 space-y-8">
                         
-                        {/* Admin Edit Panel */}
                         {isAdmin && (
                             <div className="bg-slate-900 border border-brand-blue/50 rounded-xl p-6 animate-in fade-in slide-in-from-top-4">
                                 <div className="flex items-center justify-between mb-4">
@@ -764,7 +915,66 @@ const App: React.FC = () => {
 
                                     <div className="border-t border-slate-800 pt-4">
                                          <label className="text-xs text-slate-400 block mb-2 uppercase font-bold">Add New Media</label>
-                                         <form onSubmit={handleAddMedia} className="space-y-3">
+                                         
+                                         <div className="mb-4">
+                                            <div 
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="border-2 border-dashed border-slate-700 hover:border-brand-blue/50 hover:bg-brand-blue/5 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-all group"
+                                            >
+                                                <input 
+                                                    type="file" 
+                                                    ref={fileInputRef}
+                                                    className="hidden" 
+                                                    multiple 
+                                                    accept="image/*,video/*" 
+                                                    onChange={handleBulkFileSelect} 
+                                                />
+                                                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                                    <svg className="w-6 h-6 text-slate-400 group-hover:text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                                </div>
+                                                <p className="text-sm text-slate-300 font-medium">Click to select photos or videos</p>
+                                                <p className="text-xs text-slate-500 mt-1">Supports bulk upload (Max 100MB/file)</p>
+                                            </div>
+
+                                            {uploadQueue.length > 0 && (
+                                                <div className="mt-4 space-y-2 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                                                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Upload Queue</h4>
+                                                    {uploadQueue.map(item => (
+                                                        <div key={item.id} className="flex items-center gap-3 text-sm">
+                                                            <div className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center shrink-0">
+                                                                {item.status === 'completed' ? (
+                                                                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                                ) : item.status === 'error' ? (
+                                                                    <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                ) : (
+                                                                    <svg className="w-4 h-4 text-brand-blue animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex justify-between mb-1">
+                                                                    <span className="truncate text-slate-300">{item.file.name}</span>
+                                                                    <span className="text-xs text-slate-500">{item.progress}%</span>
+                                                                </div>
+                                                                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                                                    <div 
+                                                                        className={`h-full transition-all duration-300 ${item.status === 'error' ? 'bg-red-500' : 'bg-brand-blue'}`} 
+                                                                        style={{ width: `${item.progress}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                         </div>
+
+                                         <div className="relative flex py-2 items-center">
+                                            <div className="flex-grow border-t border-slate-800"></div>
+                                            <span className="flex-shrink-0 mx-4 text-slate-600 text-xs font-bold uppercase">OR Add via URL</span>
+                                            <div className="flex-grow border-t border-slate-800"></div>
+                                         </div>
+
+                                         <form onSubmit={handleManualAddMedia} className="space-y-3 mt-2">
                                             <div className="flex flex-col md:flex-row gap-4">
                                                 <select 
                                                     value={newMediaType}
@@ -778,14 +988,10 @@ const App: React.FC = () => {
                                                 <div className="flex-1 flex gap-2">
                                                     <input 
                                                         className="flex-1 bg-brand-dark border border-slate-700 rounded px-4 py-2 text-white text-sm focus:border-brand-blue outline-none"
-                                                        placeholder="Media URL or Upload..."
+                                                        placeholder="External Media URL (e.g. YouTube, hosted image)..."
                                                         value={newMediaUrl}
                                                         onChange={(e) => setNewMediaUrl(e.target.value)}
                                                     />
-                                                    <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-3 rounded border border-slate-700 flex items-center justify-center transition-colors" title="Upload from Device">
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                                        <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-                                                    </label>
                                                 </div>
                                             </div>
                                             <div className="flex gap-4">
@@ -795,7 +1001,7 @@ const App: React.FC = () => {
                                                     value={newMediaDesc}
                                                     onChange={(e) => setNewMediaDesc(e.target.value)}
                                                 />
-                                                <Button type="submit" className="!py-2">Add Media</Button>
+                                                <Button type="submit" className="!py-2">Add URL</Button>
                                             </div>
                                          </form>
                                     </div>
@@ -803,12 +1009,10 @@ const App: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Splat Viewer */}
                         <div className="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl h-[500px]">
                             <SplatViewer url={activeProject.updates[activeUpdateIndex].splatUrl} title={`Week ${activeProject.updates[activeUpdateIndex].weekNumber}`} />
                         </div>
 
-                        {/* Media Grid */}
                         <div>
                             <h3 className="text-lg font-display font-bold text-white mb-4 flex items-center gap-2">
                                 <svg className="w-5 h-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -818,7 +1022,6 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Info Sidebar: Right Column */}
                     <div className="space-y-6">
                         <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
                             <div className="mb-6">

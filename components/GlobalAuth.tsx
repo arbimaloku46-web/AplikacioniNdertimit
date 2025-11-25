@@ -16,6 +16,20 @@ type AuthView = 'LOGIN' | 'SIGNUP';
 
 const ADMIN_PASSWORD = 'Ndertimi2024';
 
+// Helper to check password strength
+const checkPasswordStrength = (pass: string): { score: number; label: string; color: string } => {
+  if (pass.length === 0) return { score: 0, label: '', color: 'bg-slate-700' };
+  if (pass.length < 6) return { score: 1, label: 'Weak', color: 'bg-red-500' };
+  
+  const hasNumber = /\d/.test(pass);
+  const hasSpecial = /[!@#$%^&*]/.test(pass);
+  
+  if (pass.length >= 8 && hasNumber && hasSpecial) return { score: 3, label: 'Strong', color: 'bg-green-500' };
+  if (pass.length >= 6 && (hasNumber || hasSpecial)) return { score: 2, label: 'Good', color: 'bg-yellow-500' };
+  
+  return { score: 1, label: 'Fair', color: 'bg-orange-500' };
+};
+
 export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLanguage }) => {
   const [activeTab, setActiveTab] = useState<AuthTab>('CLIENT');
   const [view, setView] = useState<AuthView>('LOGIN');
@@ -37,6 +51,9 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   // Translation Helper
   const text = translations[language];
 
+  // Derived strength for visual feedback
+  const strength = checkPasswordStrength(password);
+
   const switchTab = (tab: AuthTab) => {
     setActiveTab(tab);
     setView('LOGIN'); // Reset to login view when switching tabs
@@ -51,11 +68,9 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setIsLoading(true);
 
     try {
-      // Concatenate prefix and mobile for the unique identifier
       const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
       
       const user = await loginUser(fullMobile, password);
-      // If the user has a saved country code, use that, otherwise use the one selected in UI
       const countryToUse = user.countryCode || selectedCountry.code;
       
       onLogin(user.name, countryToUse, rememberMe, false);
@@ -98,7 +113,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setIsLoading(true);
 
     try {
-        // Concatenate prefix and mobile
         const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
 
         await registerUser(fullMobile, password, name, selectedCountry.code);
@@ -154,7 +168,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
       {/* Right Side - Auth Forms */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 md:p-12 bg-brand-dark relative">
         
-        {/* Language Toggle (Top Right) */}
+        {/* Language Toggle */}
         <div className="absolute top-6 right-6 flex items-center gap-2 z-30">
             <span className="text-slate-500 text-xs font-bold uppercase tracking-wider hidden sm:inline">{text.selectLanguage}:</span>
             <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
@@ -175,7 +189,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
         <div className="w-full max-w-md space-y-8 mt-12 md:mt-0">
           
-          {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
              <div className="w-10 h-10 bg-white rounded flex items-center justify-center shadow-lg">
                 <span className="font-display font-bold text-brand-blue text-2xl">N</span>
@@ -183,11 +196,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             <span className="font-display font-bold text-white text-2xl">{text.appName}</span>
           </div>
 
-          {/* Authentication Card */}
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
-              
               <div className="p-8">
-                  
                   <div className="mb-6 text-center">
                     <h2 className="text-2xl font-display font-bold text-white mb-2">
                         {activeTab === 'CLIENT' 
@@ -201,17 +211,16 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                     </p>
                   </div>
 
-                  {/* --- CLIENT LOGIN FORM --- */}
                   {activeTab === 'CLIENT' && view === 'LOGIN' && (
                     <form onSubmit={handleLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
                             <div className="flex gap-2">
-                                <div className="relative w-[90px] shrink-0">
+                                <div className="relative w-[80px] shrink-0">
                                     <select 
                                         value={selectedCountry.code}
                                         onChange={handleCountryChange}
-                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate"
+                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
                                     >
                                         {COUNTRIES.map(country => (
                                             <option key={country.code} value={country.code}>
@@ -219,8 +228,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-500 bg-slate-950 pl-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                     </div>
                                 </div>
                                 <input 
@@ -277,15 +286,14 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                             <button 
                                 type="button"
                                 onClick={() => switchTab('ADMIN')}
-                                className="text-slate-700 text-[10px] hover:text-slate-500 transition-colors uppercase tracking-widest font-bold"
+                                className="text-slate-800 text-[10px] opacity-30 hover:opacity-100 hover:text-slate-500 transition-all uppercase tracking-widest font-bold"
                             >
-                                {text.adminAccess}
+                                Admin
                             </button>
                         </div>
                     </form>
                   )}
 
-                  {/* --- CLIENT SIGNUP FORM --- */}
                   {activeTab === 'CLIENT' && view === 'SIGNUP' && (
                     <form onSubmit={handleSignup} className="space-y-4 animate-in fade-in zoom-in duration-300">
                         <div>
@@ -303,11 +311,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
                             <div className="flex gap-2">
-                                <div className="relative w-[90px] shrink-0">
+                                <div className="relative w-[80px] shrink-0">
                                     <select 
                                         value={selectedCountry.code}
                                         onChange={handleCountryChange}
-                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate"
+                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
                                     >
                                         {COUNTRIES.map(country => (
                                             <option key={country.code} value={country.code}>
@@ -315,8 +323,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-500 bg-slate-950 pl-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                     </div>
                                 </div>
                                 <input 
@@ -342,14 +350,18 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                         setPassword(e.target.value);
                                         if (error && e.target.value.length >= 6) setError('');
                                     }}
-                                    onBlur={() => {
-                                        if (password.length > 0 && password.length < 6) {
-                                            setError('Password must be at least 6 characters.');
-                                        }
-                                    }}
                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
                                     placeholder="••••••"
                                 />
+                                {/* Password Strength Visual */}
+                                <div className="mt-2 flex gap-1 h-1">
+                                    <div className={`flex-1 rounded-full ${strength.score > 0 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                    <div className={`flex-1 rounded-full ${strength.score > 1 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                    <div className={`flex-1 rounded-full ${strength.score > 2 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                </div>
+                                <p className={`text-[10px] text-right mt-1 font-medium ${strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-yellow-400' : strength.score === 3 ? 'text-green-400' : 'text-slate-500'}`}>
+                                    {strength.label || 'Strength'}
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
@@ -382,7 +394,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                     </form>
                   )}
 
-                  {/* --- ADMIN LOGIN FORM --- */}
                   {activeTab === 'ADMIN' && (
                     <form onSubmit={handleAdminLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
                         <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-lg p-4">
@@ -437,7 +448,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                   )}
               </div>
           </div>
-
         </div>
       </div>
     </div>

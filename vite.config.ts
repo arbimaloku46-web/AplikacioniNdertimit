@@ -2,14 +2,20 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
     base: './', // Critical for Capacitor to load assets from file://
+    resolve: {
+      alias: {
+        '@': path.resolve('./'),
+      },
+    },
     plugins: [
       react(),
       // Copy the .well-known folder to build for Android verification

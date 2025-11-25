@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { WeeklyUpdate, Project } from '../types';
 
@@ -46,14 +45,8 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
     } catch (error: any) {
       lastError = error;
       
-      // Handle Quota Exhausted immediately - do not retry
-      const errString = JSON.stringify(error);
-      if (errString.includes("RESOURCE_EXHAUSTED") || error?.status === 429 && errString.includes("quota")) {
-        console.warn("Gemini API Quota Exceeded");
-        return "AI analysis unavailable: Daily API quota exceeded. Please check billing or try again tomorrow.";
-      }
-
-      // Determine if error is retryable (429 Rate Limit - not quota, or 503 Service Unavailable)
+      // Determine if error is retryable (429 Rate Limit or 503 Service Unavailable)
+      // Check various common locations for status code in error objects
       const status = error?.status || error?.code || error?.error?.code || error?.response?.status;
       const isRateLimit = status === 429 || status === 503 || (error?.message && error.message.includes('429'));
 
