@@ -1,7 +1,9 @@
 
+
+
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { loginUser, registerUser } from '../services/authService';
+import { loginUser, registerUser, loginWithGoogle } from '../services/authService';
 import { Language, translations } from '../translations';
 import { COUNTRIES } from '../constants';
 
@@ -78,6 +80,19 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
       setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+        const user = await loginWithGoogle();
+        onLogin(user.name, user.countryCode, true, false);
+    } catch (err: any) {
+        setError('Google Sign-in failed');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -212,66 +227,89 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                   </div>
 
                   {activeTab === 'CLIENT' && view === 'LOGIN' && (
-                    <form onSubmit={handleLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                            <div className="flex gap-2">
-                                <div className="relative w-[80px] shrink-0">
-                                    <select 
-                                        value={selectedCountry.code}
-                                        onChange={handleCountryChange}
-                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
-                                    >
-                                        {COUNTRIES.map(country => (
-                                            <option key={country.code} value={country.code}>
-                                                {country.flag} {country.dial_code}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    <div className="space-y-5 animate-in fade-in zoom-in duration-300">
+                        {/* Google Login Button */}
+                        <button 
+                            type="button"
+                            onClick={handleGoogleAuth}
+                            className="w-full bg-white text-slate-800 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors hover:bg-slate-100"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Continue with Google
+                        </button>
+
+                        <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-slate-700"></div>
+                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">Or sign in with mobile</span>
+                            <div className="flex-grow border-t border-slate-700"></div>
+                        </div>
+
+                        <form onSubmit={handleLogin} className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
+                                <div className="flex gap-2">
+                                    <div className="relative w-[80px] shrink-0">
+                                        <select 
+                                            value={selectedCountry.code}
+                                            onChange={handleCountryChange}
+                                            className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
+                                        >
+                                            {COUNTRIES.map(country => (
+                                                <option key={country.code} value={country.code}>
+                                                    {country.flag} {country.dial_code}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
                                     </div>
+                                    <input 
+                                        type="tel" 
+                                        required
+                                        value={mobile}
+                                        onChange={(e) => setMobile(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                        placeholder="Mobile Number"
+                                    />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
                                 <input 
-                                    type="tel" 
+                                    type="password" 
                                     required
-                                    value={mobile}
-                                    onChange={(e) => setMobile(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                    placeholder="Mobile Number"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                    placeholder="••••••••"
                                 />
                             </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
-                            <input 
-                                type="password" 
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                placeholder="••••••••"
-                            />
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                            <input 
-                                type="checkbox" 
-                                id="remember"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
-                            />
-                            <label htmlFor="remember" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
-                                {text.rememberMe}
-                            </label>
-                        </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    id="remember"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
+                                />
+                                <label htmlFor="remember" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
+                                    {text.rememberMe}
+                                </label>
+                            </div>
 
-                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+                            {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
 
-                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
-                            {text.signInBtn}
-                        </Button>
+                            <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
+                                {text.signInBtn}
+                            </Button>
+                        </form>
 
                         <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
                             <p className="text-slate-400 text-sm">
@@ -291,107 +329,130 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 Admin
                             </button>
                         </div>
-                    </form>
+                    </div>
                   )}
 
                   {activeTab === 'CLIENT' && view === 'SIGNUP' && (
-                    <form onSubmit={handleSignup} className="space-y-4 animate-in fade-in zoom-in duration-300">
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.nameLabel}</label>
-                            <input 
-                                type="text" 
-                                required
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                placeholder="Name Surname"
-                            />
+                    <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                        {/* Google Signup Button */}
+                        <button 
+                            type="button"
+                            onClick={handleGoogleAuth}
+                            className="w-full bg-white text-slate-800 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors hover:bg-slate-100"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Register with Google
+                        </button>
+
+                        <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-slate-700"></div>
+                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">Or with mobile</span>
+                            <div className="flex-grow border-t border-slate-700"></div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                            <div className="flex gap-2">
-                                <div className="relative w-[80px] shrink-0">
-                                    <select 
-                                        value={selectedCountry.code}
-                                        onChange={handleCountryChange}
-                                        className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
-                                    >
-                                        {COUNTRIES.map(country => (
-                                            <option key={country.code} value={country.code}>
-                                                {country.flag} {country.dial_code}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                    </div>
-                                </div>
+                        <form onSubmit={handleSignup} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.nameLabel}</label>
                                 <input 
-                                    type="tel" 
+                                    type="text" 
                                     required
-                                    value={mobile}
-                                    onChange={(e) => setMobile(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                    placeholder="Mobile Number"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                    placeholder="Name Surname"
                                 />
                             </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
+
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
-                                <input 
-                                    type="password" 
-                                    required
-                                    minLength={6}
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value);
-                                        if (error && e.target.value.length >= 6) setError('');
-                                    }}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="••••••"
-                                />
-                                {/* Password Strength Visual */}
-                                <div className="mt-2 flex gap-1 h-1">
-                                    <div className={`flex-1 rounded-full ${strength.score > 0 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
-                                    <div className={`flex-1 rounded-full ${strength.score > 1 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
-                                    <div className={`flex-1 rounded-full ${strength.score > 2 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
+                                <div className="flex gap-2">
+                                    <div className="relative w-[80px] shrink-0">
+                                        <select 
+                                            value={selectedCountry.code}
+                                            onChange={handleCountryChange}
+                                            className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
+                                        >
+                                            {COUNTRIES.map(country => (
+                                                <option key={country.code} value={country.code}>
+                                                    {country.flag} {country.dial_code}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                    <input 
+                                        type="tel" 
+                                        required
+                                        value={mobile}
+                                        onChange={(e) => setMobile(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
+                                        placeholder="Mobile Number"
+                                    />
                                 </div>
-                                <p className={`text-[10px] text-right mt-1 font-medium ${strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-yellow-400' : strength.score === 3 ? 'text-green-400' : 'text-slate-500'}`}>
-                                    {strength.label || 'Strength'}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
+                                    <input 
+                                        type="password" 
+                                        required
+                                        minLength={6}
+                                        value={password}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value);
+                                            if (error && e.target.value.length >= 6) setError('');
+                                        }}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                        placeholder="••••••"
+                                    />
+                                    {/* Password Strength Visual */}
+                                    <div className="mt-2 flex gap-1 h-1">
+                                        <div className={`flex-1 rounded-full ${strength.score > 0 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                        <div className={`flex-1 rounded-full ${strength.score > 1 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                        <div className={`flex-1 rounded-full ${strength.score > 2 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
+                                    </div>
+                                    <p className={`text-[10px] text-right mt-1 font-medium ${strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-yellow-400' : strength.score === 3 ? 'text-green-400' : 'text-slate-500'}`}>
+                                        {strength.label || 'Strength'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
+                                    <input 
+                                        type="password" 
+                                        required
+                                        minLength={6}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                        placeholder="••••••"
+                                    />
+                                </div>
+                            </div>
+
+                            {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+
+                            <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
+                                {text.registerBtn}
+                            </Button>
+
+                            <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
+                                <p className="text-slate-400 text-sm">
+                                    {text.alreadyAccount}{' '}
+                                    <button type="button" onClick={() => setView('LOGIN')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
+                                        {text.signInBtn}
+                                    </button>
                                 </p>
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
-                                <input 
-                                    type="password" 
-                                    required
-                                    minLength={6}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="••••••"
-                                />
-                            </div>
-                        </div>
-
-                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
-
-                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
-                            {text.registerBtn}
-                        </Button>
-
-                        <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
-                            <p className="text-slate-400 text-sm">
-                                {text.alreadyAccount}{' '}
-                                <button type="button" onClick={() => setView('LOGIN')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
-                                    {text.signInBtn}
-                                </button>
-                            </p>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                   )}
 
                   {activeTab === 'ADMIN' && (

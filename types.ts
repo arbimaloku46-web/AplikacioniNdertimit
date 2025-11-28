@@ -35,9 +35,12 @@ export interface Project {
 
 export interface User {
   name: string;
-  mobile: string;
+  mobile?: string; // Optional for Google users
+  email?: string; // Added for Google Auth
   countryCode?: string; // ISO code e.g. 'AL'
   password?: string; // In a real app, never store plain text passwords
+  provider?: 'local' | 'google';
+  avatarUrl?: string;
 }
 
 export enum AppView {
