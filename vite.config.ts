@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
 
 // https://vitejs.dev/config/
@@ -10,7 +9,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
-    base: './', // Critical for Capacitor to load assets from file://
     resolve: {
       alias: {
         '@': path.resolve('./'),
@@ -18,15 +16,6 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      // Copy the .well-known folder to build for Android verification
-      viteStaticCopy({
-        targets: [
-          {
-            src: '.well-known',
-            dest: '.'
-          }
-        ]
-      }),
       // Handle PWA manifest and Service Worker automatically
       VitePWA({
         registerType: 'autoUpdate',
@@ -62,13 +51,6 @@ export default defineConfig(({ mode }) => {
                 type: "image/jpeg",
                 form_factor: "wide",
                 label: "Dashboard View"
-             },
-             {
-                src: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1000",
-                sizes: "1000x1500",
-                type: "image/jpeg",
-                form_factor: "narrow",
-                label: "Mobile View"
              }
           ],
           categories: ["business", "productivity"],

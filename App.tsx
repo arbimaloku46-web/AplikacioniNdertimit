@@ -1,9 +1,4 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { ScreenOrientation } from '@capacitor/screen-orientation';
-import { Network } from '@capacitor/network';
 import { MOCK_PROJECTS, COUNTRIES } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
 import { LoginScreen } from './components/LoginScreen';
@@ -39,7 +34,7 @@ const App: React.FC = () => {
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
 
   // Network
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
 
   // Settings
   const [language, setLanguage] = useState<Language>('en');
@@ -77,38 +72,18 @@ const App: React.FC = () => {
     thumbnailUrl: ''
   });
 
-  // Install Prompt State
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
-
   // Translation Helper
   const text = translations[language];
 
   // --- INITIALIZATION ---
 
   useEffect(() => {
-    // Network Listener
-    const checkNetwork = async () => {
-       const status = await Network.getStatus();
-       setIsOnline(status.connected);
-    };
-    
-    checkNetwork();
-    
-    const networkListener = Network.addListener('networkStatusChange', status => {
-       setIsOnline(status.connected);
-    });
+    // Network Listener (Standard Web API)
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-    // Initialize Capacitor Features
-    const initCapacitor = async () => {
-      try {
-        await ScreenOrientation.lock({ orientation: 'portrait' });
-        await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: '#002147' });
-      } catch (e) {
-        console.debug('Capacitor plugins not active (web mode)');
-      }
-    };
-    initCapacitor();
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     // Load Projects from IndexedDB
     const loadProjects = async () => {
@@ -154,41 +129,11 @@ const App: React.FC = () => {
         }
     }
 
-    // Listen for PWA install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    });
-
     return () => {
-        networkListener.then(h => h.remove());
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  // Handle Hardware Back Button (Android)
-  useEffect(() => {
-    const backButtonListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-      if (pendingProject) {
-        setPendingProject(null);
-        return;
-      }
-      if (showCreateProject) {
-        setShowCreateProject(false);
-        return;
-      }
-      
-      if (currentView === AppView.PROJECT_DETAIL || currentView === AppView.PROFILE) {
-        setActiveProject(null);
-        setCurrentView(AppView.HOME);
-      } else if (currentView === AppView.HOME) {
-        CapacitorApp.exitApp();
-      }
-    });
-
-    return () => {
-      backButtonListener.then(f => f.remove());
-    };
-  }, [currentView, pendingProject, showCreateProject]);
 
   // Save projects to IndexedDB whenever they change
   useEffect(() => {
@@ -361,16 +306,6 @@ const App: React.FC = () => {
       setActiveUpdateIndex(0);
       setPendingProject(null);
       setCurrentView(AppView.PROJECT_DETAIL);
-    }
-  };
-
-  const handleInstallApp = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setInstallPrompt(null);
-      }
     }
   };
 
@@ -554,7 +489,7 @@ const App: React.FC = () => {
   // --- SUB-COMPONENTS ---
 
   const AppHeader = () => (
-    <header className="bg-brand-dark/90 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 h-16 flex items-center safe-top">
+    <header className="bg-brand-dark/90 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 h-16 flex items-center">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
                 setActiveProject(null);
@@ -799,14 +734,6 @@ const App: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        {installPrompt && (
-                             <Button variant="primary" onClick={handleInstallApp}>
-                                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                {text.installApp}
-                             </Button>
-                        )}
                         <Button variant="secondary" onClick={handleLogout}>{text.signOut}</Button>
                     </div>
                 </div>

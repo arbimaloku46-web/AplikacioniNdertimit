@@ -2,10 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#002147" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>Shiko Progresin</title>
     <meta name="description" content="A high-end client portal for viewing weekly drone footage, photos, and 3D Gaussian Splat renders of construction projects." />
@@ -40,8 +38,6 @@
       body {
         background-color: #002147;
         color: #e2e8f0;
-        overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
-        -webkit-tap-highlight-color: transparent; /* Removes gray tap highlight on mobile */
         font-family: 'Poppins', sans-serif;
       }
       /* Custom scrollbar for dark theme */
@@ -68,20 +64,14 @@
 <script type="importmap">
 {
   "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite-plugin-pwa": "https://aistudiocdn.com/vite-plugin-pwa@^1.1.0",
-    "vite-plugin-static-copy": "https://aistudiocdn.com/vite-plugin-static-copy@^3.1.4",
-    "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4",
-    "path": "https://aistudiocdn.com/path@^0.12.7",
-    "@capacitor/status-bar": "https://aistudiocdn.com/@capacitor/status-bar@^7.0.3",
-    "@capacitor/app": "https://aistudiocdn.com/@capacitor/app@^7.1.0",
-    "@capacitor/screen-orientation": "https://aistudiocdn.com/@capacitor/screen-orientation@^7.0.2",
-    "@capacitor/network": "https://aistudiocdn.com/@capacitor/network@^7.0.2"
+    "vite-plugin-pwa": "https://aistudiocdn.com/vite-plugin-pwa@^1.2.0"
   }
 }
 </script>
