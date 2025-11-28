@@ -36,7 +36,6 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      // Correct usage: ai.models.generateContent
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
@@ -53,11 +52,13 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
         return "AI analysis unavailable: Daily API quota exceeded. Please check billing or try again tomorrow.";
       }
 
-      // Determine if error is retryable (429 Rate Limit - not quota, or 503 Service Unavailable)
+      // Determine if error is retryable
+      // Includes 429 (Too Many Requests), 500 (Internal Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
       const status = error?.status || error?.code || error?.error?.code || error?.response?.status;
-      const isRateLimit = status === 429 || status === 503 || (error?.message && error.message.includes('429'));
+      const isRetryable = [429, 500, 502, 503, 504].includes(Number(status)) || 
+                          (error?.message && (error.message.includes('429') || error.message.includes('500') || error.message.includes('503')));
 
-      if (isRateLimit && attempt < MAX_RETRIES) {
+      if (isRetryable && attempt < MAX_RETRIES) {
         const backoffTime = BASE_DELAY * Math.pow(2, attempt); // 1s, 2s, 4s
         console.warn(`Gemini API attempt ${attempt + 1} failed with ${status}. Retrying in ${backoffTime}ms...`);
         await delay(backoffTime);
@@ -73,6 +74,10 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
   const status = lastError?.status || lastError?.code || lastError?.error?.code;
   if (status === 429 || (lastError?.message && lastError.message.includes('quota'))) {
       return "AI analysis temporarily unavailable due to high usage. Please try again later.";
+  }
+  
+  if (status >= 500) {
+      return "AI analysis currently unavailable due to a service interruption. Please try again later.";
   }
 
   return "Unable to generate AI insight at this time.";
