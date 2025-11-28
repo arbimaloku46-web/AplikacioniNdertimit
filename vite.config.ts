@@ -6,7 +6,9 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, (process as any).cwd(), '');
+  // Merge with process.env to ensure system variables are captured.
+  const loadedEnv = loadEnv(mode, process.cwd(), '');
+  const env = { ...process.env, ...loadedEnv };
 
   return {
     resolve: {
@@ -16,58 +18,48 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      // Handle PWA manifest and Service Worker automatically
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
-          id: "/",
-          scope: "/",
-          short_name: "Ndërtimi",
-          name: "Shiko Progresin - Ndërtimi",
-          description: "Client portal for construction progress monitoring with drone footage and 3D scans.",
-          theme_color: "#002147",
-          background_color: "#002147",
-          display: "standalone",
-          orientation: "portrait",
+          name: 'Shiko Progresin',
+          short_name: 'Ndërtimi',
+          description: 'A high-end client portal for viewing weekly drone footage, photos, and 3D Gaussian Splat renders of construction projects.',
+          theme_color: '#002147',
+          background_color: '#002147',
+          display: 'standalone',
+          orientation: 'portrait',
+          start_url: '/',
           icons: [
             {
-              src: "https://cdn-icons-png.flaticon.com/512/25/25694.png",
-              sizes: "192x192",
-              type: "image/png",
-              purpose: "any maskable"
+              src: 'pwa-64x64.png',
+              sizes: '64x64',
+              type: 'image/png'
             },
             {
-              src: "https://cdn-icons-png.flaticon.com/512/25/25694.png",
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "any maskable"
-            }
-          ],
-          screenshots: [
-             {
-                src: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1000",
-                sizes: "1000x667",
-                type: "image/jpeg",
-                form_factor: "wide",
-                label: "Dashboard View"
-             }
-          ],
-          categories: ["business", "productivity"],
-          shortcuts: [
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
             {
-              name: "My Profile",
-              short_name: "Profile",
-              description: "View your account settings",
-              url: "/?view=profile",
-              icons: [{ "src": "https://cdn-icons-png.flaticon.com/512/25/25694.png", "sizes": "192x192" }]
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'  
+            },
+            {
+              src: 'maskable-icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         }
       })
     ],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // API Key for Gemini
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ""),
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {

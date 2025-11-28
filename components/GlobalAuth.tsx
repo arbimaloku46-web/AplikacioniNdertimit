@@ -1,96 +1,81 @@
 
-
-
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { loginUser, registerUser, loginWithGoogle } from '../services/authService';
 import { Language, translations } from '../translations';
-import { COUNTRIES } from '../constants';
+import { User } from '../types';
 
 interface GlobalAuthProps {
-  onLogin: (userName: string, countryCode: string | undefined, rememberMe: boolean, isAdmin: boolean) => void;
+  onLogin: (user: User, isAdmin: boolean) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
 }
 
-type AuthTab = 'CLIENT' | 'ADMIN';
-type AuthView = 'LOGIN' | 'SIGNUP';
+type AuthMode = 'LOGIN' | 'REGISTER' | 'ADMIN';
 
 const ADMIN_PASSWORD = 'Ndertimi2024';
 
-// Helper to check password strength
-const checkPasswordStrength = (pass: string): { score: number; label: string; color: string } => {
-  if (pass.length === 0) return { score: 0, label: '', color: 'bg-slate-700' };
-  if (pass.length < 6) return { score: 1, label: 'Weak', color: 'bg-red-500' };
-  
-  const hasNumber = /\d/.test(pass);
-  const hasSpecial = /[!@#$%^&*]/.test(pass);
-  
-  if (pass.length >= 8 && hasNumber && hasSpecial) return { score: 3, label: 'Strong', color: 'bg-green-500' };
-  if (pass.length >= 6 && (hasNumber || hasSpecial)) return { score: 2, label: 'Good', color: 'bg-yellow-500' };
-  
-  return { score: 1, label: 'Fair', color: 'bg-orange-500' };
-};
-
 export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLanguage }) => {
-  const [activeTab, setActiveTab] = useState<AuthTab>('CLIENT');
-  const [view, setView] = useState<AuthView>('LOGIN');
-  
+  const [mode, setMode] = useState<AuthMode>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-
-  // Form State
-  const [mobile, setMobile] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]); // Default to Albania
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
   
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    identifier: '', // Email or Phone
+    password: '',
+    confirmPassword: ''
+  });
+
   // Admin Form State
   const [adminPassword, setAdminPassword] = useState('');
 
   // Translation Helper
   const text = translations[language];
 
-  // Derived strength for visual feedback
-  const strength = checkPasswordStrength(password);
-
-  const switchTab = (tab: AuthTab) => {
-    setActiveTab(tab);
-    setView('LOGIN'); // Reset to login view when switching tabs
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
-    setPassword('');
-    setAdminPassword('');
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
-      
-      const user = await loginUser(fullMobile, password);
-      const countryToUse = user.countryCode || selectedCountry.code;
-      
-      onLogin(user.name, countryToUse, rememberMe, false);
+        if (mode === 'LOGIN') {
+            const user = await loginUser(formData.identifier, formData.password);
+            onLogin(user, false);
+        } else {
+            // Validation
+            if (!formData.fullName || !formData.username || !formData.identifier || !formData.password || !formData.confirmPassword) {
+                throw new Error("All fields are required");
+            }
+            if (formData.password !== formData.confirmPassword) {
+                throw new Error(text.passwordMismatch);
+            }
+            const user = await registerUser(formData);
+            onLogin(user, false);
+        }
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+        console.error(err);
+        setError(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleLogin = async () => {
     setError('');
     setIsLoading(true);
     try {
         const user = await loginWithGoogle();
-        onLogin(user.name, user.countryCode, true, false);
+        onLogin(user, false);
     } catch (err: any) {
-        setError('Google Sign-in failed');
+        setError('Google Sign In failed');
     } finally {
         setIsLoading(false);
     }
@@ -103,48 +88,21 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
     setTimeout(() => {
         if (adminPassword === ADMIN_PASSWORD) {
-            onLogin('Administrator', 'AL', rememberMe, true);
+            // Create a mock admin user for the session
+            const adminUser: User = {
+                uid: 'admin-master',
+                name: 'Administrator',
+                username: 'admin',
+                email: 'admin@ndertimi.org',
+                photoURL: null,
+                isAdmin: true
+            };
+            onLogin(adminUser, true);
         } else {
             setError('Invalid Admin Access Key');
             setIsLoading(false);
         }
-    }, 600);
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    if (password !== confirmPassword) {
-        setError('Passwords do not match.');
-        return;
-    }
-
-    if (password.length < 6) {
-        setError('Password must be at least 6 characters.');
-        return;
-    }
-
-    setIsLoading(true);
-
-    try {
-        const fullMobile = `${selectedCountry.dial_code}${mobile.trim()}`;
-
-        await registerUser(fullMobile, password, name, selectedCountry.code);
-        alert('Account created successfully! Please sign in.');
-        setView('LOGIN');
-        setPassword(''); 
-        setConfirmPassword('');
-    } catch (err: any) {
-        setError(err.message || 'Registration failed');
-    } finally {
-        setIsLoading(false);
-    }
-  };
-
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const country = COUNTRIES.find(c => c.code === e.target.value);
-    if (country) setSelectedCountry(country);
+    }, 800);
   };
 
   return (
@@ -215,247 +173,149 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
               <div className="p-8">
                   <div className="mb-6 text-center">
                     <h2 className="text-2xl font-display font-bold text-white mb-2">
-                        {activeTab === 'CLIENT' 
-                            ? (view === 'LOGIN' ? text.loginTitle : text.signupTitle)
-                            : text.adminTitle}
+                        {mode === 'LOGIN' ? text.loginTitle : mode === 'REGISTER' ? text.signupTitle : text.adminTitle}
                     </h2>
-                    <p className="text-slate-400 text-sm">
-                        {activeTab === 'CLIENT'
-                            ? (view === 'LOGIN' ? text.loginDesc : text.signupDesc)
-                            : text.adminDesc}
-                    </p>
+                    {mode === 'ADMIN' && <p className="text-slate-400 text-sm">{text.adminDesc}</p>}
                   </div>
 
-                  {activeTab === 'CLIENT' && view === 'LOGIN' && (
-                    <div className="space-y-5 animate-in fade-in zoom-in duration-300">
-                        {/* Google Login Button */}
-                        <button 
+                  {(mode === 'LOGIN' || mode === 'REGISTER') && (
+                    <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                        {/* Google Sign In Button */}
+                        <button
                             type="button"
-                            onClick={handleGoogleAuth}
-                            className="w-full bg-white text-slate-800 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors hover:bg-slate-100"
+                            onClick={handleGoogleLogin}
+                            disabled={isLoading}
+                            className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
-                            Continue with Google
+                            {text.googleSignIn}
                         </button>
 
                         <div className="relative flex py-2 items-center">
                             <div className="flex-grow border-t border-slate-700"></div>
-                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">Or sign in with mobile</span>
+                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">OR</span>
                             <div className="flex-grow border-t border-slate-700"></div>
                         </div>
 
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                                <div className="flex gap-2">
-                                    <div className="relative w-[80px] shrink-0">
-                                        <select 
-                                            value={selectedCountry.code}
-                                            onChange={handleCountryChange}
-                                            className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
-                                        >
-                                            {COUNTRIES.map(country => (
-                                                <option key={country.code} value={country.code}>
-                                                    {country.flag} {country.dial_code}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
+                        <form onSubmit={handleClientSubmit} className="space-y-4">
+                            
+                            {/* Fields for Register Only */}
+                            {mode === 'REGISTER' && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{text.fullNameLabel}</label>
+                                        <input 
+                                            name="fullName"
+                                            type="text"
+                                            required
+                                            value={formData.fullName}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                            placeholder="Name Surname"
+                                        />
                                     </div>
-                                    <input 
-                                        type="tel" 
-                                        required
-                                        value={mobile}
-                                        onChange={(e) => setMobile(e.target.value)}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                        placeholder="Mobile Number"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{text.usernameLabel}</label>
+                                        <input 
+                                            name="username"
+                                            type="text"
+                                            required
+                                            value={formData.username}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                            placeholder="username"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Common Fields */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{text.identifierLabel}</label>
+                                <input 
+                                    name="identifier"
+                                    type="text"
+                                    required
+                                    value={formData.identifier}
+                                    onChange={handleInputChange}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                    placeholder="+355 69... or email@example.com"
+                                />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{text.passwordLabel}</label>
                                 <input 
+                                    name="password"
                                     type="password" 
                                     required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={formData.password}
+                                    onChange={handleInputChange}
                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
                                     placeholder="••••••••"
                                 />
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <input 
-                                    type="checkbox" 
-                                    id="remember"
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
-                                />
-                                <label htmlFor="remember" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
-                                    {text.rememberMe}
-                                </label>
-                            </div>
+                            {mode === 'REGISTER' && (
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{text.confirmPasswordLabel}</label>
+                                    <input 
+                                        name="confirmPassword"
+                                        type="password" 
+                                        required
+                                        value={formData.confirmPassword}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            )}
 
-                            {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+                            {error && <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
 
                             <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
-                                {text.signInBtn}
+                                {mode === 'LOGIN' ? text.signInBtn : text.registerBtn}
                             </Button>
                         </form>
 
-                        <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
-                            <p className="text-slate-400 text-sm">
-                                {text.firstTime}{' '}
-                                <button type="button" onClick={() => setView('SIGNUP')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
-                                    {text.createAccount}
+                        <div className="mt-4 text-center">
+                             <p className="text-sm text-slate-400">
+                                {mode === 'LOGIN' ? text.firstTime : text.alreadyAccount}{' '}
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
+                                        setError('');
+                                        setFormData({ fullName: '', username: '', identifier: '', password: '', confirmPassword: '' });
+                                    }}
+                                    className="text-brand-blue font-bold hover:text-white transition-colors"
+                                >
+                                    {mode === 'LOGIN' ? text.signUpLink : text.signInLink}
                                 </button>
-                            </p>
+                             </p>
                         </div>
-
-                        <div className="mt-8 flex justify-center">
+                        
+                        <div className="pt-6 border-t border-slate-800 flex justify-center">
                             <button 
                                 type="button"
-                                onClick={() => switchTab('ADMIN')}
-                                className="text-slate-800 text-[10px] opacity-30 hover:opacity-100 hover:text-slate-500 transition-all uppercase tracking-widest font-bold"
+                                onClick={() => {
+                                    setMode('ADMIN');
+                                    setError('');
+                                }}
+                                className="text-slate-600 text-xs hover:text-white transition-colors uppercase tracking-widest font-bold flex items-center gap-2"
                             >
-                                Admin
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                {text.adminPortal}
                             </button>
                         </div>
                     </div>
                   )}
 
-                  {activeTab === 'CLIENT' && view === 'SIGNUP' && (
-                    <div className="space-y-4 animate-in fade-in zoom-in duration-300">
-                        {/* Google Signup Button */}
-                        <button 
-                            type="button"
-                            onClick={handleGoogleAuth}
-                            className="w-full bg-white text-slate-800 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors hover:bg-slate-100"
-                        >
-                            <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                            </svg>
-                            Register with Google
-                        </button>
-
-                        <div className="relative flex py-2 items-center">
-                            <div className="flex-grow border-t border-slate-700"></div>
-                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">Or with mobile</span>
-                            <div className="flex-grow border-t border-slate-700"></div>
-                        </div>
-
-                        <form onSubmit={handleSignup} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.nameLabel}</label>
-                                <input 
-                                    type="text" 
-                                    required
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="Name Surname"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.mobileLabel}</label>
-                                <div className="flex gap-2">
-                                    <div className="relative w-[80px] shrink-0">
-                                        <select 
-                                            value={selectedCountry.code}
-                                            onChange={handleCountryChange}
-                                            className="w-full h-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-3 text-white appearance-none focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue text-sm cursor-pointer truncate pr-4"
-                                        >
-                                            {COUNTRIES.map(country => (
-                                                <option key={country.code} value={country.code}>
-                                                    {country.flag} {country.dial_code}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none text-slate-500 bg-slate-950">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
-                                    </div>
-                                    <input 
-                                        type="tel" 
-                                        required
-                                        value={mobile}
-                                        onChange={(e) => setMobile(e.target.value)}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all font-mono"
-                                        placeholder="Mobile Number"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.passwordLabel}</label>
-                                    <input 
-                                        type="password" 
-                                        required
-                                        minLength={6}
-                                        value={password}
-                                        onChange={(e) => {
-                                            setPassword(e.target.value);
-                                            if (error && e.target.value.length >= 6) setError('');
-                                        }}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                        placeholder="••••••"
-                                    />
-                                    {/* Password Strength Visual */}
-                                    <div className="mt-2 flex gap-1 h-1">
-                                        <div className={`flex-1 rounded-full ${strength.score > 0 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
-                                        <div className={`flex-1 rounded-full ${strength.score > 1 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
-                                        <div className={`flex-1 rounded-full ${strength.score > 2 ? strength.color : 'bg-slate-800'} transition-colors`}></div>
-                                    </div>
-                                    <p className={`text-[10px] text-right mt-1 font-medium ${strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-yellow-400' : strength.score === 3 ? 'text-green-400' : 'text-slate-500'}`}>
-                                        {strength.label || 'Strength'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.confirmPwLabel}</label>
-                                    <input 
-                                        type="password" 
-                                        required
-                                        minLength={6}
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                        placeholder="••••••"
-                                    />
-                                </div>
-                            </div>
-
-                            {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
-
-                            <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
-                                {text.registerBtn}
-                            </Button>
-
-                            <div className="text-center pt-2 border-t border-slate-800/50 mt-4">
-                                <p className="text-slate-400 text-sm">
-                                    {text.alreadyAccount}{' '}
-                                    <button type="button" onClick={() => setView('LOGIN')} className="text-brand-blue font-medium hover:text-brand-blue/80 transition-colors">
-                                        {text.signInBtn}
-                                    </button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                  )}
-
-                  {activeTab === 'ADMIN' && (
+                  {mode === 'ADMIN' && (
                     <form onSubmit={handleAdminLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
                         <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-lg p-4">
                             <p className="text-brand-blue text-xs font-medium flex items-start gap-2">
@@ -477,19 +337,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                             />
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <input 
-                                type="checkbox" 
-                                id="rememberAdmin"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-blue focus:ring-brand-blue focus:ring-offset-0 accent-brand-blue cursor-pointer"
-                            />
-                            <label htmlFor="rememberAdmin" className="text-sm text-slate-400 cursor-pointer hover:text-slate-300 select-none">
-                                {text.keepLoggedIn}
-                            </label>
-                        </div>
-
                         {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
 
                         <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
@@ -499,7 +346,10 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                         <div className="mt-6 text-center">
                             <button 
                                 type="button"
-                                onClick={() => switchTab('CLIENT')}
+                                onClick={() => {
+                                    setMode('LOGIN');
+                                    setError('');
+                                }}
                                 className="text-slate-500 text-sm hover:text-white transition-colors"
                             >
                                 ← {text.backToLogin}

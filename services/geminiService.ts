@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { WeeklyUpdate, Project } from '../types';
 
@@ -37,6 +36,7 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
+      // Correct usage: ai.models.generateContent
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
@@ -46,9 +46,9 @@ export const generateProgressReport = async (project: Project, update: WeeklyUpd
     } catch (error: any) {
       lastError = error;
       
-      // Handle Quota Exhausted immediately - do not retry
       const errString = JSON.stringify(error);
-      if (errString.includes("RESOURCE_EXHAUSTED") || error?.status === 429 && errString.includes("quota")) {
+      // Handle Quota Exhausted immediately - do not retry
+      if (errString.includes("RESOURCE_EXHAUSTED") || (error?.status === 429 && errString.includes("quota"))) {
         console.warn("Gemini API Quota Exceeded");
         return "AI analysis unavailable: Daily API quota exceeded. Please check billing or try again tomorrow.";
       }

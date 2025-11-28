@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MOCK_PROJECTS, COUNTRIES } from './constants';
-import { Project, MediaItem, AppView, WeeklyUpdate } from './types';
+import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
 import { LoginScreen } from './components/LoginScreen';
 import { GlobalAuth } from './components/GlobalAuth';
 import { Button } from './components/Button';
@@ -8,13 +8,12 @@ import { SplatViewer } from './components/SplatViewer';
 import { AIInsight } from './components/AIInsight';
 import { MediaGrid } from './components/MediaGrid';
 import { Footer } from './components/Footer';
+import { InstallButton } from './components/InstallButton';
 import { Language, translations } from './translations';
 import { dbService } from './services/db';
+import { logoutUser } from './services/authService';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
-const STORAGE_SESSION_KEY = 'ndertimi_session_user_v2';
-const STORAGE_SESSION_COUNTRY = 'ndertimi_session_country_v2';
-const STORAGE_SESSION_IS_ADMIN = 'ndertimi_session_is_admin_v2';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
 interface UploadItem {
@@ -28,9 +27,7 @@ const App: React.FC = () => {
   // --- STATE ---
   
   // Auth & User
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userName, setUserName] = useState<string>('');
-  const [userCountry, setUserCountry] = useState<string>('AL');
+  const [user, setUser] = useState<User | null>(null);
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
 
   // Network
@@ -41,7 +38,7 @@ const App: React.FC = () => {
 
   // Data
   const [projects, setProjects] = useState<Project[]>([]);
-  const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   // Navigation & View
   const [currentView, setCurrentView] = useState<AppView>(AppView.HOME);
@@ -50,7 +47,7 @@ const App: React.FC = () => {
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
   
   // Admin Mode
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
 
   // Admin Edit State (Content)
@@ -78,32 +75,27 @@ const App: React.FC = () => {
   // --- INITIALIZATION ---
 
   useEffect(() => {
-    // Network Listener (Standard Web API)
+    // Network Listener
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Load Projects from IndexedDB
-    const loadProjects = async () => {
-      try {
-        const storedProjects = await dbService.getProjects();
-        if (storedProjects && storedProjects.length > 0) {
-          setProjects(storedProjects);
-        } else {
-          setProjects(MOCK_PROJECTS);
+    // Real-time Firestore Subscription
+    const unsubscribe = dbService.subscribeProjects((data) => {
+        setProjects(data);
+        setLoadingProjects(false);
+        
+        // Update active project reference if it changes in DB
+        if (activeProject) {
+            const updated = data.find(p => p.id === activeProject.id);
+            if (updated) {
+                setActiveProject(updated);
+            }
         }
-      } catch (e) {
-        console.error("Failed to load projects from DB", e);
-        setProjects(MOCK_PROJECTS);
-      } finally {
-        setIsDataLoaded(true);
-      }
-    };
-    loadProjects();
+    });
 
-    // Load User's Unlocked Projects
+    // Load User's Unlocked Projects from local storage (Client side only)
     const storedUnlocked = localStorage.getItem(STORAGE_UNLOCKED_KEY);
     if (storedUnlocked) {
       setUnlockedProjectIds(JSON.parse(storedUnlocked));
@@ -115,40 +107,12 @@ const App: React.FC = () => {
         setLanguage(storedLang as Language);
     }
 
-    // Check for saved session
-    const savedSessionUser = localStorage.getItem(STORAGE_SESSION_KEY);
-    const savedSessionCountry = localStorage.getItem(STORAGE_SESSION_COUNTRY);
-    const savedSessionAdmin = localStorage.getItem(STORAGE_SESSION_IS_ADMIN);
-    
-    if (savedSessionUser) {
-        setUserName(savedSessionUser);
-        if (savedSessionCountry) setUserCountry(savedSessionCountry);
-        setIsLoggedIn(true);
-        if (savedSessionAdmin === 'true') {
-            setIsAdmin(true);
-        }
-    }
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      unsubscribe();
     };
-  }, []);
-
-  // Save projects to IndexedDB whenever they change
-  useEffect(() => {
-    if (isDataLoaded) {
-      const saveToDB = async () => {
-        try {
-          await dbService.saveProjects(projects);
-        } catch (error) {
-          console.error("Failed to save projects to DB:", error);
-          alert("Warning: Failed to save changes. Your device storage might be full.");
-        }
-      };
-      saveToDB();
-    }
-  }, [projects, isDataLoaded]);
+  }, [activeProject]);
 
   // Save language preference
   useEffect(() => {
@@ -158,7 +122,7 @@ const App: React.FC = () => {
   // Scroll to top on view change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentView, activeProject, isLoggedIn]);
+  }, [currentView, activeProject, user]);
 
   // Process Upload Queue
   useEffect(() => {
@@ -171,31 +135,8 @@ const App: React.FC = () => {
       ));
 
       try {
-        const readFileWithProgress = (file: File): Promise<string> => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            
-            reader.onload = (e) => {
-              if (e.target?.result) resolve(e.target.result as string);
-              else reject(new Error("Failed to read file"));
-            };
-            
-            reader.onerror = () => reject(new Error("File reading failed"));
-            
-            let progress = 0;
-            const interval = setInterval(() => {
-              progress += 10;
-              setUploadQueue(prev => prev.map(item => 
-                item.id === pendingItem.id ? { ...item, progress: Math.min(progress, 90) } : item
-              ));
-              if (progress >= 90) clearInterval(interval);
-            }, 50);
-
-            reader.readAsDataURL(file);
-          });
-        };
-
-        const resultUrl = await readFileWithProgress(pendingItem.file);
+        // Upload to Firebase Storage
+        const downloadUrl = await dbService.uploadFile(pendingItem.file, activeProject.id);
         
         setUploadQueue(prev => prev.map(item => 
             item.id === pendingItem.id ? { ...item, progress: 100, status: 'completed' } : item
@@ -205,32 +146,26 @@ const App: React.FC = () => {
         const newItem: MediaItem = {
             id: Date.now().toString() + Math.random().toString(),
             type: type,
-            url: resultUrl,
+            url: downloadUrl,
             description: pendingItem.file.name.split('.')[0],
-            thumbnail: type === 'video' ? undefined : resultUrl 
+            thumbnail: type === 'video' ? undefined : downloadUrl 
         };
 
-        setProjects(prevProjects => {
-             return prevProjects.map(p => {
-                if (p.id === activeProject.id) {
-                    const updatedUpdates = [...p.updates];
-                    updatedUpdates[activeUpdateIndex] = {
-                        ...updatedUpdates[activeUpdateIndex],
-                        media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
-                    };
-                    
-                    // Update active project ref immediately
-                    const updatedProject = { ...p, updates: updatedUpdates };
-                    setActiveProject(updatedProject);
-                    return updatedProject;
-                }
-                return p;
-            });
-        });
+        // Update Project in Firestore
+        const updatedUpdates = [...activeProject.updates];
+        updatedUpdates[activeUpdateIndex] = {
+            ...updatedUpdates[activeUpdateIndex],
+            media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
+        };
+        const updatedProject = { ...activeProject, updates: updatedUpdates };
+        
+        await dbService.updateProject(updatedProject);
+        // Note: activeProject will update via the Firestore subscription
         
         await new Promise(r => setTimeout(r, 500));
 
       } catch (error) {
+        console.error("Upload failed", error);
         setUploadQueue(prev => prev.map(item => 
             item.id === pendingItem.id ? { ...item, status: 'error' } : item
         ));
@@ -244,39 +179,24 @@ const App: React.FC = () => {
         if (allDone) {
             const timer = setTimeout(() => {
                 setUploadQueue([]);
-            }, 2000);
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }
-  }, [uploadQueue, activeProject, activeUpdateIndex, projects]);
+  }, [uploadQueue, activeProject, activeUpdateIndex]);
 
 
   // --- HANDLERS ---
 
-  const handleGlobalLogin = (name: string, countryCode: string | undefined, remember: boolean, adminAccess: boolean) => {
-    setUserName(name);
-    if (countryCode) setUserCountry(countryCode);
-    setIsLoggedIn(true);
-    setIsAdmin(adminAccess);
-    
-    if (remember) {
-        localStorage.setItem(STORAGE_SESSION_KEY, name);
-        if (countryCode) localStorage.setItem(STORAGE_SESSION_COUNTRY, countryCode);
-        if (adminAccess) {
-            localStorage.setItem(STORAGE_SESSION_IS_ADMIN, 'true');
-        }
-    }
+  const handleGlobalLogin = (loggedInUser: User, isAdminAccess: boolean) => {
+    setUser({ ...loggedInUser, isAdmin: isAdminAccess || loggedInUser.isAdmin });
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setIsAdmin(false);
-    setUserName('');
+  const handleLogout = async () => {
+    await logoutUser();
+    setUser(null);
     setCurrentView(AppView.HOME);
     setActiveProject(null);
-    localStorage.removeItem(STORAGE_SESSION_KEY);
-    localStorage.removeItem(STORAGE_SESSION_COUNTRY);
-    localStorage.removeItem(STORAGE_SESSION_IS_ADMIN);
   };
 
   const handleProjectSelect = (project: Project) => {
@@ -309,19 +229,22 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeleteProject = (e: React.MouseEvent, projectId: string) => {
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to permanently delete this project?')) {
-        const updatedProjects = projects.filter(p => p.id !== projectId);
-        setProjects(updatedProjects);
-        if (activeProject?.id === projectId) {
-            setActiveProject(null);
-            setCurrentView(AppView.HOME);
+        try {
+            await dbService.deleteProject(projectId);
+            if (activeProject?.id === projectId) {
+                setActiveProject(null);
+                setCurrentView(AppView.HOME);
+            }
+        } catch (err) {
+            alert('Failed to delete project');
         }
     }
   };
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     const newId = `p_${Date.now()}`;
     const emptyUpdate: WeeklyUpdate = {
@@ -340,12 +263,16 @@ const App: React.FC = () => {
         updates: [emptyUpdate]
     };
 
-    setProjects([newProject, ...projects]);
-    setShowCreateProject(false);
-    setNewProjectForm({ name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: '' });
+    try {
+        await dbService.addProject(newProject);
+        setShowCreateProject(false);
+        setNewProjectForm({ name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: '' });
+    } catch (err) {
+        alert('Failed to create project');
+    }
   };
 
-  const handleAddNewWeek = () => {
+  const handleAddNewWeek = async () => {
     if (!activeProject) return;
 
     const latestWeek = activeProject.updates.length > 0 
@@ -369,61 +296,44 @@ const App: React.FC = () => {
         splatUrl: ''
     };
 
-    const updatedProjects = projects.map(p => {
-        if (p.id === activeProject.id) {
-            return { ...p, updates: [newUpdate, ...p.updates] };
-        }
-        return p;
-    });
-
-    setProjects(updatedProjects);
-    setActiveProject(updatedProjects.find(p => p.id === activeProject.id) || null);
+    const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
+    await dbService.updateProject(updatedProject);
     setActiveUpdateIndex(0);
   };
 
-  const handleUpdateField = (field: string, value: string | number) => {
+  const handleUpdateField = async (field: string, value: string | number) => {
     if (!activeProject) return;
     
-    const updatedProjects = projects.map(p => {
-        if (p.id === activeProject.id) {
-            const updatedUpdates = [...p.updates];
-            const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
-            
-            if (field.startsWith('stats.')) {
-                const statKey = field.split('.')[1];
-                currentUpdate.stats = { ...currentUpdate.stats, [statKey]: value };
-            } else {
-                (currentUpdate as any)[field] = value;
-            }
-            
-            updatedUpdates[activeUpdateIndex] = currentUpdate;
-            return { ...p, updates: updatedUpdates };
-        }
-        return p;
-    });
-
-    setProjects(updatedProjects);
-    setActiveProject(updatedProjects.find(p => p.id === activeProject.id) || null);
+    const updatedUpdates = [...activeProject.updates];
+    const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
+    
+    if (field.startsWith('stats.')) {
+        const statKey = field.split('.')[1];
+        currentUpdate.stats = { ...currentUpdate.stats, [statKey]: value };
+    } else {
+        (currentUpdate as any)[field] = value;
+    }
+    
+    updatedUpdates[activeUpdateIndex] = currentUpdate;
+    const updatedProject = { ...activeProject, updates: updatedUpdates };
+    
+    await dbService.updateProject(updatedProject);
   };
 
-  const handleManualAddMedia = (e: React.FormEvent) => {
+  const handleManualAddMedia = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeProject || !newMediaUrl) return;
 
     let finalThumbnail = undefined;
     
-    // Check if it's a YouTube URL to set a better thumbnail automatically
     if (newMediaType === 'video') {
         const ytMatch = newMediaUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/);
         if (ytMatch) {
             finalThumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
         } else {
-            // For other videos, assume URL might be the thumbnail or let grid handle it (it uses <video> tag now)
-            // But we can set the URL as thumbnail if user desires, or leave generic
             finalThumbnail = newMediaUrl; 
         }
     } else {
-        // For photos, the URL is the thumbnail
         finalThumbnail = newMediaUrl;
     }
 
@@ -435,20 +345,15 @@ const App: React.FC = () => {
         thumbnail: finalThumbnail
     };
 
-    const updatedProjects = projects.map(p => {
-        if (p.id === activeProject.id) {
-            const updatedUpdates = [...p.updates];
-            updatedUpdates[activeUpdateIndex] = {
-                ...updatedUpdates[activeUpdateIndex],
-                media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
-            };
-            return { ...p, updates: updatedUpdates };
-        }
-        return p;
-    });
+    const updatedUpdates = [...activeProject.updates];
+    updatedUpdates[activeUpdateIndex] = {
+        ...updatedUpdates[activeUpdateIndex],
+        media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
+    };
+    
+    const updatedProject = { ...activeProject, updates: updatedUpdates };
+    await dbService.updateProject(updatedProject);
 
-    setProjects(updatedProjects);
-    setActiveProject(updatedProjects.find(p => p.id === activeProject.id) || null);
     setNewMediaUrl('');
     setNewMediaDesc('');
   };
@@ -458,12 +363,11 @@ const App: React.FC = () => {
 
     const files = Array.from(e.target.files) as File[];
     const validFiles: File[] = [];
-    // Increase limit to 100MB because IndexedDB can handle it
-    const maxSizeBytes = 100 * 1024 * 1024; 
+    const maxSizeBytes = 200 * 1024 * 1024; // 200MB limit for Cloud Storage
 
     files.forEach(file => {
         if (file.size > maxSizeBytes) {
-            alert(`File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 100MB allowed. Please use 'Add via URL' for larger files.`);
+            alert(`File "${file.name}" is too large. Max 200MB allowed.`);
         } else {
             validFiles.push(file);
         }
@@ -502,6 +406,9 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-2 md:gap-4">
+                {/* Install Button */}
+                <InstallButton language={language} />
+
                 <button 
                     onClick={() => setCurrentView(AppView.PROFILE)}
                     className={`text-xs font-bold uppercase tracking-wider transition-colors ${currentView === AppView.PROFILE ? 'text-brand-blue' : 'text-slate-500 hover:text-white'}`}
@@ -541,7 +448,7 @@ const App: React.FC = () => {
       );
   }
 
-  if (!isLoggedIn) {
+  if (!user) {
     return <GlobalAuth onLogin={handleGlobalLogin} language={language} setLanguage={setLanguage} />;
   }
 
@@ -628,7 +535,15 @@ const App: React.FC = () => {
                     )}
                 </div>
 
-                {projects.length === 0 ? (
+                {loadingProjects ? (
+                    <div className="text-center py-20 text-slate-500 flex flex-col items-center">
+                        <svg className="animate-spin h-8 w-8 text-brand-blue mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading Projects from Cloud...
+                    </div>
+                ) : projects.length === 0 ? (
                     <div className="text-center py-20 border border-dashed border-slate-800 rounded-2xl bg-slate-900/50">
                         <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
@@ -712,24 +627,18 @@ const App: React.FC = () => {
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
                 <div className="mb-8 bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 bg-brand-blue rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg">
-                            {userName.charAt(0)}
-                        </div>
+                        {user.photoURL ? (
+                            <img src={user.photoURL} alt={user.name} className="w-20 h-20 rounded-full border-2 border-brand-blue shadow-lg" />
+                        ) : (
+                            <div className="w-20 h-20 bg-brand-blue rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                                {user.name.charAt(0)}
+                            </div>
+                        )}
                         <div>
-                            <h2 className="text-3xl font-display font-bold text-white">{userName}</h2>
+                            <h2 className="text-3xl font-display font-bold text-white">{user.name}</h2>
+                            <p className="text-slate-500 text-sm">{user.email}</p>
                             <div className="flex items-center gap-3 mt-1">
                                 <p className="text-slate-400">{isAdmin ? text.adminRole : text.clientRole}</p>
-                                {!isAdmin && (
-                                    <>
-                                        <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
-                                        <p className="text-slate-400 flex items-center gap-1 text-sm">
-                                            {(() => {
-                                                const c = COUNTRIES.find(c => c.code === userCountry);
-                                                return c ? <>{c.flag} {c.name}</> : userCountry;
-                                            })()}
-                                        </p>
-                                    </>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -797,6 +706,7 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* PROJECT DETAIL VIEW REMAINS MOSTLY SAME, JUST INTEGRATED WITH NEW HANDLERS */}
       {currentView === AppView.PROJECT_DETAIL && activeProject && (
          <div className="min-h-screen bg-brand-dark">
             <AppHeader />
@@ -911,7 +821,7 @@ const App: React.FC = () => {
                                                     <svg className="w-6 h-6 text-slate-400 group-hover:text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                                                 </div>
                                                 <p className="text-sm text-slate-300 font-medium">Click to select photos or videos</p>
-                                                <p className="text-xs text-slate-500 mt-1">Supports bulk upload (Max 100MB/file)</p>
+                                                <p className="text-xs text-slate-500 mt-1">Supports bulk upload (Max 200MB/file)</p>
                                             </div>
 
                                             {uploadQueue.length > 0 && (

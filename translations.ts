@@ -11,30 +11,36 @@ export const translations = {
     welcomeSubtitle: 'Exclusive access to construction progress.',
     secureRealtime: 'Secure. Real-time. Transparent.',
     supportContact: 'Support Contact',
-    loginTitle: 'Client Access',
-    loginDesc: 'Enter your mobile number to access your project.',
+    loginTitle: 'Sign In',
     signupTitle: 'Create Account',
-    signupDesc: 'Register your mobile number to get started.',
     adminTitle: 'Admin Portal',
     adminDesc: 'Secure login for project managers.',
-    mobileLabel: 'Mobile Number',
+    
+    identifierLabel: 'Email or Phone Number',
+    usernameLabel: 'Username',
+    fullNameLabel: 'Full Name',
     passwordLabel: 'Password',
-    nameLabel: 'Full Name',
-    confirmPwLabel: 'Confirm Password',
+    confirmPasswordLabel: 'Confirm Password',
+    
     adminKeyLabel: 'Admin Access Key',
-    rememberMe: 'Remember me',
-    keepLoggedIn: 'Keep me logged in',
+    
     signInBtn: 'Sign In',
-    registerBtn: 'Register Account',
+    registerBtn: 'Create Account',
     accessBtn: 'Access Dashboard',
-    firstTime: 'First time here?',
+    googleSignIn: 'Sign in with Google',
+    
     createAccount: 'Create Account',
     alreadyAccount: 'Already have an account?',
-    backToLogin: 'Back to Client Login',
+    firstTime: 'First time here?',
+    signInLink: 'Sign In',
+    signUpLink: 'Sign Up',
+    
+    backToLogin: 'Back to Login',
     adminAccess: 'Admin Access',
-    clientAccess: 'Client Login',
     restrictedArea: 'Restricted Area',
-    restrictedDesc: 'Only authorized administrators can access this section. All attempts are logged.',
+
+    // Errors
+    passwordMismatch: 'Passwords do not match',
     
     // App Shell
     dashboard: 'Dashboard',
@@ -90,30 +96,36 @@ export const translations = {
     welcomeSubtitle: 'Akses ekskluziv në progresin e ndërtimit.',
     secureRealtime: 'I Sigurt. Në kohë reale. Transparent.',
     supportContact: 'Kontakti i Suportit',
-    loginTitle: 'Hyrja e Klientit',
-    loginDesc: 'Shkruani numrin tuaj të telefonit për të hyrë.',
+    loginTitle: 'Hyr',
     signupTitle: 'Krijo Llogari',
-    signupDesc: 'Regjistroni numrin tuaj për të filluar.',
     adminTitle: 'Portali i Adminit',
     adminDesc: 'Hyrje e sigurt për menaxherët e projekteve.',
-    mobileLabel: 'Numri i Telefonit',
+    
+    identifierLabel: 'Email ose Numër Telefoni',
+    usernameLabel: 'Emri i Përdoruesit',
+    fullNameLabel: 'Emri i Plotë',
     passwordLabel: 'Fjalëkalimi',
-    nameLabel: 'Emri i Plotë',
-    confirmPwLabel: 'Konfirmo Fjalëkalimin',
+    confirmPasswordLabel: 'Konfirmo Fjalëkalimin',
+
     adminKeyLabel: 'Çelësi i Adminit',
-    rememberMe: 'Më mbaj mend',
-    keepLoggedIn: 'Më mbaj të kyçur',
+
     signInBtn: 'Hyr',
-    registerBtn: 'Regjistrohu',
+    registerBtn: 'Krijo Llogari',
     accessBtn: 'Hyr në Panel',
-    firstTime: 'Hera e parë këtu?',
+    googleSignIn: 'Hyr me Google',
+    
     createAccount: 'Krijo Llogari',
     alreadyAccount: 'Keni llogari?',
+    firstTime: 'Hera e parë këtu?',
+    signInLink: 'Hyr',
+    signUpLink: 'Regjistrohu',
+    
     backToLogin: 'Kthehu te Hyrja',
     adminAccess: 'Akses Admin',
-    clientAccess: 'Hyrja e Klientit',
     restrictedArea: 'Zonë e Kufizuar',
-    restrictedDesc: 'Vetëm administratorët e autorizuar mund të qasen. Të gjitha përpjekjet regjistrohen.',
+
+    // Errors
+    passwordMismatch: 'Fjalëkalimet nuk përputhen',
     
     // App Shell
     dashboard: 'Paneli',

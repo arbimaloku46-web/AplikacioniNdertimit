@@ -1,5 +1,4 @@
 
-
 export interface MediaItem {
   id: string;
   type: 'photo' | 'video' | '360';
@@ -34,13 +33,18 @@ export interface Project {
 }
 
 export interface User {
+  uid: string;
   name: string;
-  mobile?: string; // Optional for Google users
-  email?: string; // Added for Google Auth
-  countryCode?: string; // ISO code e.g. 'AL'
-  password?: string; // In a real app, never store plain text passwords
-  provider?: 'local' | 'google';
-  avatarUrl?: string;
+  username: string;
+  email: string | null; // Can be email or phone
+  photoURL: string | null;
+  countryCode?: string;
+  isAdmin?: boolean;
+}
+
+// Internal interface for storing secrets in local storage (Mock only)
+export interface StoredUser extends User {
+  password: string; 
 }
 
 export enum AppView {
