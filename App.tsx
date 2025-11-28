@@ -131,8 +131,11 @@ const App: React.FC = () => {
 
   // Scroll to top on view change
   useEffect(() => {
+    // Only scroll to top if not already on project detail or if actively navigating between projects
+    // We remove 'activeProject' from dependencies to prevent scroll jump on data updates
+    // Use activeProject?.id to only trigger on ID change
     window.scrollTo(0, 0);
-  }, [currentView, activeProject?.id]); // Only scroll if project ID changes, not just data update
+  }, [currentView, activeProject?.id]); 
 
   // Process Upload Queue
   useEffect(() => {

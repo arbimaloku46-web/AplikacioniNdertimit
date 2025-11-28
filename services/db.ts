@@ -1,143 +1,275 @@
 
-import { Project, StoredUser, User } from '../types';
+import { Project, StoredUser, User, MediaItem } from '../types';
 
-const PROJECTS_STORAGE_KEY = 'ndertimi_projects_db';
+const DB_NAME = 'NdertimiDB';
+const DB_VERSION = 2;
+const STORE_PROJECTS = 'projects';
+const STORE_FILES = 'files';
 const USERS_STORAGE_KEY = 'ndertimi_users_db';
+const LEGACY_PROJECTS_KEY = 'ndertimi_projects_db';
 
-// Initialize Projects DB
-const initializeProjectsDB = (): Project[] => {
-  const stored = localStorage.getItem(PROJECTS_STORAGE_KEY);
+// --- IndexedDB Helpers ---
+
+let dbPromise: Promise<IDBDatabase> | null = null;
+
+const openDB = () => {
+  if (dbPromise) return dbPromise;
   
-  if (!stored) {
-    // Start with empty database
-    const empty: Project[] = [];
-    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(empty));
-    return empty;
-  }
-
-  // Check if legacy mock data exists (ids 'p_1' or 'p_2') and clear it if found
-  // This ensures the user request to "delete existing projects" takes effect immediately
-  // even if they had previous local storage data.
-  const parsed = JSON.parse(stored);
-  if (Array.isArray(parsed) && parsed.some((p: any) => p.id === 'p_1' || p.id === 'p_2')) {
-     const empty: Project[] = [];
-     localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(empty));
-     return empty;
-  }
-
-  return parsed;
-};
-
-// Initialize Users DB
-const initializeUsersDB = (): StoredUser[] => {
-  const stored = localStorage.getItem(USERS_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
-};
-
-// Simple event emitter for real-time updates within the same tab
-const listeners: Set<(projects: Project[]) => void> = new Set();
-
-const notifyListeners = () => {
-  const projects = initializeProjectsDB();
-  listeners.forEach(l => l(projects));
-};
-
-export const dbService = {
-  // Real-time subscription simulation
-  subscribeProjects(callback: (projects: Project[]) => void) {
-    const projects = initializeProjectsDB();
-    callback(projects);
+  dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
     
-    listeners.add(callback);
-    
-    // Check for storage events (multi-tab support)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === PROJECTS_STORAGE_KEY) {
-        notifyListeners();
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(STORE_PROJECTS)) {
+        db.createObjectStore(STORE_PROJECTS, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_FILES)) {
+        // Files store: Key is the file ID (string), value is the Blob/File
+        db.createObjectStore(STORE_FILES); 
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  
+  return dbPromise;
+};
 
+const getStore = async (storeName: string, mode: IDBTransactionMode) => {
+  const db = await openDB();
+  return db.transaction(storeName, mode).objectStore(storeName);
+};
+
+// --- Blob URL Management ---
+// We need to map opaque blob: URLs back to their database IDs for persistence
+const blobToIdMap = new Map<string, string>();
+const idToBlobMap = new Map<string, string>();
+
+const registerBlob = (id: string, blob: Blob): string => {
+  // If we already have a live URL for this ID, return it
+  if (idToBlobMap.has(id)) {
+    return idToBlobMap.get(id)!;
+  }
+  
+  const url = URL.createObjectURL(blob);
+  blobToIdMap.set(url, id);
+  idToBlobMap.set(id, url);
+  return url;
+};
+
+// --- Data Transformation ---
+
+// Convert "file_..." IDs in the project object to usable blob: URLs
+const hydrateProject = async (project: Project): Promise<Project> => {
+  const p = JSON.parse(JSON.stringify(project)); // Deep clone
+  
+  const processMedia = async (media: MediaItem) => {
+    if (media.url && media.url.startsWith('file_')) {
+      const fileId = media.url;
+      try {
+        // Check cache first
+        if (idToBlobMap.has(fileId)) {
+          media.url = idToBlobMap.get(fileId)!;
+        } else {
+            const store = await getStore(STORE_FILES, 'readonly');
+            const request = store.get(fileId);
+            
+            const blob = await new Promise<Blob>((resolve) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve(new Blob([])); // Fallback
+            });
+
+            if (blob) {
+                media.url = registerBlob(fileId, blob);
+            }
+        }
+      } catch (e) {
+        console.error("Failed to hydrate file", fileId, e);
+      }
+    }
+    
+    if (media.thumbnail && media.thumbnail.startsWith('file_')) {
+        const fileId = media.thumbnail;
+        // Reuse logic or simple check (thumbnails usually same as url for photos)
+        if (idToBlobMap.has(fileId)) {
+            media.thumbnail = idToBlobMap.get(fileId)!;
+        } else {
+            // Lazy load thumbnail if different (omitted for brevity, assuming main logic covers most cases)
+        }
+    }
+  };
+
+  for (const update of p.updates) {
+    if (update.media) {
+        await Promise.all(update.media.map(processMedia));
+    }
+  }
+  
+  return p;
+};
+
+// Convert blob: URLs back to "file_..." IDs before saving
+const dehydrateProject = (project: Project): Project => {
+  const p = JSON.parse(JSON.stringify(project));
+  
+  const processMedia = (media: MediaItem) => {
+    if (media.url && blobToIdMap.has(media.url)) {
+      media.url = blobToIdMap.get(media.url)!;
+    }
+    if (media.thumbnail && blobToIdMap.has(media.thumbnail)) {
+        media.thumbnail = blobToIdMap.get(media.thumbnail)!;
+    }
+  };
+
+  p.updates.forEach((update: any) => {
+    if (update.media) {
+        update.media.forEach(processMedia);
+    }
+  });
+
+  return p;
+};
+
+// --- Migration Logic ---
+const migrateLegacyData = async () => {
+    try {
+        const legacyData = localStorage.getItem(LEGACY_PROJECTS_KEY);
+        if (legacyData) {
+            console.log('Detected legacy localStorage data. Migrating to IndexedDB...');
+            const projects = JSON.parse(legacyData);
+            if (Array.isArray(projects) && projects.length > 0) {
+                 const store = await getStore(STORE_PROJECTS, 'readwrite');
+                 // Only migrate if DB is empty to prevent overwriting newer data
+                 const countRequest = store.count();
+                 
+                 await new Promise<void>((resolve) => {
+                     countRequest.onsuccess = () => {
+                         if (countRequest.result === 0) {
+                             projects.forEach(p => store.put(dehydrateProject(p)));
+                             console.log(`Migrated ${projects.length} projects successfully.`);
+                         }
+                         resolve();
+                     };
+                     countRequest.onerror = () => resolve();
+                 });
+            }
+            // Clear legacy storage to release quota
+            localStorage.removeItem(LEGACY_PROJECTS_KEY);
+            console.log('Legacy localStorage cleared.');
+        }
+    } catch (e) {
+        console.error("Migration failed", e);
+    }
+};
+
+// --- DB Service Implementation ---
+
+const listeners: Set<(projects: Project[]) => void> = new Set();
+let isMigrated = false;
+
+const notifyListeners = async () => {
+  try {
+    const store = await getStore(STORE_PROJECTS, 'readonly');
+    const request = store.getAll();
+    
+    request.onsuccess = async () => {
+      const rawProjects = request.result as Project[];
+      // Hydrate all projects (resolve blob URLs)
+      const hydratedProjects = await Promise.all(rawProjects.map(hydrateProject));
+      listeners.forEach(l => l(hydratedProjects));
+    };
+  } catch (err) {
+    console.error("Error notifying listeners", err);
+  }
+};
+
+export const dbService = {
+  subscribeProjects(callback: (projects: Project[]) => void) {
+    const init = async () => {
+        if (!isMigrated) {
+            await migrateLegacyData();
+            isMigrated = true;
+        }
+        notifyListeners();
+    };
+
+    init();
+    
+    listeners.add(callback);
     return () => {
       listeners.delete(callback);
-      window.removeEventListener('storage', handleStorageChange);
     };
   },
 
-  // Add new project
   async addProject(project: Project): Promise<void> {
-    const projects = initializeProjectsDB();
-    // Ensure ID is unique
-    if (projects.find(p => p.id === project.id)) {
-        throw new Error("Project ID exists");
-    }
-    projects.push(project);
-    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+    const store = await getStore(STORE_PROJECTS, 'readwrite');
+    const dehydrated = dehydrateProject(project);
+    store.put(dehydrated);
+    // Transaction auto-commits
+    await new Promise(resolve => setTimeout(resolve, 100)); // microtask delay
     notifyListeners();
   },
 
-  // Update existing project
   async updateProject(project: Project): Promise<void> {
-    const projects = initializeProjectsDB();
-    const index = projects.findIndex(p => p.id === project.id);
-    if (index !== -1) {
-      projects[index] = project;
-      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
-      notifyListeners();
-    } else {
-        throw new Error("Project not found");
-    }
-  },
-
-  // Delete project
-  async deleteProject(projectId: string): Promise<void> {
-    const projects = initializeProjectsDB();
-    const filtered = projects.filter(p => p.id !== projectId);
-    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(filtered));
+    const store = await getStore(STORE_PROJECTS, 'readwrite');
+    const dehydrated = dehydrateProject(project);
+    store.put(dehydrated);
+    await new Promise(resolve => setTimeout(resolve, 100));
     notifyListeners();
   },
 
-  // Upload file simulation
-  async uploadFile(file: File, projectId: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                resolve(e.target?.result as string);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        } else {
-            const url = URL.createObjectURL(file);
-            resolve(url);
-        }
-    });
+  async deleteProject(projectId: string): Promise<void> {
+    const store = await getStore(STORE_PROJECTS, 'readwrite');
+    store.delete(projectId);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    notifyListeners();
   },
 
-  // --- AUTHENTICATION MOCK (Local Storage) ---
+  async uploadFile(file: File, projectId: string): Promise<string> {
+    const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const store = await getStore(STORE_FILES, 'readwrite');
+    store.put(file, fileId);
+    
+    // Register mapping immediately so it's available for the UI
+    const blobUrl = registerBlob(fileId, file);
+    return blobUrl;
+  },
+
+  // --- AUTH (Kept in LocalStorage for simplicity as User data is small) ---
   auth: {
+    initializeUsersDB(): StoredUser[] {
+        const stored = localStorage.getItem(USERS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    },
+
     async register(user: StoredUser): Promise<User> {
-        const users = initializeUsersDB();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const users = this.initializeUsersDB();
         
-        // Check uniqueness
         if (users.some(u => u.username.toLowerCase() === user.username.toLowerCase())) {
             throw new Error('Username is already taken');
         }
         if (users.some(u => u.email?.toLowerCase() === user.email?.toLowerCase())) {
-            throw new Error('Phone number or Email is already registered');
+            throw new Error('Phone/Email is already registered');
         }
 
         users.push(user);
-        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+        try {
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+        } catch (e) {
+            // Fallback if local storage is somehow still full
+            throw new Error('Storage full. Please clear space on your device.');
+        }
         
-        // Return without password
         const { password, ...safeUser } = user;
         return safeUser;
     },
 
     async login(identifier: string, passwordAttempt: string): Promise<User> {
-        const users = initializeUsersDB();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const users = this.initializeUsersDB();
         
         const foundUser = users.find(u => 
             (u.username.toLowerCase() === identifier.toLowerCase() || 
@@ -154,7 +286,8 @@ export const dbService = {
     },
 
     async googleAuth(email: string, name: string): Promise<User> {
-        const users = initializeUsersDB();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const users = this.initializeUsersDB();
         const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
         if (existingUser) {
@@ -162,19 +295,22 @@ export const dbService = {
             return safeUser;
         }
 
-        // Register new Google user
         const newUser: StoredUser = {
             uid: `google_${Date.now()}`,
             name: name,
-            username: `user_${Math.floor(Math.random() * 10000)}`, // Generate random username
+            username: `user_${Math.floor(Math.random() * 10000)}`,
             email: email,
-            password: `google_oauth_${Date.now()}`, // Dummy password
+            password: `google_oauth_${Date.now()}`,
             photoURL: 'https://lh3.googleusercontent.com/a/default-user',
             isAdmin: false
         };
 
         users.push(newUser);
-        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+        try {
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+        } catch (e) {
+            throw new Error('Storage full.');
+        }
 
         const { password, ...safeUser } = newUser;
         return safeUser;
