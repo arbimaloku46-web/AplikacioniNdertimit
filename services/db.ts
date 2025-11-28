@@ -1,18 +1,31 @@
 
 import { Project, StoredUser, User } from '../types';
-import { MOCK_PROJECTS } from '../constants';
 
 const PROJECTS_STORAGE_KEY = 'ndertimi_projects_db';
 const USERS_STORAGE_KEY = 'ndertimi_users_db';
 
-// Initialize Projects DB with mocks if empty
+// Initialize Projects DB
 const initializeProjectsDB = (): Project[] => {
   const stored = localStorage.getItem(PROJECTS_STORAGE_KEY);
+  
   if (!stored) {
-    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(MOCK_PROJECTS));
-    return MOCK_PROJECTS;
+    // Start with empty database
+    const empty: Project[] = [];
+    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(empty));
+    return empty;
   }
-  return JSON.parse(stored);
+
+  // Check if legacy mock data exists (ids 'p_1' or 'p_2') and clear it if found
+  // This ensures the user request to "delete existing projects" takes effect immediately
+  // even if they had previous local storage data.
+  const parsed = JSON.parse(stored);
+  if (Array.isArray(parsed) && parsed.some((p: any) => p.id === 'p_1' || p.id === 'p_2')) {
+     const empty: Project[] = [];
+     localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(empty));
+     return empty;
+  }
+
+  return parsed;
 };
 
 // Initialize Users DB

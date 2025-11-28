@@ -1,11 +1,18 @@
-/// <reference types="vite/client" />
+// Manually define Vite types to avoid missing type definition error
 
 interface ImportMetaEnv {
-  // Add other env vars here if needed
+  [key: string]: any;
+  BASE_URL: string;
+  MODE: string;
+  DEV: boolean;
+  PROD: boolean;
+  SSR: boolean;
 }
 
 interface ImportMeta {
+  url: string;
   readonly env: ImportMetaEnv;
+  readonly glob: any;
 }
 
 declare namespace NodeJS {

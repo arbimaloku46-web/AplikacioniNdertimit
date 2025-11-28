@@ -5,7 +5,6 @@ import { LoginScreen } from './components/LoginScreen';
 import { GlobalAuth } from './components/GlobalAuth';
 import { Button } from './components/Button';
 import { SplatViewer } from './components/SplatViewer';
-import { AIInsight } from './components/AIInsight';
 import { MediaGrid } from './components/MediaGrid';
 import { Footer } from './components/Footer';
 import { InstallButton } from './components/InstallButton';
@@ -69,6 +68,12 @@ const App: React.FC = () => {
     thumbnailUrl: ''
   });
 
+  // Track active project in ref to avoid effect dependency cycles
+  const activeProjectRef = useRef<Project | null>(null);
+  useEffect(() => {
+      activeProjectRef.current = activeProject;
+  }, [activeProject]);
+
   // Translation Helper
   const text = translations[language];
 
@@ -87,10 +92,15 @@ const App: React.FC = () => {
         setLoadingProjects(false);
         
         // Update active project reference if it changes in DB
-        if (activeProject) {
-            const updated = data.find(p => p.id === activeProject.id);
+        // Using ref ensures we don't trigger this effect when activeProject changes via user interaction
+        if (activeProjectRef.current) {
+            const updated = data.find(p => p.id === activeProjectRef.current?.id);
             if (updated) {
-                setActiveProject(updated);
+                // Only update if content actually changed to avoid render cycles
+                // JSON stringify is a simple check, though deep comparison is better for performance if objects are large
+                if (JSON.stringify(updated) !== JSON.stringify(activeProjectRef.current)) {
+                    setActiveProject(updated);
+                }
             }
         }
     });
@@ -112,7 +122,7 @@ const App: React.FC = () => {
       window.removeEventListener('offline', handleOffline);
       unsubscribe();
     };
-  }, [activeProject]);
+  }, []); // Empty dependency array prevents re-subscription on activeProject change
 
   // Save language preference
   useEffect(() => {
@@ -122,7 +132,7 @@ const App: React.FC = () => {
   // Scroll to top on view change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentView, activeProject, user]);
+  }, [currentView, activeProject?.id]); // Only scroll if project ID changes, not just data update
 
   // Process Upload Queue
   useEffect(() => {
@@ -903,7 +913,7 @@ const App: React.FC = () => {
 
                         <div>
                             <h3 className="text-lg font-display font-bold text-white mb-4 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <svg className="w-5 h-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 00-2-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 Site Footage
                             </h3>
                             <MediaGrid media={activeProject.updates[activeUpdateIndex].media} />
@@ -962,11 +972,6 @@ const App: React.FC = () => {
                                         />
                                     </div>
                                 )}
-                            </div>
-
-                            <div className="mb-8">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">AI Summary</h4>
-                                <AIInsight project={activeProject} update={activeProject.updates[activeUpdateIndex]} />
                             </div>
 
                             <div>

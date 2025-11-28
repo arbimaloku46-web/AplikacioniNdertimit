@@ -7,7 +7,7 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Merge with process.env to ensure system variables are captured.
-  const loadedEnv = loadEnv(mode, process.cwd(), '');
+  const loadedEnv = loadEnv(mode, (process as any).cwd(), '');
   const env = { ...process.env, ...loadedEnv };
 
   return {
@@ -58,8 +58,6 @@ export default defineConfig(({ mode }) => {
       })
     ],
     define: {
-      // API Key for Gemini
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || ""),
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
