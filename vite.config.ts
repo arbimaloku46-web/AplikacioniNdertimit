@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
-      outDir: 'build',
+      outDir: 'dist', // Changed from 'build' to 'dist' for Vercel compatibility
       emptyOutDir: true,
       chunkSizeWarningLimit: 1000,
     }

@@ -12,7 +12,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
   url: string;
   readonly env: ImportMetaEnv;
-  readonly glob: any;
+  glob: any;
 }
 
 declare namespace NodeJS {
