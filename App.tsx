@@ -49,6 +49,7 @@ const App: React.FC = () => {
   // Admin Mode
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false); // New loading state
 
   // Admin Edit State (Content)
   const [newMediaUrl, setNewMediaUrl] = useState('');
@@ -286,13 +287,15 @@ const App: React.FC = () => {
                 setCurrentView(AppView.HOME);
             }
         } catch (err) {
-            alert('Failed to delete project');
+            alert('Failed to delete project. Check admin permissions.');
         }
     }
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsCreatingProject(true); // Start loading
+
     const newId = `p_${Date.now()}`;
     const emptyUpdate: WeeklyUpdate = {
         weekNumber: 1,
@@ -314,9 +317,13 @@ const App: React.FC = () => {
         await dbService.addProject(newProject);
         setShowCreateProject(false);
         setNewProjectForm({ name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: '' });
+        alert("Project created successfully on the cloud!");
     } catch (err: any) {
-        console.error(err);
-        alert('Failed to create project. Ensure you are an Admin.');
+        console.error("Supabase Error:", err);
+        // Provide exact error from Supabase to help debug (likely RLS)
+        alert(`Failed to create project: ${err.message || err.error_description || "Unknown error"}`);
+    } finally {
+        setIsCreatingProject(false); // Stop loading
     }
   };
 
@@ -556,7 +563,7 @@ const App: React.FC = () => {
                     </div>
                     <div className="md:col-span-2 flex justify-end gap-4 mt-4">
                         <Button type="button" variant="secondary" onClick={() => setShowCreateProject(false)}>Cancel</Button>
-                        <Button type="submit">Create Project</Button>
+                        <Button type="submit" isLoading={isCreatingProject}>Create Project</Button>
                     </div>
                 </form>
              </div>
