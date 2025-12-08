@@ -1,237 +1,112 @@
-import { Project, MediaItem } from '../types';
+import { supabase } from './supabaseClient';
+import { Project } from '../types';
 
-const DB_NAME = 'NdertimiDB';
-const DB_VERSION = 2;
-const STORE_PROJECTS = 'projects';
-const STORE_FILES = 'files';
-const LEGACY_PROJECTS_KEY = 'ndertimi_projects_db';
+// Map database column names (snake_case) to application types (camelCase)
+const mapFromDB = (row: any): Project => ({
+  id: row.id,
+  name: row.name,
+  clientName: row.client_name,
+  location: row.location,
+  thumbnailUrl: row.thumbnail_url,
+  accessCode: row.access_code,
+  description: row.description,
+  updates: row.updates || []
+});
 
-// --- IndexedDB Helpers ---
-
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-const openDB = () => {
-  if (dbPromise) return dbPromise;
-  
-  dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_PROJECTS)) {
-        db.createObjectStore(STORE_PROJECTS, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(STORE_FILES)) {
-        // Files store: Key is the file ID (string), value is the Blob/File
-        db.createObjectStore(STORE_FILES); 
-      }
-    };
-    
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  
-  return dbPromise;
-};
-
-const getStore = async (storeName: string, mode: IDBTransactionMode) => {
-  const db = await openDB();
-  return db.transaction(storeName, mode).objectStore(storeName);
-};
-
-// --- Blob URL Management ---
-// We need to map opaque blob: URLs back to their database IDs for persistence
-const blobToIdMap = new Map<string, string>();
-const idToBlobMap = new Map<string, string>();
-
-const registerBlob = (id: string, blob: Blob): string => {
-  // If we already have a live URL for this ID, return it
-  if (idToBlobMap.has(id)) {
-    return idToBlobMap.get(id)!;
-  }
-  
-  const url = URL.createObjectURL(blob);
-  blobToIdMap.set(url, id);
-  idToBlobMap.set(id, url);
-  return url;
-};
-
-// --- Data Transformation ---
-
-// Convert "file_..." IDs in the project object to usable blob: URLs
-const hydrateProject = async (project: Project): Promise<Project> => {
-  const p = JSON.parse(JSON.stringify(project)); // Deep clone
-  
-  const processMedia = async (media: MediaItem) => {
-    if (media.url && media.url.startsWith('file_')) {
-      const fileId = media.url;
-      try {
-        // Check cache first
-        if (idToBlobMap.has(fileId)) {
-          media.url = idToBlobMap.get(fileId)!;
-        } else {
-            const store = await getStore(STORE_FILES, 'readonly');
-            const request = store.get(fileId);
-            
-            const blob = await new Promise<Blob>((resolve) => {
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => resolve(new Blob([])); // Fallback
-            });
-
-            if (blob) {
-                media.url = registerBlob(fileId, blob);
-            }
-        }
-      } catch (e) {
-        console.error("Failed to hydrate file", fileId, e);
-      }
-    }
-    
-    if (media.thumbnail && media.thumbnail.startsWith('file_')) {
-        const fileId = media.thumbnail;
-        // Reuse logic or simple check (thumbnails usually same as url for photos)
-        if (idToBlobMap.has(fileId)) {
-            media.thumbnail = idToBlobMap.get(fileId)!;
-        } else {
-            // Lazy load thumbnail if different (omitted for brevity, assuming main logic covers most cases)
-        }
-    }
-  };
-
-  for (const update of p.updates) {
-    if (update.media) {
-        await Promise.all(update.media.map(processMedia));
-    }
-  }
-  
-  return p;
-};
-
-// Convert blob: URLs back to "file_..." IDs before saving
-const dehydrateProject = (project: Project): Project => {
-  const p = JSON.parse(JSON.stringify(project));
-  
-  const processMedia = (media: MediaItem) => {
-    if (media.url && blobToIdMap.has(media.url)) {
-      media.url = blobToIdMap.get(media.url)!;
-    }
-    if (media.thumbnail && blobToIdMap.has(media.thumbnail)) {
-        media.thumbnail = blobToIdMap.get(media.thumbnail)!;
-    }
-  };
-
-  p.updates.forEach((update: any) => {
-    if (update.media) {
-        update.media.forEach(processMedia);
-    }
-  });
-
-  return p;
-};
-
-// --- Migration Logic ---
-const migrateLegacyData = async () => {
-    try {
-        const legacyData = localStorage.getItem(LEGACY_PROJECTS_KEY);
-        if (legacyData) {
-            console.log('Detected legacy localStorage data. Migrating to IndexedDB...');
-            const projects = JSON.parse(legacyData);
-            if (Array.isArray(projects) && projects.length > 0) {
-                 const store = await getStore(STORE_PROJECTS, 'readwrite');
-                 // Only migrate if DB is empty to prevent overwriting newer data
-                 const countRequest = store.count();
-                 
-                 await new Promise<void>((resolve) => {
-                     countRequest.onsuccess = () => {
-                         if (countRequest.result === 0) {
-                             projects.forEach(p => store.put(dehydrateProject(p)));
-                             console.log(`Migrated ${projects.length} projects successfully.`);
-                         }
-                         resolve();
-                     };
-                     countRequest.onerror = () => resolve();
-                 });
-            }
-            // Clear legacy storage to release quota
-            localStorage.removeItem(LEGACY_PROJECTS_KEY);
-            console.log('Legacy localStorage cleared.');
-        }
-    } catch (e) {
-        console.error("Migration failed", e);
-    }
-};
-
-// --- DB Service Implementation ---
-
-const listeners: Set<(projects: Project[]) => void> = new Set();
-let isMigrated = false;
-
-const notifyListeners = async () => {
-  try {
-    const store = await getStore(STORE_PROJECTS, 'readonly');
-    const request = store.getAll();
-    
-    request.onsuccess = async () => {
-      const rawProjects = request.result as Project[];
-      // Hydrate all projects (resolve blob URLs)
-      const hydratedProjects = await Promise.all(rawProjects.map(hydrateProject));
-      listeners.forEach(l => l(hydratedProjects));
-    };
-  } catch (err) {
-    console.error("Error notifying listeners", err);
-  }
-};
+const mapToDB = (project: Project) => ({
+  id: project.id,
+  name: project.name,
+  client_name: project.clientName,
+  location: project.location,
+  thumbnail_url: project.thumbnailUrl,
+  access_code: project.accessCode,
+  description: project.description,
+  updates: project.updates // JSONB column handles the array structure automatically
+});
 
 export const dbService = {
+  // Subscribe to Realtime Changes
   subscribeProjects(callback: (projects: Project[]) => void) {
-    const init = async () => {
-        if (!isMigrated) {
-            await migrateLegacyData();
-            isMigrated = true;
-        }
-        notifyListeners();
+    // 1. Fetch initial data
+    const fetchProjects = async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+        return;
+      }
+      
+      callback((data || []).map(mapFromDB));
     };
 
-    init();
-    
-    listeners.add(callback);
+    fetchProjects();
+
+    // 2. Listen for changes
+    const channel = supabase
+      .channel('public:projects')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        (payload) => {
+          // On any change, re-fetch to keep it simple and ensure consistency
+          // (Optimization: modify local state based on payload type)
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
     return () => {
-      listeners.delete(callback);
+      supabase.removeChannel(channel);
     };
   },
 
   async addProject(project: Project): Promise<void> {
-    const store = await getStore(STORE_PROJECTS, 'readwrite');
-    const dehydrated = dehydrateProject(project);
-    store.put(dehydrated);
-    // Transaction auto-commits
-    await new Promise(resolve => setTimeout(resolve, 100)); // microtask delay
-    notifyListeners();
+    const { error } = await supabase
+      .from('projects')
+      .insert(mapToDB(project));
+
+    if (error) throw error;
   },
 
   async updateProject(project: Project): Promise<void> {
-    const store = await getStore(STORE_PROJECTS, 'readwrite');
-    const dehydrated = dehydrateProject(project);
-    store.put(dehydrated);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    notifyListeners();
+    const { error } = await supabase
+      .from('projects')
+      .update(mapToDB(project))
+      .eq('id', project.id);
+
+    if (error) throw error;
   },
 
   async deleteProject(projectId: string): Promise<void> {
-    const store = await getStore(STORE_PROJECTS, 'readwrite');
-    store.delete(projectId);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    notifyListeners();
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) throw error;
   },
 
   async uploadFile(file: File, projectId: string): Promise<string> {
-    const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const store = await getStore(STORE_FILES, 'readwrite');
-    store.put(file, fileId);
-    
-    // Register mapping immediately so it's available for the UI
-    const blobUrl = registerBlob(fileId, file);
-    return blobUrl;
+    // 1. Create a unique file path
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${projectId}/${fileName}`;
+
+    // 2. Upload to Supabase Storage bucket 'project-media'
+    const { error: uploadError } = await supabase.storage
+      .from('project-media')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    // 3. Get the Public URL
+    const { data } = supabase.storage
+      .from('project-media')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   }
 };

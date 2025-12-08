@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
 import { LoginScreen } from './components/LoginScreen';
@@ -118,19 +119,13 @@ const App: React.FC = () => {
         });
       } else {
         // Handle Logout / Session Expiry
-        setUser(prev => {
-            // If the current user is the "Admin Master" (Mock), do not clear them on Supabase events.
-            if (prev?.uid === 'admin-master') return prev;
-            
-            // For everyone else, clear state and reset view
-            setCurrentView(AppView.HOME);
-            setActiveProject(null);
-            return null;
-        });
+        setUser(null);
+        setCurrentView(AppView.HOME);
+        setActiveProject(null);
       }
     });
 
-    // Real-time Firestore Subscription (now using IndexedDB)
+    // Real-time Database Subscription
     const unsubscribeDB = dbService.subscribeProjects((data) => {
         setProjects(data);
         setLoadingProjects(false);
@@ -188,7 +183,7 @@ const App: React.FC = () => {
       ));
 
       try {
-        // Upload to Local IndexedDB (Mock Cloud)
+        // Upload to Supabase Storage
         const downloadUrl = await dbService.uploadFile(pendingItem.file, activeProject.id);
         
         setUploadQueue(prev => prev.map(item => 
@@ -204,7 +199,7 @@ const App: React.FC = () => {
             thumbnail: type === 'video' ? undefined : downloadUrl 
         };
 
-        // Update Project in IndexedDB
+        // Update Project in Database
         const updatedUpdates = [...activeProject.updates];
         updatedUpdates[activeUpdateIndex] = {
             ...updatedUpdates[activeUpdateIndex],
@@ -242,24 +237,11 @@ const App: React.FC = () => {
   // --- HANDLERS ---
 
   const handleGlobalLogin = (loggedInUser: User, isAdminAccess: boolean) => {
-    // If logging in via the "Admin Portal" (Backdoor), explicitly set the user state
-    // because Supabase doesn't know about this mock user.
-    if (loggedInUser.uid === 'admin-master') {
-        setUser(loggedInUser);
-    }
-    // For regular users, the onAuthStateChange listener in useEffect handles state updates.
+    // Standard Supabase login handled by auth listener
   };
 
   const handleLogout = async () => {
-    if (user?.uid === 'admin-master') {
-        // Manual logout for mock admin
-        setUser(null);
-        setCurrentView(AppView.HOME);
-        setActiveProject(null);
-    } else {
-        await logoutUser();
-        // Supabase listener will handle state clearing
-    }
+    await logoutUser();
   };
 
   const handleProjectSelect = (project: Project) => {
@@ -330,8 +312,9 @@ const App: React.FC = () => {
         await dbService.addProject(newProject);
         setShowCreateProject(false);
         setNewProjectForm({ name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: '' });
-    } catch (err) {
-        alert('Failed to create project');
+    } catch (err: any) {
+        console.error(err);
+        alert('Failed to create project. Ensure you are an Admin.');
     }
   };
 

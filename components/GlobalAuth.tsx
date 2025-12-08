@@ -11,9 +11,7 @@ interface GlobalAuthProps {
   setLanguage: (lang: Language) => void;
 }
 
-type AuthMode = 'LOGIN' | 'REGISTER' | 'ADMIN';
-
-const ADMIN_PASSWORD = 'Ndertimi2024';
+type AuthMode = 'LOGIN' | 'REGISTER';
 
 export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLanguage }) => {
   const [mode, setMode] = useState<AuthMode>('LOGIN');
@@ -28,9 +26,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     password: '',
     confirmPassword: ''
   });
-
-  // Admin Form State
-  const [adminPassword, setAdminPassword] = useState('');
 
   // Translation Helper
   const text = translations[language];
@@ -48,7 +43,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     try {
         if (mode === 'LOGIN') {
             const user = await loginUser(formData.identifier, formData.password);
-            onLogin(user, false);
+            onLogin(user, user.isAdmin || false);
         } else {
             // Validation
             if (!formData.fullName || !formData.username || !formData.identifier || !formData.password || !formData.confirmPassword) {
@@ -74,7 +69,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     try {
         await loginWithGoogle();
         // Do NOT set isLoading(false) here, as the browser is redirecting.
-        // If we set it to false, the user might see a flash of the form again before the page unloads.
     } catch (err: any) {
         setIsLoading(false);
         console.error("Google Login Error:", err);
@@ -87,30 +81,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             setError(err.message || 'Google Sign In failed');
         }
     }
-  };
-
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    setTimeout(() => {
-        if (adminPassword === ADMIN_PASSWORD) {
-            // Create a mock admin user for the session
-            const adminUser: User = {
-                uid: 'admin-master',
-                name: 'Administrator',
-                username: 'admin',
-                email: 'admin@ndertimi.org',
-                photoURL: null,
-                isAdmin: true
-            };
-            onLogin(adminUser, true);
-        } else {
-            setError('Invalid Admin Access Key');
-            setIsLoading(false);
-        }
-    }, 800);
   };
 
   return (
@@ -181,13 +151,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
               <div className="p-8">
                   <div className="mb-6 text-center">
                     <h2 className="text-2xl font-display font-bold text-white mb-2">
-                        {mode === 'LOGIN' ? text.loginTitle : mode === 'REGISTER' ? text.signupTitle : text.adminTitle}
+                        {mode === 'LOGIN' ? text.loginTitle : text.signupTitle}
                     </h2>
-                    {mode === 'ADMIN' && <p className="text-slate-400 text-sm">{text.adminDesc}</p>}
                   </div>
 
-                  {(mode === 'LOGIN' || mode === 'REGISTER') && (
-                    <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                  <div className="space-y-4 animate-in fade-in zoom-in duration-300">
                         {/* Google Sign In Button */}
                         <button
                             type="button"
@@ -313,65 +281,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 </button>
                              </p>
                         </div>
-                        
-                        <div className="pt-6 border-t border-slate-800 flex justify-center">
-                            <button 
-                                type="button"
-                                onClick={() => {
-                                    setMode('ADMIN');
-                                    setError('');
-                                }}
-                                className="text-slate-600 text-xs hover:text-white transition-colors uppercase tracking-widest font-bold flex items-center gap-2"
-                            >
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                {text.adminPortal}
-                            </button>
-                        </div>
                     </div>
-                  )}
-
-                  {mode === 'ADMIN' && (
-                    <form onSubmit={handleAdminLogin} className="space-y-5 animate-in fade-in zoom-in duration-300">
-                        <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-lg p-4">
-                            <p className="text-brand-blue text-xs font-medium flex items-start gap-2">
-                                <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                {text.restrictedArea}
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">{text.adminKeyLabel}</label>
-                            <input 
-                                type="password" 
-                                required
-                                autoFocus
-                                value={adminPassword}
-                                onChange={(e) => setAdminPassword(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all text-center tracking-widest font-mono text-lg"
-                                placeholder="••••••••"
-                            />
-                        </div>
-
-                        {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
-
-                        <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
-                            {text.accessBtn}
-                        </Button>
-
-                        <div className="mt-6 text-center">
-                            <button 
-                                type="button"
-                                onClick={() => {
-                                    setMode('LOGIN');
-                                    setError('');
-                                }}
-                                className="text-slate-500 text-sm hover:text-white transition-colors"
-                            >
-                                ← {text.backToLogin}
-                            </button>
-                        </div>
-                    </form>
-                  )}
               </div>
           </div>
         </div>
