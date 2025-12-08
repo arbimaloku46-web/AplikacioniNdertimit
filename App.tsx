@@ -92,13 +92,14 @@ const App: React.FC = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
+        const appMetadata = session.user.app_metadata || {};
         setUser({
           uid: session.user.id,
           email: session.user.email || null,
           name: metadata.full_name || metadata.name || 'User',
           username: metadata.username || session.user.email?.split('@')[0] || 'user',
           photoURL: metadata.avatar_url || metadata.picture || null,
-          isAdmin: metadata.is_admin === true,
+          isAdmin: appMetadata.is_admin === true || metadata.is_admin === true,
           countryCode: metadata.country_code
         });
       }
@@ -108,13 +109,14 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
          const metadata = session.user.user_metadata || {};
+         const appMetadata = session.user.app_metadata || {};
          setUser({
           uid: session.user.id,
           email: session.user.email || null,
           name: metadata.full_name || metadata.name || 'User',
           username: metadata.username || session.user.email?.split('@')[0] || 'user',
           photoURL: metadata.avatar_url || metadata.picture || null,
-          isAdmin: metadata.is_admin === true,
+          isAdmin: appMetadata.is_admin === true || metadata.is_admin === true,
           countryCode: metadata.country_code
         });
       } else {
