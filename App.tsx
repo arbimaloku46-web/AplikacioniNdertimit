@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MOCK_PROJECTS, COUNTRIES } from './constants';
 import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
 import { LoginScreen } from './components/LoginScreen';
 import { GlobalAuth } from './components/GlobalAuth';
@@ -118,13 +117,20 @@ const App: React.FC = () => {
           countryCode: metadata.country_code
         });
       } else {
-        setUser(null);
-        setCurrentView(AppView.HOME);
-        setActiveProject(null);
+        // Handle Logout / Session Expiry
+        setUser(prev => {
+            // If the current user is the "Admin Master" (Mock), do not clear them on Supabase events.
+            if (prev?.uid === 'admin-master') return prev;
+            
+            // For everyone else, clear state and reset view
+            setCurrentView(AppView.HOME);
+            setActiveProject(null);
+            return null;
+        });
       }
     });
 
-    // Real-time Firestore Subscription
+    // Real-time Firestore Subscription (now using IndexedDB)
     const unsubscribeDB = dbService.subscribeProjects((data) => {
         setProjects(data);
         setLoadingProjects(false);
@@ -236,15 +242,24 @@ const App: React.FC = () => {
   // --- HANDLERS ---
 
   const handleGlobalLogin = (loggedInUser: User, isAdminAccess: boolean) => {
-    // State update is handled by onAuthStateChange in useEffect, 
-    // but we can manually set it here for immediate feedback if needed.
-    // However, sticking to the single source of truth (subscription) is safer.
-    // The GlobalAuth component will unmount when user is set.
+    // If logging in via the "Admin Portal" (Backdoor), explicitly set the user state
+    // because Supabase doesn't know about this mock user.
+    if (loggedInUser.uid === 'admin-master') {
+        setUser(loggedInUser);
+    }
+    // For regular users, the onAuthStateChange listener in useEffect handles state updates.
   };
 
   const handleLogout = async () => {
-    await logoutUser();
-    // User state clearing is handled by onAuthStateChange
+    if (user?.uid === 'admin-master') {
+        // Manual logout for mock admin
+        setUser(null);
+        setCurrentView(AppView.HOME);
+        setActiveProject(null);
+    } else {
+        await logoutUser();
+        // Supabase listener will handle state clearing
+    }
   };
 
   const handleProjectSelect = (project: Project) => {

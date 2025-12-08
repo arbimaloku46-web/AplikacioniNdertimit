@@ -1,3 +1,4 @@
+
 import { User } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -49,8 +50,8 @@ export const loginUser = async (identifier: string, password: string): Promise<U
   return mapSupabaseUser(data.user);
 };
 
-export const loginWithGoogle = async (): Promise<User> => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+export const loginWithGoogle = async (): Promise<void> => {
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
         // Redirect to the current URL after login
@@ -59,11 +60,7 @@ export const loginWithGoogle = async (): Promise<User> => {
   });
 
   if (error) throw error;
-  
-  // Note: OAuth sign-in triggers a redirect. The promise resolves with URL info, 
-  // but the user state won't be available until after the redirect and page reload.
-  // We return a placeholder here, but the onAuthStateChange in App.tsx handles the actual session.
-  throw new Error('Redirecting to Google...'); 
+  // Browser will redirect automatically
 };
 
 export const logoutUser = async () => {
