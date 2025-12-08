@@ -1,41 +1,78 @@
+import { User } from '../types';
+import { supabase } from './supabaseClient';
 
-import { User, StoredUser } from '../types';
-import { dbService } from './db';
+// Helper to map Supabase user to our App User type
+const mapSupabaseUser = (sbUser: any): User => {
+  if (!sbUser) throw new Error('No user data');
+  
+  const metadata = sbUser.user_metadata || {};
+  
+  return {
+    uid: sbUser.id,
+    email: sbUser.email || null,
+    name: metadata.full_name || metadata.name || 'User',
+    username: metadata.username || sbUser.email?.split('@')[0] || 'user',
+    photoURL: metadata.avatar_url || metadata.picture || null,
+    isAdmin: metadata.is_admin === true,
+    countryCode: metadata.country_code
+  };
+};
 
 export const registerUser = async (data: any): Promise<User> => {
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+  const { data: result, error } = await supabase.auth.signUp({
+    email: data.identifier, // Assuming identifier is email
+    password: data.password,
+    options: {
+      data: {
+        full_name: data.fullName,
+        username: data.username,
+        is_admin: false, // Default to false
+      },
+    },
+  });
 
-  const newUser: StoredUser = {
-      uid: `user_${Date.now()}`,
-      name: data.fullName,
-      username: data.username,
-      email: data.identifier, // Storing phone/email in email field for simplicity
-      password: data.password,
-      photoURL: null,
-      isAdmin: false
-  };
+  if (error) throw error;
+  if (!result.user) throw new Error('Registration failed');
 
-  return dbService.auth.register(newUser);
+  return mapSupabaseUser(result.user);
 };
 
 export const loginUser = async (identifier: string, password: string): Promise<User> => {
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
-  return dbService.auth.login(identifier, password);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: identifier,
+    password: password,
+  });
+
+  if (error) throw error;
+  if (!data.user) throw new Error('Login failed');
+
+  return mapSupabaseUser(data.user);
 };
 
 export const loginWithGoogle = async (): Promise<User> => {
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network popup delay
-    
-    // Simulate a successful Google Auth response
-    // In a real app, this would come from Firebase/Auth0
-    const mockGoogleProfile = {
-        email: 'demo.user@gmail.com',
-        name: 'Demo Google User'
-    };
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+        // Redirect to the current URL after login
+        redirectTo: window.location.origin
+    }
+  });
 
-    return dbService.auth.googleAuth(mockGoogleProfile.email, mockGoogleProfile.name);
+  if (error) throw error;
+  
+  // Note: OAuth sign-in triggers a redirect. The promise resolves with URL info, 
+  // but the user state won't be available until after the redirect and page reload.
+  // We return a placeholder here, but the onAuthStateChange in App.tsx handles the actual session.
+  throw new Error('Redirecting to Google...'); 
 };
 
 export const logoutUser = async () => {
-  await new Promise(resolve => setTimeout(resolve, 300));
+  const { error } = await supabase.auth.signOut();
+  if (error) console.error('Error signing out:', error);
+};
+
+export const getCurrentSession = async (): Promise<User | null> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+  return mapSupabaseUser(session.user);
 };

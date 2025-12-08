@@ -1,11 +1,9 @@
-
-import { Project, StoredUser, User, MediaItem } from '../types';
+import { Project, MediaItem } from '../types';
 
 const DB_NAME = 'NdertimiDB';
 const DB_VERSION = 2;
 const STORE_PROJECTS = 'projects';
 const STORE_FILES = 'files';
-const USERS_STORAGE_KEY = 'ndertimi_users_db';
 const LEGACY_PROJECTS_KEY = 'ndertimi_projects_db';
 
 // --- IndexedDB Helpers ---
@@ -235,85 +233,5 @@ export const dbService = {
     // Register mapping immediately so it's available for the UI
     const blobUrl = registerBlob(fileId, file);
     return blobUrl;
-  },
-
-  // --- AUTH (Kept in LocalStorage for simplicity as User data is small) ---
-  auth: {
-    initializeUsersDB(): StoredUser[] {
-        const stored = localStorage.getItem(USERS_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-    },
-
-    async register(user: StoredUser): Promise<User> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const users = this.initializeUsersDB();
-        
-        if (users.some(u => u.username.toLowerCase() === user.username.toLowerCase())) {
-            throw new Error('Username is already taken');
-        }
-        if (users.some(u => u.email?.toLowerCase() === user.email?.toLowerCase())) {
-            throw new Error('Phone/Email is already registered');
-        }
-
-        users.push(user);
-        try {
-            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-        } catch (e) {
-            // Fallback if local storage is somehow still full
-            throw new Error('Storage full. Please clear space on your device.');
-        }
-        
-        const { password, ...safeUser } = user;
-        return safeUser;
-    },
-
-    async login(identifier: string, passwordAttempt: string): Promise<User> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const users = this.initializeUsersDB();
-        
-        const foundUser = users.find(u => 
-            (u.username.toLowerCase() === identifier.toLowerCase() || 
-             u.email?.toLowerCase() === identifier.toLowerCase()) && 
-            u.password === passwordAttempt
-        );
-
-        if (!foundUser) {
-            throw new Error('Invalid credentials');
-        }
-
-        const { password, ...safeUser } = foundUser;
-        return safeUser;
-    },
-
-    async googleAuth(email: string, name: string): Promise<User> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const users = this.initializeUsersDB();
-        const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-
-        if (existingUser) {
-            const { password, ...safeUser } = existingUser;
-            return safeUser;
-        }
-
-        const newUser: StoredUser = {
-            uid: `google_${Date.now()}`,
-            name: name,
-            username: `user_${Math.floor(Math.random() * 10000)}`,
-            email: email,
-            password: `google_oauth_${Date.now()}`,
-            photoURL: 'https://lh3.googleusercontent.com/a/default-user',
-            isAdmin: false
-        };
-
-        users.push(newUser);
-        try {
-            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-        } catch (e) {
-            throw new Error('Storage full.');
-        }
-
-        const { password, ...safeUser } = newUser;
-        return safeUser;
-    }
   }
 };

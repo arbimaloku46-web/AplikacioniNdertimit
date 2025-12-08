@@ -11,6 +11,7 @@ import { InstallButton } from './components/InstallButton';
 import { Language, translations } from './translations';
 import { dbService } from './services/db';
 import { logoutUser } from './services/authService';
+import { supabase } from './services/supabaseClient';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -86,18 +87,52 @@ const App: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Supabase Auth Listener
+    // Check active session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const metadata = session.user.user_metadata || {};
+        setUser({
+          uid: session.user.id,
+          email: session.user.email || null,
+          name: metadata.full_name || metadata.name || 'User',
+          username: metadata.username || session.user.email?.split('@')[0] || 'user',
+          photoURL: metadata.avatar_url || metadata.picture || null,
+          isAdmin: metadata.is_admin === true,
+          countryCode: metadata.country_code
+        });
+      }
+    });
+
+    // Listen for changes (Login, Logout, Auto-refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+         const metadata = session.user.user_metadata || {};
+         setUser({
+          uid: session.user.id,
+          email: session.user.email || null,
+          name: metadata.full_name || metadata.name || 'User',
+          username: metadata.username || session.user.email?.split('@')[0] || 'user',
+          photoURL: metadata.avatar_url || metadata.picture || null,
+          isAdmin: metadata.is_admin === true,
+          countryCode: metadata.country_code
+        });
+      } else {
+        setUser(null);
+        setCurrentView(AppView.HOME);
+        setActiveProject(null);
+      }
+    });
+
     // Real-time Firestore Subscription
-    const unsubscribe = dbService.subscribeProjects((data) => {
+    const unsubscribeDB = dbService.subscribeProjects((data) => {
         setProjects(data);
         setLoadingProjects(false);
         
         // Update active project reference if it changes in DB
-        // Using ref ensures we don't trigger this effect when activeProject changes via user interaction
         if (activeProjectRef.current) {
             const updated = data.find(p => p.id === activeProjectRef.current?.id);
             if (updated) {
-                // Only update if content actually changed to avoid render cycles
-                // JSON stringify is a simple check, though deep comparison is better for performance if objects are large
                 if (JSON.stringify(updated) !== JSON.stringify(activeProjectRef.current)) {
                     setActiveProject(updated);
                 }
@@ -120,9 +155,10 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      unsubscribe();
+      subscription.unsubscribe();
+      unsubscribeDB();
     };
-  }, []); // Empty dependency array prevents re-subscription on activeProject change
+  }, []); // Empty dependency array prevents re-subscription
 
   // Save language preference
   useEffect(() => {
@@ -132,8 +168,6 @@ const App: React.FC = () => {
   // Scroll to top on view change
   useEffect(() => {
     // Only scroll to top if not already on project detail or if actively navigating between projects
-    // We remove 'activeProject' from dependencies to prevent scroll jump on data updates
-    // Use activeProject?.id to only trigger on ID change
     window.scrollTo(0, 0);
   }, [currentView, activeProject?.id]); 
 
@@ -148,7 +182,7 @@ const App: React.FC = () => {
       ));
 
       try {
-        // Upload to Firebase Storage
+        // Upload to Local IndexedDB (Mock Cloud)
         const downloadUrl = await dbService.uploadFile(pendingItem.file, activeProject.id);
         
         setUploadQueue(prev => prev.map(item => 
@@ -164,7 +198,7 @@ const App: React.FC = () => {
             thumbnail: type === 'video' ? undefined : downloadUrl 
         };
 
-        // Update Project in Firestore
+        // Update Project in IndexedDB
         const updatedUpdates = [...activeProject.updates];
         updatedUpdates[activeUpdateIndex] = {
             ...updatedUpdates[activeUpdateIndex],
@@ -173,7 +207,7 @@ const App: React.FC = () => {
         const updatedProject = { ...activeProject, updates: updatedUpdates };
         
         await dbService.updateProject(updatedProject);
-        // Note: activeProject will update via the Firestore subscription
+        // Note: activeProject will update via the subscription
         
         await new Promise(r => setTimeout(r, 500));
 
@@ -202,14 +236,15 @@ const App: React.FC = () => {
   // --- HANDLERS ---
 
   const handleGlobalLogin = (loggedInUser: User, isAdminAccess: boolean) => {
-    setUser({ ...loggedInUser, isAdmin: isAdminAccess || loggedInUser.isAdmin });
+    // State update is handled by onAuthStateChange in useEffect, 
+    // but we can manually set it here for immediate feedback if needed.
+    // However, sticking to the single source of truth (subscription) is safer.
+    // The GlobalAuth component will unmount when user is set.
   };
 
   const handleLogout = async () => {
     await logoutUser();
-    setUser(null);
-    setCurrentView(AppView.HOME);
-    setActiveProject(null);
+    // User state clearing is handled by onAuthStateChange
   };
 
   const handleProjectSelect = (project: Project) => {
@@ -376,7 +411,7 @@ const App: React.FC = () => {
 
     const files = Array.from(e.target.files) as File[];
     const validFiles: File[] = [];
-    const maxSizeBytes = 200 * 1024 * 1024; // 200MB limit for Cloud Storage
+    const maxSizeBytes = 200 * 1024 * 1024; // 200MB limit
 
     files.forEach(file => {
         if (file.size > maxSizeBytes) {
@@ -467,6 +502,7 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-brand-dark min-h-screen font-sans text-slate-200 selection:bg-brand-blue/30 selection:text-brand-blue">
+      {/* ... Rest of the JSX remains the same ... */}
       
       {pendingProject && (
         <LoginScreen 
@@ -554,7 +590,7 @@ const App: React.FC = () => {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Loading Projects from Cloud...
+                        Loading Projects...
                     </div>
                 ) : projects.length === 0 ? (
                     <div className="text-center py-20 border border-dashed border-slate-800 rounded-2xl bg-slate-900/50">
@@ -634,7 +670,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {currentView === AppView.PROFILE && (
+      {currentView === AppView.PROFILE && user && (
         <div className="min-h-screen flex flex-col">
             <AppHeader />
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
@@ -719,7 +755,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* PROJECT DETAIL VIEW REMAINS MOSTLY SAME, JUST INTEGRATED WITH NEW HANDLERS */}
+      {/* PROJECT DETAIL VIEW */}
       {currentView === AppView.PROJECT_DETAIL && activeProject && (
          <div className="min-h-screen bg-brand-dark">
             <AppHeader />

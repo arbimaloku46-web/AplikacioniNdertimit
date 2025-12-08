@@ -7,11 +7,13 @@ interface ImportMetaEnv {
   DEV: boolean;
   PROD: boolean;
   SSR: boolean;
+  VITE_SUPABASE_URL: string;
+  VITE_SUPABASE_ANON_KEY: string;
 }
 
 interface ImportMeta {
   url: string;
-  readonly env: ImportMetaEnv;
+  env: ImportMetaEnv;
   glob: any;
 }
 
@@ -19,6 +21,8 @@ declare namespace NodeJS {
   interface ProcessEnv {
     API_KEY: string;
     NODE_ENV: string;
+    VITE_SUPABASE_URL: string;
+    VITE_SUPABASE_ANON_KEY: string;
     [key: string]: string | undefined;
   }
 }
