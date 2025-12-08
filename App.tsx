@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false); // New loading state
+  const [isAddingWeek, setIsAddingWeek] = useState(false); // Loading state for adding weeks
 
   // Admin Edit State (Content)
   const [newMediaUrl, setNewMediaUrl] = useState('');
@@ -329,31 +330,40 @@ const App: React.FC = () => {
 
   const handleAddNewWeek = async () => {
     if (!activeProject) return;
+    setIsAddingWeek(true);
 
-    const latestWeek = activeProject.updates.length > 0 
-        ? Math.max(...activeProject.updates.map(u => u.weekNumber)) 
-        : 0;
-    
-    const nextWeek = latestWeek + 1;
-    const today = new Date().toISOString().split('T')[0];
+    try {
+        const latestWeek = activeProject.updates.length > 0 
+            ? Math.max(...activeProject.updates.map(u => u.weekNumber)) 
+            : 0;
+        
+        const nextWeek = latestWeek + 1;
+        const today = new Date().toISOString().split('T')[0];
 
-    const newUpdate: WeeklyUpdate = {
-        weekNumber: nextWeek,
-        date: today,
-        title: `Week ${nextWeek} Update`,
-        summary: 'Enter weekly summary here...',
-        media: [],
-        stats: {
-            completion: activeProject.updates[0]?.stats.completion || 0,
-            workersOnSite: 0,
-            weatherConditions: 'Sunny'
-        },
-        splatUrl: ''
-    };
+        const newUpdate: WeeklyUpdate = {
+            weekNumber: nextWeek,
+            date: today,
+            title: `Week ${nextWeek} Update`,
+            summary: 'Enter weekly summary here...',
+            media: [],
+            stats: {
+                completion: activeProject.updates[0]?.stats.completion || 0,
+                workersOnSite: 0,
+                weatherConditions: 'Sunny'
+            },
+            splatUrl: ''
+        };
 
-    const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
-    await dbService.updateProject(updatedProject);
-    setActiveUpdateIndex(0);
+        const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
+        
+        await dbService.updateProject(updatedProject);
+        setActiveUpdateIndex(0);
+    } catch (error: any) {
+        console.error("Failed to add week:", error);
+        alert(`Failed to add new week: ${error.message || "Unknown error"}`);
+    } finally {
+        setIsAddingWeek(false);
+    }
   };
 
   const handleUpdateField = async (field: string, value: string | number) => {
@@ -372,7 +382,12 @@ const App: React.FC = () => {
     updatedUpdates[activeUpdateIndex] = currentUpdate;
     const updatedProject = { ...activeProject, updates: updatedUpdates };
     
-    await dbService.updateProject(updatedProject);
+    // In a production app, you should debounce this to avoid spamming DB
+    try {
+        await dbService.updateProject(updatedProject);
+    } catch (err: any) {
+        console.error("Save failed:", err);
+    }
   };
 
   const handleManualAddMedia = async (e: React.FormEvent) => {
@@ -794,11 +809,21 @@ const App: React.FC = () => {
                         {isAdmin && (
                             <button 
                                 onClick={handleAddNewWeek}
-                                className="flex-shrink-0 flex flex-col items-center justify-center min-w-[120px] h-[72px] p-2 rounded-xl border border-dashed border-brand-blue/50 bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue transition-all"
+                                disabled={isAddingWeek}
+                                className="flex-shrink-0 flex flex-col items-center justify-center min-w-[120px] h-[72px] p-2 rounded-xl border border-dashed border-brand-blue/50 bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <div className="flex flex-col items-center">
-                                    <span className="text-xl font-bold leading-none mb-1">+</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-wider">Add Week</span>
+                                    {isAddingWeek ? (
+                                        <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : (
+                                        <>
+                                            <span className="text-xl font-bold leading-none mb-1">+</span>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider">Add Week</span>
+                                        </>
+                                    )}
                                 </div>
                             </button>
                         )}
