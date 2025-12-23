@@ -13,7 +13,8 @@ export interface WeeklyUpdate {
   date: string;
   title: string;
   summary: string;
-  splatUrl?: string; // URL to polycam or similar web viewer
+  splatUrl?: string; // Polycam / 3D Render
+  floorfyUrl?: string; // Floorfy / 360 Tour
   media: MediaItem[];
   stats: {
     completion: number;
@@ -28,7 +29,7 @@ export interface Project {
   clientName: string;
   location: string;
   thumbnailUrl: string;
-  accessCode: string; // The password
+  accessCode: string;
   updates: WeeklyUpdate[];
   description: string;
 }
@@ -37,15 +38,10 @@ export interface User {
   uid: string;
   name: string;
   username: string;
-  email: string | null; // Can be email or phone
+  email: string | null;
   photoURL: string | null;
   countryCode?: string;
   isAdmin?: boolean;
-}
-
-// Internal interface for storing secrets in local storage (Mock only)
-export interface StoredUser extends User {
-  password: string; 
 }
 
 export enum AppView {
