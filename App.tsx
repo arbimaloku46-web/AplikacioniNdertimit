@@ -46,6 +46,10 @@ const App: React.FC = () => {
   const [newMediaCategory, setNewMediaCategory] = useState<'inside' | 'outside' | 'drone' | 'interior' | 'other'>('outside');
   const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
 
+  // Profile Edit State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+
   const [newProjectForm, setNewProjectForm] = useState({
     name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: ''
   });
@@ -267,6 +271,20 @@ const App: React.FC = () => {
     try { await dbService.updateProject(updatedProject); } catch {}
   };
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    try {
+        const { error } = await supabase.auth.updateUser({
+            data: { full_name: editName }
+        });
+        if (error) throw error;
+        setUser({...user, name: editName});
+        setIsEditingProfile(false);
+    } catch (err: any) {
+        alert('Failed to update profile: ' + err.message);
+    }
+  };
+
   const AppHeader = () => (
     <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 h-16 flex items-center shadow-lg">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
@@ -276,7 +294,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-3 md:gap-5">
                 <InstallButton language={language} />
-                <button onClick={() => setCurrentView(AppView.PROFILE)} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white transition-colors">
+                <button onClick={() => setCurrentView(AppView.PROFILE)} className={`p-2 rounded-full transition-colors ${currentView === AppView.PROFILE ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                 </button>
                 <button onClick={handleLogout} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-red-400 transition-colors">
@@ -514,6 +532,155 @@ const App: React.FC = () => {
                 </div>
             </main>
          </div>
+      )}
+
+      {currentView === AppView.PROFILE && user && (
+        <div className="min-h-screen flex flex-col bg-brand-dark">
+            <AppHeader />
+            <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-4 mb-10">
+                    <button onClick={() => setCurrentView(AppView.HOME)} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </button>
+                    <h1 className="text-3xl md:text-4xl font-display font-bold text-white">{text.profileTitle}</h1>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    {/* Left Column: User Card */}
+                    <div className="md:col-span-4 space-y-6">
+                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden backdrop-blur-xl">
+                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-brand-blue/20 to-transparent pointer-events-none" />
+                            
+                            <div className="relative mb-6 group">
+                                <div className="w-32 h-32 rounded-full bg-brand-blue flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-slate-900 overflow-hidden">
+                                     {user.photoURL ? (
+                                        <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                                     ) : (
+                                        <span>{user.name.charAt(0).toUpperCase()}</span>
+                                     )}
+                                </div>
+                                {!user.photoURL && (
+                                    <div className="absolute bottom-0 right-0 bg-slate-800 rounded-full p-2 border border-slate-700 shadow-lg text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    </div>
+                                )}
+                            </div>
+
+                            {isEditingProfile ? (
+                                <div className="w-full space-y-4 animate-in fade-in zoom-in duration-300">
+                                    <div>
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block text-left">Full Name</label>
+                                        <input 
+                                            className="w-full bg-slate-950 border border-brand-blue rounded-xl px-4 py-2 text-white text-center focus:outline-none"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 justify-center">
+                                        <button onClick={() => setIsEditingProfile(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold hover:bg-slate-700">Cancel</button>
+                                        <button onClick={handleSaveProfile} className="px-4 py-2 rounded-lg bg-brand-blue text-white text-xs font-bold hover:bg-blue-600">Save</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <h2 className="text-2xl font-bold text-white mb-1">{user.name}</h2>
+                                    <p className="text-slate-400 text-sm mb-6 font-mono">{user.email}</p>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${user.isAdmin ? 'bg-brand-blue/10 border-brand-blue text-brand-blue' : 'bg-emerald-500/10 border-emerald-500 text-emerald-500'}`}>
+                                            {user.isAdmin ? text.adminRole : text.clientRole}
+                                        </span>
+                                        <button onClick={() => { setEditName(user.name); setIsEditingProfile(true); }} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors" title="Edit Profile">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
+                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Account Security</h3>
+                             <Button variant="secondary" onClick={handleLogout} className="w-full !bg-red-500/10 !text-red-400 !border-red-500/20 hover:!bg-red-500/20 hover:!border-red-500/40 justify-between group">
+                                <span>{text.signOut}</span>
+                                <svg className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
+                             </Button>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Settings & Content */}
+                    <div className="md:col-span-8 space-y-6">
+                        {/* Language Selector */}
+                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl">
+                            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+                                {text.languageSettings}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button onClick={() => { setLanguage('en'); localStorage.setItem(STORAGE_LANGUAGE_KEY, 'en'); }} className={`relative p-6 rounded-2xl border text-left transition-all duration-300 group overflow-hidden ${language === 'en' ? 'bg-brand-blue border-brand-blue shadow-lg shadow-brand-blue/20' : 'bg-slate-950 border-white/5 hover:border-white/20'}`}>
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition-transform select-none">🇬🇧</div>
+                                    <span className={`block text-2xl mb-2 ${language === 'en' ? 'text-white' : 'text-slate-400 grayscale'}`}>🇬🇧</span>
+                                    <span className={`font-bold block ${language === 'en' ? 'text-white' : 'text-slate-300'}`}>English</span>
+                                    <span className={`text-xs block mt-1 ${language === 'en' ? 'text-blue-200' : 'text-slate-500'}`}>International</span>
+                                </button>
+                                <button onClick={() => { setLanguage('sq'); localStorage.setItem(STORAGE_LANGUAGE_KEY, 'sq'); }} className={`relative p-6 rounded-2xl border text-left transition-all duration-300 group overflow-hidden ${language === 'sq' ? 'bg-brand-blue border-brand-blue shadow-lg shadow-brand-blue/20' : 'bg-slate-950 border-white/5 hover:border-white/20'}`}>
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition-transform select-none">🇦🇱</div>
+                                    <span className={`block text-2xl mb-2 ${language === 'sq' ? 'text-white' : 'text-slate-400 grayscale'}`}>🇦🇱</span>
+                                    <span className={`font-bold block ${language === 'sq' ? 'text-white' : 'text-slate-300'}`}>Shqip</span>
+                                    <span className={`text-xs block mt-1 ${language === 'sq' ? 'text-blue-200' : 'text-slate-500'}`}>Amtare</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Accessed Projects List */}
+                        {!user.isAdmin && (
+                            <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl">
+                                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    {text.myUnlockedProjects}
+                                </h3>
+                                
+                                {projects.filter(p => unlockedProjectIds.includes(p.id)).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {projects.filter(p => unlockedProjectIds.includes(p.id)).map(p => (
+                                            <div key={p.id} onClick={() => handleProjectSelect(p)} className="group flex items-center gap-5 p-4 rounded-2xl bg-slate-950 border border-white/5 cursor-pointer hover:border-brand-blue/50 hover:bg-slate-900 transition-all active:scale-[0.99]">
+                                                <div className="w-20 h-16 rounded-xl overflow-hidden shadow-lg relative">
+                                                    <img src={p.thumbnailUrl} className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-white font-bold text-base group-hover:text-brand-blue transition-colors">{p.name}</h4>
+                                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mt-1">{p.location}</p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-10 px-6 rounded-2xl bg-slate-950/50 border border-dashed border-white/10">
+                                        <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                        </div>
+                                        <p className="text-sm text-slate-400 mb-4">{text.noProjectsAccess}</p>
+                                        <Button variant="primary" onClick={() => setCurrentView(AppView.HOME)} className="!py-2 !px-6 !text-xs">
+                                            {text.browseProjects}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-center mt-8">
+                             <a href="mailto:support@ndertimi.org" className="text-slate-600 hover:text-slate-400 text-xs font-mono transition-colors">
+                                 Support ID: {user.uid.substring(0, 8)} • v1.0.4
+                             </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <Footer />
+        </div>
       )}
     </div>
   );
