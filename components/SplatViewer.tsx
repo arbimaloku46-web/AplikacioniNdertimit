@@ -29,7 +29,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
 
   return (
     <div 
-        className="relative w-full h-full min-h-[400px] md:min-h-[550px] rounded-2xl overflow-hidden border border-white/5 bg-black group"
+        className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-black group shadow-2xl"
         onMouseLeave={() => setIsInteracting(false)}
     >
       {isLoading && (
@@ -75,10 +75,11 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
       <iframe 
         src={url}
         title={title}
-        loading="lazy"
-        className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onLoad={() => setIsLoading(false)}
         allowFullScreen
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       ></iframe>
       
       {isInteracting && (

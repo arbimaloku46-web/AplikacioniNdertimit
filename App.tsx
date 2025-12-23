@@ -50,8 +50,11 @@ const App: React.FC = () => {
     name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: ''
   });
 
-  const activeProjectRef = useRef<Project | null>(null);
-  useEffect(() => { activeProjectRef.current = activeProject; }, [activeProject]);
+  // Keep a ref of the active project ID to sync real-time updates correctly
+  const activeProjectIdRef = useRef<string | null>(null);
+  useEffect(() => { 
+    activeProjectIdRef.current = activeProject?.id || null; 
+  }, [activeProject]);
 
   const text = translations[language];
 
@@ -100,9 +103,21 @@ const App: React.FC = () => {
     const unsubscribeDB = dbService.subscribeProjects((data) => {
         setProjects(data);
         setLoadingProjects(false);
-        if (activeProjectRef.current) {
-            const updated = data.find(p => p.id === activeProjectRef.current?.id);
-            if (updated) setActiveProject(updated);
+        
+        // Real-time Sync Logic:
+        // If we are currently viewing a project, update its state from the incoming DB data
+        // to show changes made by this admin (or others) immediately.
+        if (activeProjectIdRef.current) {
+            const updated = data.find(p => p.id === activeProjectIdRef.current);
+            if (updated) {
+                setActiveProject(prev => {
+                    // Only update if data actually changed to avoid cursor jumping
+                    if (JSON.stringify(prev) !== JSON.stringify(updated)) {
+                        return updated;
+                    }
+                    return prev;
+                });
+            }
         }
     });
 
@@ -146,7 +161,12 @@ const App: React.FC = () => {
             ...updatedUpdates[activeUpdateIndex],
             media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
         };
-        await dbService.updateProject({ ...activeProject, updates: updatedUpdates });
+        
+        // Optimistic Update: Update UI immediately before DB confirms
+        const newProjectState = { ...activeProject, updates: updatedUpdates };
+        setActiveProject(newProjectState); 
+        
+        await dbService.updateProject(newProjectState);
         setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'completed' } : item));
       } catch (error) {
         setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'error' } : item));
@@ -209,6 +229,10 @@ const App: React.FC = () => {
             stats: { completion: activeProject.updates[0]?.stats.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
         };
         const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
+        
+        // Optimistic Update
+        setActiveProject(updatedProject);
+        
         await dbService.updateProject(updatedProject);
         setActiveUpdateIndex(0);
     } catch (err: any) { alert(err.message); }
@@ -223,18 +247,28 @@ const App: React.FC = () => {
 
   const handleUpdateField = async (field: string, value: any) => {
     if (!activeProject) return;
+    
+    // 1. Create the updated object
     const updatedUpdates = [...activeProject.updates];
     const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
+    
     if (field.startsWith('stats.')) {
         const statKey = field.split('.')[1];
         currentUpdate.stats = { ...currentUpdate.stats, [statKey]: value };
     } else { (currentUpdate as any)[field] = value; }
+    
     updatedUpdates[activeUpdateIndex] = currentUpdate;
-    try { await dbService.updateProject({ ...activeProject, updates: updatedUpdates }); } catch {}
+    const updatedProject = { ...activeProject, updates: updatedUpdates };
+
+    // 2. Optimistic Update (Immediate UI Refresh)
+    setActiveProject(updatedProject);
+
+    // 3. Persist to DB
+    try { await dbService.updateProject(updatedProject); } catch {}
   };
 
   const AppHeader = () => (
-    <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-40 h-16 flex items-center">
+    <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 h-16 flex items-center shadow-lg">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
                 <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-xl"><span className="font-display font-bold text-brand-blue text-xl">N</span></div>
@@ -261,7 +295,7 @@ const App: React.FC = () => {
       {pendingProject && <LoginScreen targetProject={pendingProject} onLogin={handleAuthenticationSuccess} onCancel={() => setPendingProject(null)} />}
       
       {showCreateProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
              <div className="bg-slate-900 border border-white/5 rounded-3xl p-8 w-full max-w-2xl shadow-2xl my-8">
                 <h2 className="text-2xl font-bold text-white mb-8">New Project Entry</h2>
                 <form onSubmit={handleCreateProject} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -314,7 +348,7 @@ const App: React.FC = () => {
       {currentView === AppView.PROJECT_DETAIL && activeProject && (
          <div className="min-h-screen bg-brand-dark pb-32">
             <AppHeader />
-            <main className="max-w-7xl mx-auto px-4 md:px-6 py-10">
+            <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 relative z-0">
                 {/* Project Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div>
@@ -352,7 +386,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Hero Experience Suite */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16 relative z-10">
                     <div className="lg:col-span-8 space-y-8">
                         <div className="flex flex-col gap-6">
                            <div className="flex items-center justify-between">
@@ -377,9 +411,9 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="lg:col-span-4 space-y-8">
-                        {/* Site Stats & Summary */}
-                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl sticky top-24">
+                    <div className="lg:col-span-4 space-y-8 relative z-20">
+                        {/* Site Stats & Summary - Sticky */}
+                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl sticky top-24 z-30 shadow-2xl">
                             <h3 className="text-[10px] uppercase font-bold text-brand-blue mb-6 tracking-widest">Executive Update</h3>
                             
                             {isAdmin ? (

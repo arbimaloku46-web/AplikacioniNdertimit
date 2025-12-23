@@ -175,10 +175,10 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
 
       {/* Lightbox */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center p-4">
           <button 
             onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 z-[110] bg-white/10 p-3 rounded-full backdrop-blur-md text-white transition-all active:scale-90"
+            className="absolute top-6 right-6 z-[1100] bg-white/10 p-3 rounded-full backdrop-blur-md text-white transition-all active:scale-90"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
