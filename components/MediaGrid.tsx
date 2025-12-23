@@ -1,16 +1,16 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MediaItem } from '../types';
 
 interface MediaGridProps {
   media: MediaItem[];
 }
 
-// Helper to detect YouTube/Vimeo links
+type ViewMode = 'tiles' | 'content';
+type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
+
 const getVideoInfo = (url: string) => {
   if (!url) return { type: 'file', embedUrl: '', thumbnail: null };
-
-  // YouTube (Standard, Short, Embed, youtu.be)
   const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/);
   if (ytMatch) {
     return {
@@ -20,36 +20,24 @@ const getVideoInfo = (url: string) => {
       thumbnail: `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`
     };
   }
-  
-  // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) {
-    return {
-      type: 'vimeo',
-      id: vimeoMatch[1],
-      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
-      thumbnail: null // Generic placeholder
-    };
-  }
-
-  // Standard Video File
+  if (vimeoMatch) return { type: 'vimeo', id: vimeoMatch[1], embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`, thumbnail: null };
   return { type: 'file', embedUrl: url, thumbnail: null };
 };
 
-// Internal component for Video Thumbnails to handle hover state independently
-const VideoThumbnail: React.FC<{ url: string }> = ({ url }) => {
+const VideoThumbnail: React.FC<{ url: string; autoPlayOnHover?: boolean }> = ({ url, autoPlayOnHover = true }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const info = getVideoInfo(url);
 
   const handleMouseEnter = () => {
-    if (videoRef.current && info.type === 'file') {
+    if (autoPlayOnHover && videoRef.current && info.type === 'file') {
       videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
     }
   };
 
   const handleMouseLeave = () => {
-    if (videoRef.current && info.type === 'file') {
+    if (autoPlayOnHover && videoRef.current && info.type === 'file') {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
       setIsPlaying(false);
@@ -58,21 +46,17 @@ const VideoThumbnail: React.FC<{ url: string }> = ({ url }) => {
 
   if (info.type !== 'file') {
      return (
-        <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-500">
+        <div className="w-full h-full relative group">
           {info.thumbnail ? (
-              <img src={info.thumbnail} alt="Video Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+              <img src={info.thumbnail} alt="Video" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
           ) : (
               <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                <span className="text-slate-500 font-bold tracking-widest uppercase text-xs">{info.type}</span>
+                <span className="text-slate-500 font-bold uppercase text-[10px]">{info.type}</span>
               </div>
           )}
-          <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-           <div className="absolute top-2 right-2 bg-red-600/90 backdrop-blur px-2 py-0.5 rounded text-[10px] text-white font-bold uppercase flex items-center gap-1">
-              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-              {info.type}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
              </div>
           </div>
@@ -81,266 +65,218 @@ const VideoThumbnail: React.FC<{ url: string }> = ({ url }) => {
   }
 
   return (
-    <div 
-      className="w-full h-full relative" 
-      onMouseEnter={handleMouseEnter} 
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="w-full h-full relative overflow-hidden" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
         <video 
             ref={videoRef}
             src={url}
-            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"
+            className="w-full h-full object-cover transition-opacity"
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
         />
-        
-        {/* Play Icon Overlay - Fades out when hovering/playing */}
-        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="w-12 h-12 rounded-full bg-amber-500/90 flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
-            <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-            </svg>
+        {!isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-brand-blue/90 flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
             </div>
-        </div>
-    </div>
-  );
-};
-
-// Internal component to handle complex zoom/pan logic
-const ZoomableImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ x: 0, y: 0 });
-  const lastPositionRef = useRef({ x: 0, y: 0 });
-
-  const handleZoomIn = () => setScale(s => Math.min(s + 0.5, 4));
-  const handleZoomOut = () => {
-    setScale(s => {
-      const newScale = Math.max(s - 0.5, 1);
-      if (newScale === 1) setPosition({ x: 0, y: 0 }); // Reset position if fully zoomed out
-      return newScale;
-    });
-  };
-  
-  const handleReset = () => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-  };
-
-  const handleDoubleTap = () => {
-    if (scale > 1) {
-      handleReset();
-    } else {
-      setScale(2.5);
-    }
-  };
-
-  // Handle Mouse Wheel Zoom
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation();
-    if (e.deltaY < 0) {
-      setScale(s => Math.min(s + 0.2, 4));
-    } else {
-      setScale(s => {
-        const newScale = Math.max(s - 0.2, 1);
-        if (newScale === 1) setPosition({ x: 0, y: 0 });
-        return newScale;
-      });
-    }
-  };
-
-  // Pointer Events for Panning (Mouse & Touch)
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (scale === 1) return; // Only drag if zoomed in
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    lastPositionRef.current = { ...position };
-    if (containerRef.current) containerRef.current.setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    
-    const deltaX = e.clientX - dragStartRef.current.x;
-    const deltaY = e.clientY - dragStartRef.current.y;
-
-    setPosition({
-      x: lastPositionRef.current.x + deltaX,
-      y: lastPositionRef.current.y + deltaY
-    });
-  };
-
-  const onPointerUp = (e: React.PointerEvent) => {
-    setIsDragging(false);
-    if (containerRef.current) containerRef.current.releasePointerCapture(e.pointerId);
-  };
-
-  return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/50 rounded-lg border border-slate-800">
-      {/* Floating Controls */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 bg-slate-900/80 backdrop-blur-md rounded-full border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handleZoomOut} disabled={scale <= 1} className="p-2 text-white hover:text-brand-blue disabled:opacity-30 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-        </button>
-        <span className="text-xs font-mono text-slate-300 w-12 text-center">{Math.round(scale * 100)}%</span>
-        <button onClick={handleZoomIn} disabled={scale >= 4} className="p-2 text-white hover:text-brand-blue disabled:opacity-30 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-        </button>
-        <div className="w-[1px] h-4 bg-slate-700 mx-1"></div>
-        <button onClick={handleReset} className="text-xs font-bold text-slate-400 hover:text-white px-2 uppercase tracking-wider">
-          Reset
-        </button>
-      </div>
-
-      {/* Image Container */}
-      <div 
-        ref={containerRef}
-        className={`relative w-full h-full flex items-center justify-center touch-none ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-        onWheel={handleWheel}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onDoubleClick={handleDoubleTap}
-      >
-        <img 
-          src={src} 
-          alt={alt}
-          className="max-w-full max-h-[80vh] object-contain transition-transform duration-75 ease-linear select-none"
-          style={{ 
-            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
-          }}
-          draggable={false}
-        />
-      </div>
+          </div>
+        )}
     </div>
   );
 };
 
 export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('tiles');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
 
-  // Close lightbox on Escape key
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedMedia(null);
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
+  // Filtering Logic
+  const filteredMedia = useMemo(() => {
+    let list = [...media];
+    if (activeFilter !== 'all') {
+      list = list.filter(m => m.category === activeFilter);
+    }
+    if (activeTab === 'videos') {
+      list = list.filter(m => m.type === 'video');
+    } else if (activeTab === 'photos') {
+      list = list.filter(m => m.type === 'photo' || m.type === '360');
+    }
+    return list;
+  }, [media, activeFilter, activeTab]);
+
+  const stats = useMemo(() => ({
+    videos: media.filter(m => m.type === 'video').length,
+    photos: media.filter(m => m.type === 'photo' || m.type === '360').length
+  }), [media]);
+
+  const categories: { id: FilterType; label: string }[] = [
+    { id: 'all', label: 'All Areas' },
+    { id: 'outside', label: 'Outside' },
+    { id: 'inside', label: 'Inside' },
+    { id: 'drone', label: 'Drone' },
+    { id: 'interior', label: 'Interior' },
+  ];
 
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {media.map((item) => {
-           return (
-            <div 
-              key={item.id} 
-              onClick={() => setSelectedMedia(item)}
-              className="group relative aspect-video bg-slate-900 rounded-lg overflow-hidden cursor-pointer border border-slate-800 hover:border-amber-500/50 transition-all"
+    <div className="space-y-6">
+      {/* Controls Bar */}
+      <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between bg-slate-900/40 p-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+        {/* Type Tabs */}
+        <div className="flex bg-slate-950/50 p-1 rounded-xl">
+          {(['all', 'videos', 'photos'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === tab 
+                  ? 'bg-brand-blue text-white shadow-lg' 
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
             >
-              {item.type === 'video' ? (
-                 <VideoThumbnail url={item.url} />
-              ) : item.type === '360' ? (
-                  <div className="w-full h-full relative">
-                    <img 
-                      src={item.url} 
-                      alt={item.description} 
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                    />
-                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                      </div>
-                    </div>
-                     <div className="absolute top-2 right-2 bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                      360° View
-                     </div>
-                  </div>
-              ) : (
-                <img 
-                  src={item.url} 
-                  alt={item.description} 
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-500"
-                />
-              )}
-              
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform z-10 pointer-events-none">
-                <p className="text-xs text-white font-medium truncate">{item.description}</p>
-              </div>
-            </div>
-          );
-        })}
+              {tab}
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === tab ? 'bg-white/20' : 'bg-slate-800'}`}>
+                {tab === 'all' ? media.length : tab === 'videos' ? stats.videos : stats.photos}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* View Mode Switcher */}
+        <div className="flex items-center gap-4">
+           <div className="flex bg-slate-950/50 p-1 rounded-xl">
+            <button onClick={() => setViewMode('tiles')} className={`p-2 rounded-lg transition-colors ${viewMode === 'tiles' ? 'bg-slate-800 text-brand-blue' : 'text-slate-600 hover:text-slate-400'}`}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            </button>
+            <button onClick={() => setViewMode('content')} className={`p-2 rounded-lg transition-colors ${viewMode === 'content' ? 'bg-slate-800 text-brand-blue' : 'text-slate-600 hover:text-slate-400'}`}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Filter Chips (Horizontal Scroll on Mobile) */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        {categories.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveFilter(cat.id)}
+            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+              activeFilter === cat.id 
+                ? 'bg-white text-brand-dark border-white' 
+                : 'bg-transparent text-slate-500 border-slate-800 hover:border-slate-600 hover:text-slate-300'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Media Display */}
+      {filteredMedia.length === 0 ? (
+        <div className="py-20 text-center border border-dashed border-slate-800 rounded-2xl text-slate-600">
+          No media matches your current filter.
+        </div>
+      ) : (
+        <div className={viewMode === 'tiles' 
+          ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" 
+          : "flex flex-col gap-8 max-w-4xl mx-auto"
+        }>
+          {filteredMedia.map((item) => (
+            <div 
+              key={item.id}
+              onClick={() => setSelectedMedia(item)}
+              className={`group relative bg-slate-900 rounded-xl overflow-hidden cursor-pointer border border-white/5 transition-all hover:border-brand-blue/50 active:scale-[0.98] ${
+                viewMode === 'content' ? 'aspect-video md:aspect-[21/9]' : 'aspect-square md:aspect-video'
+              }`}
+            >
+              {item.type === 'video' ? (
+                <VideoThumbnail url={item.url} />
+              ) : (
+                <div className="w-full h-full relative">
+                  <img src={item.url} alt={item.description} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                  {item.type === '360' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tag Overlays */}
+              <div className="absolute top-2 left-2 flex gap-1">
+                {item.category && (
+                  <span className="bg-black/60 backdrop-blur px-2 py-0.5 rounded text-[8px] uppercase font-bold text-white tracking-widest border border-white/10">
+                    {item.category}
+                  </span>
+                )}
+              </div>
+
+              {/* Info Overlay */}
+              <div className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-transform duration-300 ${
+                viewMode === 'tiles' ? 'translate-y-full group-hover:translate-y-0' : 'translate-y-0'
+              }`}>
+                <p className="text-xs text-white font-medium truncate drop-shadow-lg">{item.description}</p>
+                {viewMode === 'content' && item.type === 'video' && (
+                  <span className="text-[10px] text-brand-blue font-bold uppercase mt-1 inline-block">Click to play full video</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox / Overlay (Enhanced Mobile Support) */}
       {selectedMedia && (
-        <div 
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-10"
-            onClick={() => setSelectedMedia(null)}
-        >
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-in fade-in duration-200">
           <button 
             onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 text-slate-400 hover:text-white z-50 bg-black/20 rounded-full p-2 hover:bg-white/10 transition-colors"
+            className="absolute top-6 right-6 z-[110] text-white/50 hover:text-white bg-white/10 p-3 rounded-full backdrop-blur-md transition-all active:scale-90"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
 
-          <div className="max-w-6xl w-full h-full flex flex-col items-center justify-center gap-4" onClick={e => e.stopPropagation()}>
-             {selectedMedia.type === 'video' ? (
-               (() => {
-                   const info = getVideoInfo(selectedMedia.url);
-                   return info.type === 'file' ? (
-                       <video 
-                        key={selectedMedia.id} // Forces re-render on video change to ensure autoPlay works
-                        controls 
-                        autoPlay
-                        playsInline
-                        className="w-full h-auto max-h-[80vh] rounded-lg shadow-2xl border border-slate-800"
-                        src={selectedMedia.url}
-                       />
-                   ) : (
-                       <iframe 
-                        src={info.embedUrl} 
-                        className="w-full aspect-video max-h-[80vh] rounded-lg shadow-2xl border border-slate-800"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                       ></iframe>
-                   );
-               })()
-             ) : selectedMedia.type === '360' ? (
-                <div className="w-full h-[70vh] relative rounded-lg overflow-hidden border border-slate-800 bg-black group">
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                         <div className="glass-panel px-4 py-2 rounded-full text-sm text-white flex items-center gap-2">
-                            <svg className="w-4 h-4 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                            Drag to Look Around
-                         </div>
-                    </div>
-                    <img 
-                        src={selectedMedia.url} 
-                        alt="360 view"
-                        className="w-full h-full object-cover scale-125 cursor-move"
-                        style={{ objectPosition: 'center' }}
-                    />
-                    <div className="absolute bottom-4 right-4 text-xs text-slate-500">360° Simulated View</div>
+          <div className="w-full h-full flex flex-col p-4 md:p-12 relative">
+             <div className="flex-1 flex items-center justify-center relative">
+                {/* Side Navigation Buttons (Desktop) */}
+                <div className="hidden md:contents">
+                   <button className="absolute left-4 p-4 text-white/20 hover:text-white transition-all"><svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
+                   <button className="absolute right-4 p-4 text-white/20 hover:text-white transition-all"><svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
                 </div>
-             ) : (
-               <ZoomableImage src={selectedMedia.url} alt={selectedMedia.description} />
-             )}
-             <div className="text-center mt-4 relative z-40 pointer-events-none">
-               <p className="text-lg font-medium text-white drop-shadow-md">{selectedMedia.description}</p>
-               {selectedMedia.type === '360' && <p className="text-slate-400 text-sm">Immersive Interior View</p>}
+
+                {selectedMedia.type === 'video' ? (
+                  (() => {
+                    const info = getVideoInfo(selectedMedia.url);
+                    return info.type === 'file' ? (
+                      <video controls autoPlay playsInline className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src={selectedMedia.url} />
+                    ) : (
+                      <iframe src={info.embedUrl} className="w-full aspect-video max-h-[75vh] rounded-lg shadow-2xl" allow="autoplay; encrypted-media" allowFullScreen />
+                    );
+                  })()
+                ) : (
+                  <img src={selectedMedia.url} alt={selectedMedia.description} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl select-none" />
+                )}
+             </div>
+
+             <div className="text-center mt-6">
+                <h4 className="text-lg font-bold text-white mb-1">{selectedMedia.description}</h4>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded border border-white/5">
+                    {selectedMedia.type}
+                  </span>
+                  {selectedMedia.category && (
+                     <span className="text-[10px] text-brand-blue font-bold uppercase tracking-widest bg-brand-blue/10 px-2 py-1 rounded border border-brand-blue/20">
+                      {selectedMedia.category}
+                    </span>
+                  )}
+                </div>
              </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

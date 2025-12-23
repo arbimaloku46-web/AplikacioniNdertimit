@@ -5,6 +5,7 @@ export interface MediaItem {
   url: string;
   thumbnail?: string;
   description: string;
+  category?: 'inside' | 'outside' | 'drone' | 'interior' | 'other';
 }
 
 export interface WeeklyUpdate {
