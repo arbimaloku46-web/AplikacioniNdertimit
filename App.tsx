@@ -412,8 +412,8 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="lg:col-span-4 space-y-8 relative z-20">
-                        {/* Site Stats & Summary - Sticky */}
-                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl sticky top-24 z-30 shadow-2xl">
+                        {/* Site Stats & Summary - Removed sticky behavior to fix overlap issues */}
+                        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl relative z-30 shadow-2xl">
                             <h3 className="text-[10px] uppercase font-bold text-brand-blue mb-6 tracking-widest">Executive Update</h3>
                             
                             {isAdmin ? (
