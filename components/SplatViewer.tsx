@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 
 interface EmbedViewerProps {
@@ -11,6 +11,33 @@ interface EmbedViewerProps {
 export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+        const isFs = !!document.fullscreenElement;
+        setIsFullscreen(isFs);
+        // Automatically handle interaction state based on fullscreen
+        if (isFs) setIsInteracting(true);
+        else setIsInteracting(false);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+        containerRef.current.requestFullscreen().catch(err => {
+            console.error("Error enabling full-screen mode:", err);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+  };
 
   if (!url) {
     return (
@@ -29,9 +56,23 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
 
   return (
     <div 
-        className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-black group shadow-2xl"
-        onMouseLeave={() => setIsInteracting(false)}
+        ref={containerRef}
+        className={`relative w-full rounded-3xl overflow-hidden border border-white/5 bg-black group shadow-2xl transition-all duration-300 ${isFullscreen ? 'h-full' : 'aspect-video'}`}
+        onMouseLeave={() => !isFullscreen && setIsInteracting(false)}
     >
+      {/* Fullscreen Toggle Button */}
+      <button 
+        onClick={toggleFullScreen}
+        className="absolute top-4 right-4 z-[40] p-2.5 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg"
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+      >
+        {isFullscreen ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        ) : (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+        )}
+      </button>
+
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-900/80 backdrop-blur-md pointer-events-none">
           <div className="flex flex-col items-center">
@@ -46,7 +87,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         </div>
       )}
 
-      {!isLoading && !isInteracting && (
+      {!isLoading && !isInteracting && !isFullscreen && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[1px] transition-all duration-300">
             <Button 
                 onClick={() => setIsInteracting(true)}
@@ -60,8 +101,8 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         </div>
       )}
 
-      {isInteracting && (
-        <div className="absolute top-4 right-4 z-30 animate-in fade-in slide-in-from-top-2">
+      {isInteracting && !isFullscreen && (
+        <div className="absolute top-4 left-4 z-30 animate-in fade-in slide-in-from-top-2">
             <button
                 onClick={() => setIsInteracting(false)}
                 className="bg-brand-dark/90 hover:bg-brand-blue text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg backdrop-blur border border-white/10 transition-all flex items-center gap-2"
