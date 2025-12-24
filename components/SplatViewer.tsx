@@ -23,15 +23,13 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         setIsNativeFullscreen(isFs);
         if (isFs) {
              setIsInteracting(true);
-             setIsCssFullscreen(false); // Ensure CSS mode is off if native activates
+             setIsCssFullscreen(false); 
         } else {
-             // If we just exited native, and aren't in CSS mode, turn off interaction
              if (!isCssFullscreen) setIsInteracting(false);
         }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    // Add webkit listener for broader support
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange); 
 
     return () => {
@@ -56,12 +54,10 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
 
     // Enter Logic
     const el = containerRef.current as any;
-    // Standard and vendor-prefixed methods
     const requestFs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
 
     if (requestFs) {
         const promise = requestFs.call(el);
-        // Some older implementations don't return a promise
         if (promise && typeof promise.catch === 'function') {
             promise.catch((err: any) => {
                 console.log("Native fullscreen rejected, using CSS fallback", err);
@@ -70,7 +66,6 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
             });
         }
     } else {
-        // Fallback for iOS Safari (iPhone) and others without API
         setIsCssFullscreen(true);
         setIsInteracting(true);
     }
@@ -103,18 +98,38 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         `}
         onMouseLeave={() => !isFullscreen && setIsInteracting(false)}
     >
-      {/* Fullscreen Toggle Button */}
-      <button 
-        onClick={toggleFullScreen}
-        className="absolute top-4 right-4 z-[110] p-2.5 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg"
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-      >
-        {isFullscreen ? (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-        ) : (
+      {/* Top Controls Bar - Always visible in fullscreen */}
+      {isFullscreen && (
+          <div className="absolute top-0 left-0 right-0 z-[110] p-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+              <div className="pointer-events-auto">
+                 <button 
+                    onClick={() => setIsInteracting(!isInteracting)}
+                    className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all"
+                 >
+                    {isInteracting ? 'Lock View' : 'Unlock View'}
+                 </button>
+              </div>
+              
+              <button 
+                onClick={toggleFullScreen}
+                className="pointer-events-auto p-3 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-lg transition-transform active:scale-90 flex items-center gap-2 pr-5"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <span className="font-bold text-sm uppercase tracking-wider">Close</span>
+              </button>
+          </div>
+      )}
+
+      {/* Standard Fullscreen Toggle (Only valid when NOT in fullscreen) */}
+      {!isFullscreen && (
+        <button 
+            onClick={toggleFullScreen}
+            className="absolute top-4 right-4 z-[50] p-3 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg active:scale-95"
+            title="Enter Fullscreen"
+        >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-        )}
-      </button>
+        </button>
+      )}
 
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-900/80 backdrop-blur-md pointer-events-none">
@@ -125,7 +140,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
                    <span className="text-[8px] font-bold text-brand-blue">{type.toUpperCase()}</span>
                 </div>
              </div>
-             <p className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Initializing Environment</p>
+             <p className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Loading...</p>
           </div>
         </div>
       )}
@@ -136,23 +151,8 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
                 onClick={() => setIsInteracting(true)}
                 className="shadow-2xl !bg-white !text-slate-950 hover:scale-105"
             >
-                {type === '3d' ? 'Explore 3D Model' : 'Start 360 Tour'}
+                {type === '3d' ? 'Tap to Explore' : 'Start Tour'}
             </Button>
-            <p className="mt-4 text-[10px] text-white/60 font-medium px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
-              Interactive Viewport Enabled
-            </p>
-        </div>
-      )}
-
-      {isInteracting && !isFullscreen && (
-        <div className="absolute top-4 left-4 z-30 animate-in fade-in slide-in-from-top-2">
-            <button
-                onClick={() => setIsInteracting(false)}
-                className="bg-brand-dark/90 hover:bg-brand-blue text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg backdrop-blur border border-white/10 transition-all flex items-center gap-2"
-            >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                EXIT INTERACTIVE MODE
-            </button>
         </div>
       )}
 
@@ -166,12 +166,13 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       ></iframe>
       
+      {/* Controls Hint */}
       {isInteracting && !isFullscreen && (
-          <div className="absolute bottom-4 left-4 z-20 pointer-events-none animate-in fade-in slide-in-from-bottom-2 hidden md:block">
-            <div className="bg-black/60 backdrop-blur-md p-3 rounded-xl text-white/70 text-[10px] border border-white/10 font-bold uppercase tracking-widest">
-                {type === '3d' ? 'LMB: Rotate • Wheel: Zoom • RMB: Pan' : 'Click & Drag to Look Around'}
+         <div className="absolute top-4 left-4 z-30 animate-in fade-in slide-in-from-top-2 pointer-events-none">
+            <div className="bg-black/40 backdrop-blur px-3 py-1.5 rounded-lg border border-white/5">
+                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Interactive Mode</span>
             </div>
-        </div>
+         </div>
       )}
     </div>
   );
