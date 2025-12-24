@@ -11,31 +11,68 @@ interface EmbedViewerProps {
 export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
+  const [isCssFullscreen, setIsCssFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const isFullscreen = isNativeFullscreen || isCssFullscreen;
 
   useEffect(() => {
     const handleFullscreenChange = () => {
         const isFs = !!document.fullscreenElement;
-        setIsFullscreen(isFs);
-        // Automatically handle interaction state based on fullscreen
-        if (isFs) setIsInteracting(true);
-        else setIsInteracting(false);
+        setIsNativeFullscreen(isFs);
+        if (isFs) {
+             setIsInteracting(true);
+             setIsCssFullscreen(false); // Ensure CSS mode is off if native activates
+        } else {
+             // If we just exited native, and aren't in CSS mode, turn off interaction
+             if (!isCssFullscreen) setIsInteracting(false);
+        }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+    // Add webkit listener for broader support
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange); 
+
+    return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [isCssFullscreen]);
 
   const toggleFullScreen = () => {
     if (!containerRef.current) return;
     
-    if (!document.fullscreenElement) {
-        containerRef.current.requestFullscreen().catch(err => {
-            console.error("Error enabling full-screen mode:", err);
-        });
+    // Exit Logic
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(console.error);
+        return;
+    }
+    if (isCssFullscreen) {
+        setIsCssFullscreen(false);
+        setIsInteracting(false);
+        return;
+    }
+
+    // Enter Logic
+    const el = containerRef.current as any;
+    // Standard and vendor-prefixed methods
+    const requestFs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+
+    if (requestFs) {
+        const promise = requestFs.call(el);
+        // Some older implementations don't return a promise
+        if (promise && typeof promise.catch === 'function') {
+            promise.catch((err: any) => {
+                console.log("Native fullscreen rejected, using CSS fallback", err);
+                setIsCssFullscreen(true);
+                setIsInteracting(true);
+            });
+        }
     } else {
-        document.exitFullscreen();
+        // Fallback for iOS Safari (iPhone) and others without API
+        setIsCssFullscreen(true);
+        setIsInteracting(true);
     }
   };
 
@@ -57,13 +94,19 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
   return (
     <div 
         ref={containerRef}
-        className={`relative w-full rounded-3xl overflow-hidden border border-white/5 bg-black group shadow-2xl transition-all duration-300 ${isFullscreen ? 'h-full' : 'aspect-video'}`}
+        className={`
+            transition-all duration-300 bg-black group shadow-2xl overflow-hidden
+            ${isFullscreen 
+                ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none' 
+                : 'relative w-full aspect-video rounded-3xl border border-white/5'
+            }
+        `}
         onMouseLeave={() => !isFullscreen && setIsInteracting(false)}
     >
       {/* Fullscreen Toggle Button */}
       <button 
         onClick={toggleFullScreen}
-        className="absolute top-4 right-4 z-[40] p-2.5 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg"
+        className="absolute top-4 right-4 z-[110] p-2.5 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg"
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       >
         {isFullscreen ? (
@@ -116,14 +159,14 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
       <iframe 
         src={url}
         title={title}
-        className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting || isFullscreen ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onLoad={() => setIsLoading(false)}
         allowFullScreen
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       ></iframe>
       
-      {isInteracting && (
+      {isInteracting && !isFullscreen && (
           <div className="absolute bottom-4 left-4 z-20 pointer-events-none animate-in fade-in slide-in-from-bottom-2 hidden md:block">
             <div className="bg-black/60 backdrop-blur-md p-3 rounded-xl text-white/70 text-[10px] border border-white/10 font-bold uppercase tracking-widest">
                 {type === '3d' ? 'LMB: Rotate • Wheel: Zoom • RMB: Pan' : 'Click & Drag to Look Around'}
