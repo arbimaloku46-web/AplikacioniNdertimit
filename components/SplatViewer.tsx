@@ -17,6 +17,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
 
   const isFullscreen = isNativeFullscreen || isCssFullscreen;
 
+  // Handle Scroll Locking and Fullscreen Events
   useEffect(() => {
     const handleFullscreenChange = () => {
         const isFs = !!document.fullscreenElement;
@@ -35,6 +36,18 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
     return () => {
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [isCssFullscreen]);
+
+  // Effect to lock body scroll when in CSS fullscreen (mobile fallback)
+  useEffect(() => {
+    if (isCssFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
     };
   }, [isCssFullscreen]);
 
@@ -92,7 +105,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
         className={`
             transition-all duration-300 bg-black group shadow-2xl overflow-hidden
             ${isFullscreen 
-                ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none' 
+                ? 'fixed inset-0 z-[5000] w-screen h-screen rounded-none' 
                 : 'relative w-full aspect-video rounded-3xl border border-white/5'
             }
         `}
@@ -100,7 +113,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
     >
       {/* Top Controls Bar - Always visible in fullscreen */}
       {isFullscreen && (
-          <div className="absolute top-0 left-0 right-0 z-[110] p-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="absolute top-0 left-0 right-0 z-[5100] p-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none safe-area-inset-top">
               <div className="pointer-events-auto">
                  <button 
                     onClick={() => setIsInteracting(!isInteracting)}

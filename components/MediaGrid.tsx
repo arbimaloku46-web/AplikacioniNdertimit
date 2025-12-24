@@ -68,6 +68,18 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
 
+  // Lock scroll when lightbox is active to prevent background movement
+  useEffect(() => {
+    if (selectedMedia) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedMedia]);
+
   const filteredMedia = useMemo(() => {
     let list = [...media];
     if (activeFilter !== 'all') list = list.filter(m => m.category === activeFilter);
@@ -173,32 +185,41 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
         </div>
       )}
 
-      {/* Lightbox */}
+      {/* Lightbox - Full Screen Overlay */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-[5000] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
+            onClick={() => setSelectedMedia(null)} // Click outside to close
+        >
+          {/* Close Button - High visibility */}
           <button 
-            onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 z-[1100] bg-white/10 p-3 rounded-full backdrop-blur-md text-white transition-all active:scale-90"
+            onClick={(e) => { e.stopPropagation(); setSelectedMedia(null); }}
+            className="absolute top-6 right-6 z-[5100] bg-white/10 hover:bg-red-500/20 text-white/70 hover:text-white p-3 rounded-full backdrop-blur-md transition-all active:scale-90 border border-white/10"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
 
-          <div className="w-full max-w-6xl max-h-[85vh] flex items-center justify-center">
+          <div 
+            className="w-full h-full flex items-center justify-center p-2" 
+            onClick={(e) => e.stopPropagation()}
+          >
             {selectedMedia.type === 'video' ? (
               (() => {
                 const info = getVideoInfo(selectedMedia.url);
                 return info.type === 'file' 
-                  ? <video controls autoPlay playsInline className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" src={selectedMedia.url} />
-                  : <iframe src={info.embedUrl} className="w-full aspect-video max-h-[75vh] rounded-2xl shadow-2xl" allow="autoplay; encrypted-media" allowFullScreen />
+                  ? <video controls autoPlay playsInline className="max-w-full max-h-full rounded-lg shadow-2xl" src={selectedMedia.url} />
+                  : <iframe src={info.embedUrl} className="w-full aspect-video max-h-full rounded-lg shadow-2xl" allow="autoplay; encrypted-media" allowFullScreen />
               })()
             ) : (
-              <img src={selectedMedia.url} alt={selectedMedia.description} className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl" />
+              <img src={selectedMedia.url} alt={selectedMedia.description} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
             )}
           </div>
           
-          <div className="mt-8 text-center max-w-2xl">
-              <h4 className="text-lg font-bold text-white mb-2">{selectedMedia.description}</h4>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{selectedMedia.category} • {selectedMedia.type}</p>
+          <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
+              <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 max-w-[90%]">
+                <h4 className="text-sm font-bold text-white mb-1 line-clamp-1">{selectedMedia.description}</h4>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{selectedMedia.category} • {selectedMedia.type}</p>
+              </div>
           </div>
         </div>
       )}
