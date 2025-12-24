@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { Project } from '../types';
 
@@ -36,6 +37,7 @@ export const dbService = {
 
       if (error) {
         console.error('Error fetching projects:', error);
+        callback([]); // Return empty list on error to stop loading spinner
         return;
       }
       
@@ -51,8 +53,6 @@ export const dbService = {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
         (payload) => {
-          // On any change, re-fetch to keep it simple and ensure consistency
-          // (Optimization: modify local state based on payload type)
           fetchProjects();
         }
       )

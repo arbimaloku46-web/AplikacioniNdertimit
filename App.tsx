@@ -179,7 +179,11 @@ const App: React.FC = () => {
     if (uploadQueue.some(i => i.status === 'pending')) processQueue();
   }, [uploadQueue, activeProject, activeUpdateIndex, newMediaCategory]);
 
-  const handleLogout = async () => await logoutUser();
+  const handleLogout = async () => {
+      await logoutUser();
+      setUser(null);
+      setCurrentView(AppView.HOME);
+  };
 
   const handleProjectSelect = (project: Project) => {
     if (isAdmin || unlockedProjectIds.includes(project.id)) {
@@ -285,7 +289,8 @@ const App: React.FC = () => {
     }
   };
 
-  const AppHeader = () => (
+  // Reusable Header Component
+  const renderHeader = () => (
     <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 h-16 flex items-center shadow-lg">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
@@ -294,10 +299,14 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-3 md:gap-5">
                 <InstallButton language={language} />
-                <button onClick={() => setCurrentView(AppView.PROFILE)} className={`p-2 rounded-full transition-colors ${currentView === AppView.PROFILE ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
+                <button 
+                    onClick={() => setCurrentView(AppView.PROFILE)} 
+                    className={`p-2 rounded-full transition-colors ${currentView === AppView.PROFILE ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+                    title={text.profileTitle}
+                >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                 </button>
-                <button onClick={handleLogout} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-red-400 transition-colors">
+                <button onClick={handleLogout} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-red-400 transition-colors" title={text.logout}>
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
                 </button>
             </div>
@@ -306,7 +315,14 @@ const App: React.FC = () => {
   );
 
   if (!isOnline) return <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white"><h1>Offline</h1></div>;
-  if (!user) return <GlobalAuth onLogin={() => {}} language={language} setLanguage={setLanguage} />;
+  
+  if (!user) return (
+      <GlobalAuth 
+        onLogin={(u) => setUser(u)} 
+        language={language} 
+        setLanguage={setLanguage} 
+      />
+  );
 
   return (
     <div className="bg-brand-dark min-h-screen font-sans text-slate-200">
@@ -331,7 +347,7 @@ const App: React.FC = () => {
 
       {currentView === AppView.HOME && (
         <div className="min-h-screen flex flex-col">
-            <AppHeader />
+            {renderHeader()}
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
                     <div>
@@ -342,21 +358,37 @@ const App: React.FC = () => {
                     </div>
                     {isAdmin && <Button onClick={() => setShowCreateProject(true)}>{text.addNewProject}</Button>}
                 </div>
-                {loadingProjects ? <div className="animate-pulse flex space-x-4">Loading...</div> : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {projects.map(p => (
-                            <div key={p.id} onClick={() => handleProjectSelect(p)} className="group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1">
-                                <div className="aspect-video relative overflow-hidden">
-                                  <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                                </div>
-                                <div className="p-8">
-                                    <h3 className="text-xl font-bold text-white group-hover:text-brand-blue transition-colors">{p.name}</h3>
-                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
-                                </div>
-                            </div>
-                        ))}
+                {loadingProjects ? (
+                    <div className="flex items-center justify-center py-20">
+                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
                     </div>
+                ) : (
+                    <>
+                        {projects.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {projects.map(p => (
+                                    <div key={p.id} onClick={() => handleProjectSelect(p)} className="group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1">
+                                        <div className="aspect-video relative overflow-hidden">
+                                        <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                                        </div>
+                                        <div className="p-8">
+                                            <h3 className="text-xl font-bold text-white group-hover:text-brand-blue transition-colors">{p.name}</h3>
+                                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-24 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
+                                <div className="inline-block p-4 rounded-full bg-slate-800 mb-4">
+                                    <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">{text.noProjectsTitle}</h3>
+                                <p className="text-slate-500 max-w-md mx-auto">{isAdmin ? text.noProjectsDescAdmin : text.noProjectsDescClient}</p>
+                            </div>
+                        )}
+                    </>
                 )}
             </main>
             <Footer />
@@ -365,7 +397,7 @@ const App: React.FC = () => {
 
       {currentView === AppView.PROJECT_DETAIL && activeProject && (
          <div className="min-h-screen bg-brand-dark pb-32">
-            <AppHeader />
+            {renderHeader()}
             <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 relative z-0">
                 {/* Project Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -536,7 +568,7 @@ const App: React.FC = () => {
 
       {currentView === AppView.PROFILE && user && (
         <div className="min-h-screen flex flex-col bg-brand-dark">
-            <AppHeader />
+            {renderHeader()}
             <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-4 mb-10">
                     <button onClick={() => setCurrentView(AppView.HOME)} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
