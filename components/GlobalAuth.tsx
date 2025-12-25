@@ -37,10 +37,46 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     setSuccessMessage('');
   };
 
+  const validateForm = () => {
+    // 1. Check Empty Fields
+    if (!formData.identifier || !formData.password) {
+      return "Email and password are required.";
+    }
+
+    // 2. Email Regex Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.identifier)) {
+      return "Please enter a valid email address.";
+    }
+
+    // 3. Password Length (Supabase default is 6)
+    if (formData.password.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+
+    if (mode === 'REGISTER') {
+      if (!formData.fullName || !formData.username) {
+        return "All fields are required for registration.";
+      }
+      if (formData.password !== formData.confirmPassword) {
+        return text.passwordMismatch;
+      }
+    }
+
+    return null;
+  };
+
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -48,14 +84,6 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             const user = await loginUser(formData.identifier, formData.password);
             onLogin(user, user.isAdmin || false);
         } else {
-            // Validation
-            if (!formData.fullName || !formData.username || !formData.identifier || !formData.password || !formData.confirmPassword) {
-                throw new Error("All fields are required");
-            }
-            if (formData.password !== formData.confirmPassword) {
-                throw new Error(text.passwordMismatch);
-            }
-            
             // Registration
             const { user, session } = await registerUser(formData);
             
@@ -67,12 +95,17 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                 setIsLoading(false);
                 setMode('LOGIN');
                 setFormData({ ...formData, password: '', confirmPassword: '' });
-                setSuccessMessage('Account created successfully! Please check your email to verify your account before logging in.');
+                setSuccessMessage('Account created! Please check your email to confirm your account.');
             }
         }
     } catch (err: any) {
         console.error(err);
-        setError(err.message || 'Authentication failed. Please check your credentials.');
+        // Clean up Supabase error messages for the user
+        let msg = err.message || 'Authentication failed.';
+        if (msg.includes('Invalid login credentials')) msg = 'Incorrect email or password.';
+        if (msg.includes('already registered')) msg = 'This email is already registered. Please sign in.';
+        
+        setError(msg);
         setIsLoading(false);
     }
   };
@@ -95,6 +128,13 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             setError(err.message || 'Google Sign In failed');
         }
     }
+  };
+
+  const toggleMode = () => {
+      setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
+      setError('');
+      setSuccessMessage('');
+      setFormData({ fullName: '', username: '', identifier: '', password: '', confirmPassword: '' });
   };
 
   return (
@@ -285,12 +325,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 {mode === 'LOGIN' ? text.firstTime : text.alreadyAccount}{' '}
                                 <button 
                                     type="button"
-                                    onClick={() => {
-                                        setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
-                                        setError('');
-                                        setSuccessMessage('');
-                                        setFormData({ fullName: '', username: '', identifier: '', password: '', confirmPassword: '' });
-                                    }}
+                                    onClick={toggleMode}
                                     className="text-brand-blue font-bold hover:text-white transition-colors"
                                 >
                                     {mode === 'LOGIN' ? text.signUpLink : text.signInLink}
