@@ -17,6 +17,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   const [mode, setMode] = useState<AuthMode>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Form State
   const [formData, setFormData] = useState({
@@ -33,11 +34,13 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+    setSuccessMessage('');
   };
 
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setIsLoading(true);
 
     try {
@@ -52,13 +55,24 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             if (formData.password !== formData.confirmPassword) {
                 throw new Error(text.passwordMismatch);
             }
-            const user = await registerUser(formData);
-            onLogin(user, false);
+            
+            // Registration
+            const { user, session } = await registerUser(formData);
+            
+            if (session) {
+                // Email confirmation disabled, or auto-login succeeded
+                onLogin(user, false);
+            } else {
+                // Email confirmation required
+                setIsLoading(false);
+                setMode('LOGIN');
+                setFormData({ ...formData, password: '', confirmPassword: '' });
+                setSuccessMessage('Account created successfully! Please check your email to verify your account before logging in.');
+            }
         }
     } catch (err: any) {
         console.error(err);
         setError(err.message || 'Authentication failed. Please check your credentials.');
-    } finally {
         setIsLoading(false);
     }
   };
@@ -163,7 +177,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                             disabled={isLoading}
                             className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            {isLoading ? (
+                            {isLoading && mode === 'LOGIN' ? (
                                 <svg className="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -227,7 +241,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                     value={formData.identifier}
                                     onChange={handleInputChange}
                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                                    placeholder="+355 69... or email@example.com"
+                                    placeholder="email@example.com"
                                 />
                             </div>
                             <div>
@@ -259,6 +273,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                             )}
 
                             {error && <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
+                            {successMessage && <div className="text-emerald-400 text-center text-sm bg-emerald-500/10 p-3 rounded border border-emerald-500/20">{successMessage}</div>}
 
                             <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
                                 {mode === 'LOGIN' ? text.signInBtn : text.registerBtn}
@@ -273,6 +288,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                     onClick={() => {
                                         setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
                                         setError('');
+                                        setSuccessMessage('');
                                         setFormData({ fullName: '', username: '', identifier: '', password: '', confirmPassword: '' });
                                     }}
                                     className="text-brand-blue font-bold hover:text-white transition-colors"

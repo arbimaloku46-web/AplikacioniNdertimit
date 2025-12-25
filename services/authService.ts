@@ -21,11 +21,12 @@ const mapSupabaseUser = (sbUser: any): User => {
   };
 };
 
-export const registerUser = async (data: any): Promise<User> => {
+export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
   const { data: result, error } = await supabase.auth.signUp({
     email: data.identifier, // Assuming identifier is email
     password: data.password,
     options: {
+      emailRedirectTo: window.location.origin, // Ensure verification link comes back here
       data: {
         full_name: data.fullName,
         username: data.username,
@@ -37,7 +38,10 @@ export const registerUser = async (data: any): Promise<User> => {
   if (error) throw error;
   if (!result.user) throw new Error('Registration failed');
 
-  return mapSupabaseUser(result.user);
+  return {
+    user: mapSupabaseUser(result.user),
+    session: result.session // If null, email verification is required
+  };
 };
 
 export const loginUser = async (identifier: string, password: string): Promise<User> => {

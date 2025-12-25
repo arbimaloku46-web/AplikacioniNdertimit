@@ -13,7 +13,7 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   url: string;
-  env: ImportMetaEnv;
+  readonly env: ImportMetaEnv;
   glob: any;
 }
 
