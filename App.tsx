@@ -172,7 +172,16 @@ const App: React.FC = () => {
       setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'uploading' } : item));
 
       try {
-        const downloadUrl = await dbService.uploadFile(pendingItem.file, activeProject.id);
+        const downloadUrl = await dbService.uploadFile(
+            pendingItem.file, 
+            activeProject.id, 
+            (progress) => {
+                setUploadQueue(prev => prev.map(item => 
+                    item.id === pendingItem.id ? { ...item, progress } : item
+                ));
+            }
+        );
+        
         const type = pendingItem.file.type.startsWith('video') ? 'video' : 'photo';
         const newItem: MediaItem = {
             id: Date.now().toString() + Math.random().toString(),
@@ -190,12 +199,18 @@ const App: React.FC = () => {
         const newProjectState = { ...activeProject, updates: updatedUpdates };
         setActiveProject(newProjectState); 
         await dbService.updateProject(newProjectState);
-        setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'completed' } : item));
+        setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'completed', progress: 100 } : item));
       } catch (error) {
+        console.error("Upload error:", error);
         setUploadQueue(prev => prev.map(item => item.id === pendingItem.id ? { ...item, status: 'error' } : item));
       }
     };
-    if (uploadQueue.some(i => i.status === 'pending')) processQueue();
+
+    // Sequential Upload Processing
+    const currentlyUploading = uploadQueue.some(i => i.status === 'uploading');
+    if (!currentlyUploading && uploadQueue.some(i => i.status === 'pending')) {
+        processQueue();
+    }
   }, [uploadQueue, activeProject, activeUpdateIndex, newMediaCategory]);
 
   const handleLogout = async () => {
@@ -540,7 +555,6 @@ const App: React.FC = () => {
                         {isAdmin && (
                            <div className="bg-slate-900/80 border border-brand-blue/20 rounded-3xl p-6 md:p-8">
                                <h4 className="text-[10px] uppercase font-bold text-brand-blue mb-4 md:mb-6 tracking-widest">Media Upload Lab</h4>
-                               {/* ... upload UI ... */}
                                <div className="space-y-6">
                                   <div>
                                      <label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Tag</label>
@@ -552,15 +566,68 @@ const App: React.FC = () => {
                                         <option value="other">Other</option>
                                      </select>
                                   </div>
-                                  <div className="border-2 border-dashed border-white/10 p-6 rounded-2xl text-center relative">
-                                     <input type="file" multiple accept="image/*,video/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
+                                  <div className="border-2 border-dashed border-white/10 p-6 rounded-2xl text-center relative hover:border-brand-blue/50 transition-colors">
+                                     <input type="file" multiple accept="image/*,video/*" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" onChange={(e) => {
                                         if (e.target.files) {
                                            const files = Array.from(e.target.files).map(f => ({ id: Math.random().toString(), file: f, progress: 0, status: 'pending' as const }));
                                            setUploadQueue(prev => [...prev, ...files]);
                                         }
                                      }} />
-                                     <p className="text-[10px] text-slate-500 font-bold uppercase">Add Media</p>
+                                     <div className="pointer-events-none">
+                                        <svg className="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase">Click or Drag to Upload (Max 1.5GB)</p>
+                                     </div>
                                   </div>
+                                  
+                                  {/* Upload Queue List */}
+                                  {uploadQueue.length > 0 && (
+                                      <div className="space-y-3 mt-4">
+                                          {uploadQueue.map(item => (
+                                              <div key={item.id} className="bg-slate-950 p-3 rounded-xl border border-white/5 flex flex-col gap-2">
+                                                  <div className="flex items-center justify-between">
+                                                      <div className="flex items-center gap-3 overflow-hidden">
+                                                         <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center shrink-0 text-slate-500">
+                                                             {item.file.type.startsWith('video') ? (
+                                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                             ) : (
+                                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                             )}
+                                                         </div>
+                                                         <span className="text-xs text-slate-300 font-medium truncate">{item.file.name}</span>
+                                                      </div>
+                                                      <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                                          item.status === 'completed' ? 'text-emerald-500' : 
+                                                          item.status === 'error' ? 'text-red-500' : 
+                                                          'text-brand-blue'
+                                                      }`}>
+                                                          {item.status === 'completed' ? 'Done' : item.status === 'error' ? 'Failed' : `${Math.round(item.progress)}%`}
+                                                      </span>
+                                                  </div>
+                                                  {/* Progress Bar */}
+                                                  {(item.status === 'uploading' || item.status === 'pending') && (
+                                                      <div className="h-1 bg-slate-800 rounded-full overflow-hidden w-full">
+                                                          <div 
+                                                              className="h-full bg-brand-blue transition-all duration-300 ease-out"
+                                                              style={{ width: `${item.progress}%` }}
+                                                          />
+                                                      </div>
+                                                  )}
+                                              </div>
+                                          ))}
+                                          
+                                          {/* Clear Finished Button */}
+                                          {uploadQueue.some(i => i.status === 'completed' || i.status === 'error') && (
+                                              <div className="flex justify-end">
+                                                  <button 
+                                                    onClick={() => setUploadQueue(prev => prev.filter(i => i.status === 'pending' || i.status === 'uploading'))}
+                                                    className="text-[10px] text-slate-500 hover:text-white uppercase font-bold tracking-widest"
+                                                  >
+                                                      Clear Finished
+                                                  </button>
+                                              </div>
+                                          )}
+                                      </div>
+                                  )}
                                </div>
                            </div>
                         )}

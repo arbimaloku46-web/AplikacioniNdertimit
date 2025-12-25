@@ -12,8 +12,9 @@ const getEnv = (key: string) => {
 };
 
 // Use environment variables if available, otherwise fallback to provided credentials
-const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://kfodljdnoaapfsocmywl.supabase.co';
-const supabaseKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'sb_publishable_HcIvNdcBwqfn4U58rFi5CA_xX0KRSnv';
+// Export these so other services can use them for raw API calls (like XHR for progress)
+export const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://kfodljdnoaapfsocmywl.supabase.co';
+export const supabaseKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'sb_publishable_HcIvNdcBwqfn4U58rFi5CA_xX0KRSnv';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase URL or Key is missing.');

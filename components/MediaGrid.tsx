@@ -9,6 +9,8 @@ interface MediaGridProps {
 type ViewMode = 'tiles' | 'content';
 type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
 
+// --- Helper Functions ---
+
 const getVideoInfo = (url: string) => {
   if (!url) return { type: 'file', embedUrl: '', thumbnail: null };
   const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/);
@@ -62,23 +64,229 @@ const VideoThumbnail: React.FC<{ url: string }> = ({ url }) => {
   );
 };
 
+// --- Advanced Lightbox Component ---
+
+interface LightboxProps {
+  media: MediaItem;
+  onClose: () => void;
+}
+
+const Lightbox: React.FC<LightboxProps> = ({ media, onClose }) => {
+  // Transformation State
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Refs for calculations
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ x: number, y: number } | null>(null);
+  const lastPositionRef = useRef({ x: 0, y: 0 });
+  const lastTouchDistanceRef = useRef<number | null>(null);
+
+  // Lock body scroll on mount
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // --- Handlers ---
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (media.type === 'video') return; // Disable zoom for video
+    e.preventDefault();
+
+    const scaleSensitivity = 0.001;
+    const delta = -e.deltaY * scaleSensitivity;
+    const newScale = Math.min(Math.max(1, scale + delta * scale), 5); // Clamp 1x to 5x
+
+    setScale(newScale);
+
+    if (newScale === 1) {
+      setPosition({ x: 0, y: 0 }); // Reset position on full zoom out
+    }
+  };
+
+  const startDrag = (clientX: number, clientY: number) => {
+    if (scale === 1) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: clientX, y: clientY };
+    lastPositionRef.current = { ...position };
+  };
+
+  const onDrag = (clientX: number, clientY: number) => {
+    if (!isDragging || !dragStartRef.current || scale === 1) return;
+
+    const deltaX = clientX - dragStartRef.current.x;
+    const deltaY = clientY - dragStartRef.current.y;
+
+    // Boundary Logic
+    // We only allow panning if the image is larger than the viewport
+    // The max translate is roughly (scaledWidth - viewWidth) / 2
+    
+    // Simplified boundary for smoothness:
+    // Limit x and y based on current scale
+    const limitX = (window.innerWidth * scale - window.innerWidth) / 2;
+    const limitY = (window.innerHeight * scale - window.innerHeight) / 2;
+
+    let newX = lastPositionRef.current.x + deltaX;
+    let newY = lastPositionRef.current.y + deltaY;
+
+    // Clamp
+    newX = Math.max(-limitX, Math.min(limitX, newX));
+    newY = Math.max(-limitY, Math.min(limitY, newY));
+
+    setPosition({ x: newX, y: newY });
+  };
+
+  const endDrag = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  // --- Mouse Events ---
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(e.clientX, e.clientY);
+  };
+  const handleMouseMove = (e: React.MouseEvent) => onDrag(e.clientX, e.clientY);
+  const handleMouseUp = endDrag;
+
+  // --- Touch Events (Pinch & Pan) ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      startDrag(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2) {
+      // Pinch Start
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastTouchDistanceRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      onDrag(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
+      // Pinch Zoom Logic
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = dist - lastTouchDistanceRef.current;
+      
+      // Update scale based on pinch delta
+      // Reduced sensitivity for smoother mobile feel
+      const newScale = Math.min(Math.max(1, scale + delta * 0.01), 5);
+      setScale(newScale);
+      
+      if (newScale === 1) setPosition({ x: 0, y: 0 });
+      lastTouchDistanceRef.current = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    endDrag();
+    lastTouchDistanceRef.current = null;
+  };
+
+  // Double tap to smart zoom
+  const handleDoubleClick = () => {
+    if (media.type === 'video') return;
+    if (scale > 1) {
+        setScale(1);
+        setPosition({x: 0, y: 0});
+    } else {
+        setScale(2.5);
+    }
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 z-[5000] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden touch-none"
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* High-Z Exit Button */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="fixed top-6 right-6 z-[5100] bg-white/10 hover:bg-red-500/80 text-white p-3 rounded-full backdrop-blur-md transition-all active:scale-90 border border-white/10 shadow-lg"
+        aria-label="Close Lightbox"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      {/* Reset Zoom Button (Only visible when zoomed) */}
+      {scale > 1 && (
+         <button 
+            onClick={() => { setScale(1); setPosition({x:0, y:0}); }}
+            className="fixed bottom-10 z-[5100] bg-white/10 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md hover:bg-white/20"
+         >
+            Reset View
+         </button>
+      )}
+
+      {/* Content Container with Transform */}
+      <div 
+        ref={contentRef}
+        className="relative w-full h-full flex items-center justify-center pointer-events-none"
+        style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+            cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+        }}
+      >
+         <div className="pointer-events-auto" onDoubleClick={handleDoubleClick}>
+            {media.type === 'video' ? (
+                // Videos are contained and don't receive zoom transforms directly to preserve controls
+                // We wrap it in a static container that ignores the parent scale if needed, 
+                // but here we scale the container. Note: Native controls might be hard to hit if scaled too much.
+                (() => {
+                    const info = getVideoInfo(media.url);
+                    return info.type === 'file' 
+                    ? <video controls autoPlay playsInline className="max-w-[95vw] max-h-[95vh] rounded-lg shadow-2xl" src={media.url} />
+                    : <iframe src={info.embedUrl} className="w-[85vw] aspect-video max-h-[85vh] rounded-lg shadow-2xl" allow="autoplay; encrypted-media" allowFullScreen />
+                })()
+            ) : (
+                <img 
+                    src={media.url} 
+                    alt={media.description} 
+                    className="max-w-[95vw] max-h-[95vh] object-contain select-none shadow-2xl rounded-sm"
+                    draggable={false}
+                />
+            )}
+         </div>
+      </div>
+
+      {/* Caption Overlay - Fades out when zoomed to focus on details */}
+      <div className={`fixed bottom-0 left-0 right-0 p-8 text-center pointer-events-none transition-opacity duration-300 ${scale > 1.1 ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 max-w-xl">
+            <h4 className="text-base font-bold text-white mb-1">{media.description}</h4>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{media.category} • {media.type}</p>
+          </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main MediaGrid Component ---
+
 export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('tiles');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
-
-  // Lock scroll when lightbox is active to prevent background movement
-  useEffect(() => {
-    if (selectedMedia) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedMedia]);
 
   const filteredMedia = useMemo(() => {
     let list = [...media];
@@ -98,7 +306,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
 
   return (
     <div className="space-y-6">
-      {/* Controls Bar - Mobile Optimized */}
+      {/* Controls Bar */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-white/5">
@@ -185,43 +393,9 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
         </div>
       )}
 
-      {/* Lightbox - Full Screen Overlay */}
+      {/* Render the advanced Lightbox if media is selected */}
       {selectedMedia && (
-        <div 
-            className="fixed inset-0 z-[5000] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
-            onClick={() => setSelectedMedia(null)} // Click outside to close
-        >
-          {/* Close Button - High visibility */}
-          <button 
-            onClick={(e) => { e.stopPropagation(); setSelectedMedia(null); }}
-            className="absolute top-6 right-6 z-[5100] bg-white/10 hover:bg-red-500/20 text-white/70 hover:text-white p-3 rounded-full backdrop-blur-md transition-all active:scale-90 border border-white/10"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-
-          <div 
-            className="w-full h-full flex items-center justify-center p-2" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            {selectedMedia.type === 'video' ? (
-              (() => {
-                const info = getVideoInfo(selectedMedia.url);
-                return info.type === 'file' 
-                  ? <video controls autoPlay playsInline className="max-w-full max-h-full rounded-lg shadow-2xl" src={selectedMedia.url} />
-                  : <iframe src={info.embedUrl} className="w-full aspect-video max-h-full rounded-lg shadow-2xl" allow="autoplay; encrypted-media" allowFullScreen />
-              })()
-            ) : (
-              <img src={selectedMedia.url} alt={selectedMedia.description} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-            )}
-          </div>
-          
-          <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-              <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 max-w-[90%]">
-                <h4 className="text-sm font-bold text-white mb-1 line-clamp-1">{selectedMedia.description}</h4>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{selectedMedia.category} • {selectedMedia.type}</p>
-              </div>
-          </div>
-        </div>
+        <Lightbox media={selectedMedia} onClose={() => setSelectedMedia(null)} />
       )}
     </div>
   );
