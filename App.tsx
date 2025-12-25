@@ -26,6 +26,7 @@ interface UploadItem {
 const App: React.FC = () => {
   // --- STATE ---
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true); // New state for loading auth
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [language, setLanguage] = useState<Language>('en');
@@ -100,6 +101,7 @@ const App: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // 1. Check active session immediately
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
@@ -114,8 +116,10 @@ const App: React.FC = () => {
           countryCode: metadata.country_code
         });
       }
+      setIsAuthChecking(false); // Initial check done
     });
 
+    // 2. Listen for auth changes (Login, Logout, OAuth Redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
          const metadata = session.user.user_metadata || {};
@@ -129,11 +133,17 @@ const App: React.FC = () => {
           isAdmin: appMetadata.is_admin === true || metadata.is_admin === true,
           countryCode: metadata.country_code
         });
+        
+        // Clear hash from URL if present (cleaner URL after OAuth redirect)
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+            window.history.replaceState(null, '', window.location.pathname);
+        }
       } else {
         setUser(null);
         setCurrentView(AppView.HOME);
         setActiveProject(null);
       }
+      setIsAuthChecking(false); // State change handled
     });
 
     const unsubscribeDB = dbService.subscribeProjects((data) => {
@@ -358,6 +368,20 @@ const App: React.FC = () => {
   );
 
   if (!isOnline) return <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white"><h1>Offline</h1></div>;
+  
+  // New: Show loading screen while checking auth session to prevent flash of login screen
+  if (isAuthChecking) {
+      return (
+        <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white">
+            <div className="w-16 h-16 bg-white rounded flex items-center justify-center shadow-lg mb-6 animate-pulse">
+                <span className="font-display font-bold text-brand-blue text-3xl">N</span>
+            </div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mb-4"></div>
+            <p className="text-slate-400 text-sm font-medium animate-pulse">Establishing Secure Connection...</p>
+        </div>
+      );
+  }
+
   if (!user) return <GlobalAuth onLogin={(u) => setUser(u)} language={language} setLanguage={setLanguage} />;
 
   return (

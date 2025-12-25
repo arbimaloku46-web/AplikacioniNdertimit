@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { loginUser, registerUser, loginWithGoogle } from '../services/authService';
+import { loginUser, registerUser, loginWithGoogle, getRedirectUrl } from '../services/authService';
 import { Language, translations } from '../translations';
 import { User } from '../types';
 
@@ -129,6 +129,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         
         if (msg.includes('not enabled') || msg.includes('Unsupported provider')) {
             setError('Google Login is disabled. Enable it in Supabase > Authentication > Providers.');
+        } else if (msg.includes('Mismatching redirect URI')) {
+             setError(`Error: Redirect URI mismatch. Add "${getRedirectUrl()}" to Supabase > Auth > URL Configuration.`);
         } else {
             setError(err.message || 'Google Sign In failed');
         }
@@ -221,7 +223,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                             type="button"
                             onClick={handleGoogleLogin}
                             disabled={isLoading}
-                            className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden"
                         >
                             {isLoading && mode === 'LOGIN' ? (
                                 <svg className="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

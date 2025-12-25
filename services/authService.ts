@@ -21,6 +21,20 @@ const mapSupabaseUser = (sbUser: any): User => {
   };
 };
 
+export const getRedirectUrl = () => {
+    // Dynamically determine the redirect URL based on the current browser location.
+    // This works automatically for Localhost, Vercel Preview, and Vercel Production.
+    let url = 'http://localhost:5173';
+    
+    if (typeof window !== 'undefined') {
+        url = window.location.origin;
+    } else if (import.meta.env.VITE_SITE_URL) {
+        url = import.meta.env.VITE_SITE_URL;
+    }
+    
+    return url;
+};
+
 export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
   console.log("Attempting registration for:", data.identifier);
   
@@ -28,8 +42,8 @@ export const registerUser = async (data: any): Promise<{ user: User; session: an
     email: data.identifier.trim(),
     password: data.password.trim(),
     options: {
-      // Removed emailRedirectTo to avoid 'Redirect URL not allowed' errors if localhost isn't whitelisted.
-      // It will default to the Site URL configured in Supabase.
+      // Redirect back to the app after clicking the email confirmation link
+      emailRedirectTo: getRedirectUrl(),
       data: {
         full_name: data.fullName ? data.fullName.trim() : '',
         username: data.username ? data.username.trim() : '',
@@ -65,20 +79,20 @@ export const loginUser = async (identifier: string, password: string): Promise<U
   return mapSupabaseUser(data.user);
 };
 
-export const getRedirectUrl = () => {
-    // 1. Explicit VITE_SITE_URL (Best for Production)
-    if (import.meta.env.VITE_SITE_URL) {
-        return import.meta.env.VITE_SITE_URL;
-    }
-    // 2. Window Origin (Fallback for Localhost)
-    return window.location.origin;
-};
-
 export const loginWithGoogle = async (): Promise<void> => {
+  const redirectUrl = getRedirectUrl();
+  console.log("Initiating Google Auth.");
+  console.log("IMPORTANT: Ensure this URL is added to Supabase > Authentication > URL Configuration > Redirect URLs:");
+  console.log(redirectUrl);
+  
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-        redirectTo: getRedirectUrl()
+        redirectTo: redirectUrl,
+        queryParams: {
+            access_type: 'offline',
+            prompt: 'consent', // Forces account selection to avoid sticky invalid sessions
+        }
     }
   });
 
