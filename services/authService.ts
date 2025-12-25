@@ -36,14 +36,16 @@ export const getRedirectUrl = () => {
 };
 
 export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
+  const redirectUrl = getRedirectUrl();
   console.log("Attempting registration for:", data.identifier);
+  console.log("Using Redirect URL for Email Confirmation:", redirectUrl);
   
   const { data: result, error } = await supabase.auth.signUp({
     email: data.identifier.trim(),
     password: data.password.trim(),
     options: {
       // Redirect back to the app after clicking the email confirmation link
-      emailRedirectTo: getRedirectUrl(),
+      emailRedirectTo: redirectUrl,
       data: {
         full_name: data.fullName ? data.fullName.trim() : '',
         username: data.username ? data.username.trim() : '',
@@ -57,13 +59,15 @@ export const registerUser = async (data: any): Promise<{ user: User; session: an
     throw error;
   }
   
+  // result.user will be null if auto-confirm is off and email verification is required, 
+  // BUT in recent Supabase versions it returns the user object with `identities` array.
   if (!result.user) throw new Error('Registration failed: No user returned');
 
-  console.log("Registration successful", result);
+  console.log("Registration API Call Successful. Session exists?", !!result.session);
 
   return {
     user: mapSupabaseUser(result.user),
-    session: result.session
+    session: result.session // Session is null if email confirmation is required
   };
 };
 

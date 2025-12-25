@@ -87,17 +87,18 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             // Registration
             console.log("Submitting registration...");
             const { user, session } = await registerUser(formData);
-            console.log("Registration response:", { user, session });
             
             if (session) {
-                // Email confirmation disabled, or auto-login succeeded
+                // If session exists, Supabase is set to "Auto Confirm" (no email verification needed)
+                console.log("Auto-login successful");
                 onLogin(user, false);
             } else {
-                // Email confirmation required
+                // If session is null, Supabase requires Email Verification
+                console.log("Email verification required");
                 setIsLoading(false);
                 setMode('LOGIN');
-                setFormData({ ...formData, password: '', confirmPassword: '' });
-                setSuccessMessage('Account created successfully! Please check your email inbox (and spam) to confirm your account.');
+                setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+                setSuccessMessage(`Account created! We sent a confirmation link to ${formData.identifier}. Please check your Inbox and Spam folder.`);
             }
         }
     } catch (err: any) {
@@ -108,7 +109,12 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         let msg = err.message || JSON.stringify(err) || 'Authentication failed.';
         
         if (msg.includes('Invalid login credentials')) msg = 'Incorrect email or password.';
-        if (msg.includes('already registered')) msg = 'This email is already registered. Please sign in instead.';
+        if (msg.includes('User already registered') || msg.includes('already registered')) {
+            msg = 'This email is already registered. Please sign in instead.';
+        }
+        if (msg.includes('Email not confirmed')) {
+            msg = 'Please verify your email address before logging in. Check your inbox and spam folder.';
+        }
         if (msg.includes('rate limit')) msg = 'Too many requests. Please try again later.';
         
         setError(msg);
@@ -130,7 +136,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         if (msg.includes('not enabled') || msg.includes('Unsupported provider')) {
             setError('Google Login is disabled. Enable it in Supabase > Authentication > Providers.');
         } else if (msg.includes('Mismatching redirect URI')) {
-             setError(`Error: Redirect URI mismatch. Add "${getRedirectUrl()}" to Supabase > Auth > URL Configuration.`);
+             setError(`Configuration Error: Add "${getRedirectUrl()}" to Supabase > Authentication > URL Configuration > Redirect URLs.`);
         } else {
             setError(err.message || 'Google Sign In failed');
         }
