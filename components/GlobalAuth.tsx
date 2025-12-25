@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { loginUser, registerUser, loginWithGoogle, getRedirectUrl } from '../services/authService';
+import { loginUser, registerUser, loginWithGoogle, resendVerificationEmail, getRedirectUrl } from '../services/authService';
 import { Language, translations } from '../translations';
 import { User } from '../types';
 
@@ -18,6 +18,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showResend, setShowResend] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -34,7 +35,11 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
-    setSuccessMessage('');
+    // Don't clear success message immediately so user can still see "Account Created" while typing password
+    if (!successMessage.includes('Account created')) {
+        setSuccessMessage('');
+    }
+    setShowResend(false);
   };
 
   const validateForm = () => {
@@ -70,6 +75,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+    setShowResend(false);
     
     const validationError = validateForm();
     if (validationError) {
@@ -97,8 +103,9 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                 console.log("Email verification required");
                 setIsLoading(false);
                 setMode('LOGIN');
+                // Clear passwords for security, keep email
                 setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
-                setSuccessMessage(`Account created! We sent a confirmation link to ${formData.identifier}. Please check your Inbox and Spam folder.`);
+                setSuccessMessage(`Account created! Please check your inbox (and spam) at ${formData.identifier} to verify your email.`);
             }
         }
     } catch (err: any) {
@@ -114,11 +121,26 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         }
         if (msg.includes('Email not confirmed')) {
             msg = 'Please verify your email address before logging in. Check your inbox and spam folder.';
+            setShowResend(true);
         }
         if (msg.includes('rate limit')) msg = 'Too many requests. Please try again later.';
         
         setError(msg);
     }
+  };
+
+  const handleResendEmail = async () => {
+      setIsLoading(true);
+      try {
+          await resendVerificationEmail(formData.identifier);
+          setSuccessMessage(`Confirmation email resent to ${formData.identifier}. Please check your inbox.`);
+          setError('');
+          setShowResend(false);
+      } catch (err: any) {
+          setError('Failed to resend: ' + (err.message || 'Unknown error'));
+      } finally {
+          setIsLoading(false);
+      }
   };
 
   const handleGoogleLogin = async () => {
@@ -147,6 +169,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
       setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
       setError('');
       setSuccessMessage('');
+      setShowResend(false);
       // Keep email if user switches modes, clear passwords
       setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
   };
@@ -326,7 +349,22 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 </div>
                             )}
 
-                            {error && <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20 animate-in fade-in slide-in-from-top-2">{error}</div>}
+                            {/* Error Display with Optional Resend Button */}
+                            {error && (
+                                <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20 animate-in fade-in slide-in-from-top-2">
+                                    <p>{error}</p>
+                                    {showResend && (
+                                        <button 
+                                            type="button" 
+                                            onClick={handleResendEmail} 
+                                            className="mt-2 text-xs font-bold underline hover:text-red-300"
+                                        >
+                                            Resend Confirmation Email
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            
                             {successMessage && <div className="text-emerald-400 text-center text-sm bg-emerald-500/10 p-3 rounded border border-emerald-500/20 animate-in fade-in slide-in-from-top-2">{successMessage}</div>}
 
                             <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>

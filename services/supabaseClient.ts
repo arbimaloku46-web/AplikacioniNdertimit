@@ -1,8 +1,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// --- CONFIGURATION ---
+// 1. Get these from Supabase Dashboard > Project Settings > API
+// 2. You can paste them directly here to test, OR use a .env file (recommended)
+const HARDCODED_URL = 'https://kfodljdnoaapfsocmywl.supabase.co'; // e.g. 'https://xyz.supabase.co'
+const HARDCODED_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2RsamRub2FhcGZzb2NteXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMjE1MjMsImV4cCI6MjA4MDc5NzUyM30.9iP3HXdTil43MyVIkjYhMc1vgLJ9mLM9xxOUMM3iX4E'; // e.g. 'eyJJh...'
+
 const getEnv = (key: string) => {
-  // Check import.meta.env (Vite)
   try {
     // @ts-ignore
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
@@ -10,31 +15,27 @@ const getEnv = (key: string) => {
       return import.meta.env[key];
     }
   } catch (e) {}
-
-  // Check process.env (Node/System/Webpack)
-  try {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      // @ts-ignore
-      return process.env[key];
-    }
-  } catch (e) {}
-
   return '';
 };
 
-// You can overwrite these with VITE_SUPABASE_URL in .env, or just rely on these defaults
-const defaultUrl = 'https://kfodljdnoaapfsocmywl.supabase.co';
-const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2RsamRub2FhcGZzb2NteXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMjE1MjMsImV4cCI6MjA4MDc5NzUyM30.9iP3HXdTil43MyVIkjYhMc1vgLJ9mLM9xxOUMM3iX4E';
+// Priority: Hardcoded -> Environment Variable -> Empty
+export const supabaseUrl = HARDCODED_URL || getEnv('VITE_SUPABASE_URL');
+export const supabaseKey = HARDCODED_KEY || getEnv('VITE_SUPABASE_ANON_KEY');
 
-export const supabaseUrl = getEnv('VITE_SUPABASE_URL') || defaultUrl;
-export const supabaseKey = getEnv('VITE_SUPABASE_ANON_KEY') || defaultKey;
-
+// Debugging
 if (!supabaseUrl || !supabaseKey) {
-  console.error('CRITICAL: Supabase URL or Key is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file or environment variables.');
+  console.error(`
+    CRITICAL ERROR: Supabase Credentials Missing.
+    
+    To fix this "Failed to fetch" error:
+    1. Go to services/supabaseClient.ts
+    2. Paste your URL and Anon Key into HARDCODED_URL and HARDCODED_KEY
+    3. OR create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+    4. Restart your terminal/server
+  `);
 }
 
-// If keys are missing, use placeholders to prevent the app from crashing immediately with "supabaseUrl is required".
+// Fallback to avoid immediate crash, but Auth calls will fail with "Failed to fetch" if these are used.
 const finalUrl = supabaseUrl || 'https://placeholder.supabase.co';
 const finalKey = supabaseKey || 'placeholder';
 

@@ -23,7 +23,7 @@ const mapSupabaseUser = (sbUser: any): User => {
 
 export const getRedirectUrl = () => {
     // Dynamically determine the redirect URL based on the current browser location.
-    // This works automatically for Localhost, Vercel Preview, and Vercel Production.
+    // This ensures the email link redirects back to the correct environment (Localhost vs Production)
     let url = 'http://localhost:5173';
     
     if (typeof window !== 'undefined') {
@@ -38,56 +38,81 @@ export const getRedirectUrl = () => {
 export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
   const redirectUrl = getRedirectUrl();
   console.log("Attempting registration for:", data.identifier);
-  console.log("Using Redirect URL for Email Confirmation:", redirectUrl);
   
-  const { data: result, error } = await supabase.auth.signUp({
-    email: data.identifier.trim(),
-    password: data.password.trim(),
-    options: {
-      // Redirect back to the app after clicking the email confirmation link
-      emailRedirectTo: redirectUrl,
-      data: {
-        full_name: data.fullName ? data.fullName.trim() : '',
-        username: data.username ? data.username.trim() : '',
-        is_admin: false,
-      },
-    },
-  });
+  try {
+      const { data: result, error } = await supabase.auth.signUp({
+        email: data.identifier.trim(),
+        password: data.password.trim(),
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: data.fullName ? data.fullName.trim() : '',
+            username: data.username ? data.username.trim() : '',
+            is_admin: false,
+          },
+        },
+      });
 
-  if (error) {
-    console.error("Supabase SignUp Error:", error);
-    throw error;
+      if (error) throw error;
+      
+      // result.user might be null in very old clients, but standard checks cover it.
+      if (!result.user) throw new Error('Registration failed: No user returned');
+
+      console.log("Registration API Call Successful. Session active:", !!result.session);
+
+      return {
+        user: mapSupabaseUser(result.user),
+        session: result.session
+      };
+  } catch (err: any) {
+      console.error("Supabase SignUp Error:", err);
+      
+      // Handle "Failed to fetch" specifically (Network or Config issues)
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+          throw new Error('Connection failed. Please check your internet connection.');
+      }
+      
+      throw err;
   }
-  
-  // result.user will be null if auto-confirm is off and email verification is required, 
-  // BUT in recent Supabase versions it returns the user object with `identities` array.
-  if (!result.user) throw new Error('Registration failed: No user returned');
-
-  console.log("Registration API Call Successful. Session exists?", !!result.session);
-
-  return {
-    user: mapSupabaseUser(result.user),
-    session: result.session // Session is null if email confirmation is required
-  };
 };
 
-export const loginUser = async (identifier: string, password: string): Promise<User> => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: identifier.trim(),
-    password: password.trim(),
+export const resendVerificationEmail = async (email: string) => {
+  const redirectUrl = getRedirectUrl();
+  console.log("Resending verification to:", email);
+  
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.trim(),
+    options: {
+      emailRedirectTo: redirectUrl
+    }
   });
 
   if (error) throw error;
-  if (!data.user) throw new Error('Login failed');
+};
 
-  return mapSupabaseUser(data.user);
+export const loginUser = async (identifier: string, password: string): Promise<User> => {
+  try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: identifier.trim(),
+        password: password.trim(),
+      });
+
+      if (error) throw error;
+      if (!data.user) throw new Error('Login failed');
+
+      return mapSupabaseUser(data.user);
+  } catch (err: any) {
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+          throw new Error('Connection failed. Please check your internet connection.');
+      }
+      throw err;
+  }
 };
 
 export const loginWithGoogle = async (): Promise<void> => {
   const redirectUrl = getRedirectUrl();
-  console.log("Initiating Google Auth.");
-  console.log("IMPORTANT: Ensure this URL is added to Supabase > Authentication > URL Configuration > Redirect URLs:");
-  console.log(redirectUrl);
+  console.log("Initiating Google Auth with redirect:", redirectUrl);
   
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -95,13 +120,12 @@ export const loginWithGoogle = async (): Promise<void> => {
         redirectTo: redirectUrl,
         queryParams: {
             access_type: 'offline',
-            prompt: 'consent', // Forces account selection to avoid sticky invalid sessions
+            prompt: 'consent',
         }
     }
   });
 
   if (error) throw error;
-  // Browser will redirect automatically
 };
 
 export const logoutUser = async () => {
@@ -110,7 +134,12 @@ export const logoutUser = async () => {
 };
 
 export const getCurrentSession = async (): Promise<User | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return null;
-  return mapSupabaseUser(session.user);
+  try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+      return mapSupabaseUser(session.user);
+  } catch (error) {
+      console.error("Session check failed:", error);
+      return null;
+  }
 };
