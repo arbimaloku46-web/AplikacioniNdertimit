@@ -19,8 +19,9 @@ const getEnv = (key: string) => {
 };
 
 // Priority: Hardcoded -> Environment Variable -> Empty
-export const supabaseUrl = HARDCODED_URL || getEnv('VITE_SUPABASE_URL');
-export const supabaseKey = HARDCODED_KEY || getEnv('VITE_SUPABASE_ANON_KEY');
+// IMPORTANT: We .trim() the values to remove accidental newlines/spaces from copy-pasting
+export const supabaseUrl = (HARDCODED_URL || getEnv('VITE_SUPABASE_URL')).trim();
+export const supabaseKey = (HARDCODED_KEY || getEnv('VITE_SUPABASE_ANON_KEY')).trim();
 
 // Debugging
 if (!supabaseUrl || !supabaseKey) {

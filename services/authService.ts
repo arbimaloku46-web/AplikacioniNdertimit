@@ -32,12 +32,14 @@ export const getRedirectUrl = () => {
         url = import.meta.env.VITE_SITE_URL;
     }
     
-    return url;
+    // Remove trailing slash if present to avoid double slashes issues
+    return url.replace(/\/$/, "");
 };
 
 export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
   const redirectUrl = getRedirectUrl();
   console.log("Attempting registration for:", data.identifier);
+  console.log("Using Redirect URL:", redirectUrl);
   
   try {
       const { data: result, error } = await supabase.auth.signUp({
@@ -65,11 +67,12 @@ export const registerUser = async (data: any): Promise<{ user: User; session: an
         session: result.session
       };
   } catch (err: any) {
-      console.error("Supabase SignUp Error:", err);
+      console.error("Supabase SignUp Error (Full):", err);
       
       // Handle "Failed to fetch" specifically (Network or Config issues)
       if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-          throw new Error('Connection failed. Please check your internet connection.');
+          console.error("Network Error Details: Check your internet connection, Supabase URL correctness, and ensure no VPN/Firewall is blocking supabase.co");
+          throw new Error('Connection failed. Please check your internet connection or URL configuration.');
       }
       
       throw err;
@@ -103,6 +106,7 @@ export const loginUser = async (identifier: string, password: string): Promise<U
 
       return mapSupabaseUser(data.user);
   } catch (err: any) {
+      console.error("Login Error:", err);
       if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
           throw new Error('Connection failed. Please check your internet connection.');
       }
