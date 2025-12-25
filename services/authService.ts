@@ -22,25 +22,34 @@ const mapSupabaseUser = (sbUser: any): User => {
 };
 
 export const registerUser = async (data: any): Promise<{ user: User; session: any }> => {
+  console.log("Attempting registration for:", data.identifier);
+  
   const { data: result, error } = await supabase.auth.signUp({
-    email: data.identifier.trim(), // Assuming identifier is email, trim whitespace
+    email: data.identifier.trim(),
     password: data.password.trim(),
     options: {
-      emailRedirectTo: window.location.origin, // Ensure verification link comes back here
+      // Removed emailRedirectTo to avoid 'Redirect URL not allowed' errors if localhost isn't whitelisted.
+      // It will default to the Site URL configured in Supabase.
       data: {
-        full_name: data.fullName,
-        username: data.username,
-        is_admin: false, // Default to false
+        full_name: data.fullName ? data.fullName.trim() : '',
+        username: data.username ? data.username.trim() : '',
+        is_admin: false,
       },
     },
   });
 
-  if (error) throw error;
-  if (!result.user) throw new Error('Registration failed');
+  if (error) {
+    console.error("Supabase SignUp Error:", error);
+    throw error;
+  }
+  
+  if (!result.user) throw new Error('Registration failed: No user returned');
+
+  console.log("Registration successful", result);
 
   return {
     user: mapSupabaseUser(result.user),
-    session: result.session // If null, email verification is required
+    session: result.session
   };
 };
 

@@ -56,7 +56,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
 
     if (mode === 'REGISTER') {
       if (!formData.fullName || !formData.username) {
-        return "All fields are required for registration.";
+        return "Full Name and Username are required.";
       }
       if (formData.password !== formData.confirmPassword) {
         return text.passwordMismatch;
@@ -85,7 +85,9 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
             onLogin(user, user.isAdmin || false);
         } else {
             // Registration
+            console.log("Submitting registration...");
             const { user, session } = await registerUser(formData);
+            console.log("Registration response:", { user, session });
             
             if (session) {
                 // Email confirmation disabled, or auto-login succeeded
@@ -95,18 +97,21 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                 setIsLoading(false);
                 setMode('LOGIN');
                 setFormData({ ...formData, password: '', confirmPassword: '' });
-                setSuccessMessage('Account created! Please check your email to confirm your account.');
+                setSuccessMessage('Account created successfully! Please check your email inbox (and spam) to confirm your account.');
             }
         }
     } catch (err: any) {
-        console.error(err);
+        console.error("Auth flow error:", err);
+        setIsLoading(false);
+        
         // Clean up Supabase error messages for the user
-        let msg = err.message || 'Authentication failed.';
+        let msg = err.message || JSON.stringify(err) || 'Authentication failed.';
+        
         if (msg.includes('Invalid login credentials')) msg = 'Incorrect email or password.';
-        if (msg.includes('already registered')) msg = 'This email is already registered. Please sign in.';
+        if (msg.includes('already registered')) msg = 'This email is already registered. Please sign in instead.';
+        if (msg.includes('rate limit')) msg = 'Too many requests. Please try again later.';
         
         setError(msg);
-        setIsLoading(false);
     }
   };
 
@@ -134,7 +139,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
       setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN');
       setError('');
       setSuccessMessage('');
-      setFormData({ fullName: '', username: '', identifier: '', password: '', confirmPassword: '' });
+      // Keep email if user switches modes, clear passwords
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
   };
 
   return (
@@ -312,8 +318,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
                                 </div>
                             )}
 
-                            {error && <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20">{error}</div>}
-                            {successMessage && <div className="text-emerald-400 text-center text-sm bg-emerald-500/10 p-3 rounded border border-emerald-500/20">{successMessage}</div>}
+                            {error && <div className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded border border-red-500/20 animate-in fade-in slide-in-from-top-2">{error}</div>}
+                            {successMessage && <div className="text-emerald-400 text-center text-sm bg-emerald-500/10 p-3 rounded border border-emerald-500/20 animate-in fade-in slide-in-from-top-2">{successMessage}</div>}
 
                             <Button type="submit" className="w-full !text-base !py-3" isLoading={isLoading}>
                                 {mode === 'LOGIN' ? text.signInBtn : text.registerBtn}
