@@ -26,7 +26,7 @@ interface UploadItem {
 const App: React.FC = () => {
   // --- STATE ---
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthChecking, setIsAuthChecking] = useState(true); // New state for loading auth
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [language, setLanguage] = useState<Language>('en');
@@ -37,6 +37,9 @@ const App: React.FC = () => {
   const [pendingProject, setPendingProject] = useState<Project | null>(null);
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
   const [heroTab, setHeroTab] = useState<'3d' | '360'>('3d');
+  
+  // UI State
+  const [isFullScreenMode, setIsFullScreenMode] = useState(false);
   
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
@@ -69,9 +72,10 @@ const App: React.FC = () => {
 
   // Touch Handlers for Swipe Back
   const onTouchStart = (e: React.TouchEvent) => {
+    // Disable swipe gesture if we are in full screen media mode
+    if (isFullScreenMode) return;
+    
     setTouchEnd(null);
-    // Only trigger swipe back if starting from the left 20% of screen (iOS style)
-    // and if we are not in Home view
     if (currentView !== AppView.HOME && e.targetTouches[0].clientX < window.innerWidth * 0.2) {
          setTouchStart(e.targetTouches[0].clientX);
     } else {
@@ -80,10 +84,12 @@ const App: React.FC = () => {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+     if (isFullScreenMode) return;
      if (touchStart) setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = () => {
+    if (isFullScreenMode) return;
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
     const isRightSwipe = distance < -75; // Negative distance means moving right
@@ -101,7 +107,6 @@ const App: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 1. Check active session immediately
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
@@ -116,10 +121,9 @@ const App: React.FC = () => {
           countryCode: metadata.country_code
         });
       }
-      setIsAuthChecking(false); // Initial check done
+      setIsAuthChecking(false);
     });
 
-    // 2. Listen for auth changes (Login, Logout, OAuth Redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
          const metadata = session.user.user_metadata || {};
@@ -134,7 +138,6 @@ const App: React.FC = () => {
           countryCode: metadata.country_code
         });
         
-        // Clear hash from URL if present (cleaner URL after OAuth redirect)
         if (window.location.hash && window.location.hash.includes('access_token')) {
             window.history.replaceState(null, '', window.location.pathname);
         }
@@ -143,7 +146,7 @@ const App: React.FC = () => {
         setCurrentView(AppView.HOME);
         setActiveProject(null);
       }
-      setIsAuthChecking(false); // State change handled
+      setIsAuthChecking(false);
     });
 
     const unsubscribeDB = dbService.subscribeProjects((data) => {
@@ -216,7 +219,6 @@ const App: React.FC = () => {
       }
     };
 
-    // Sequential Upload Processing
     const currentlyUploading = uploadQueue.some(i => i.status === 'uploading');
     if (!currentlyUploading && uploadQueue.some(i => i.status === 'pending')) {
         processQueue();
@@ -321,55 +323,59 @@ const App: React.FC = () => {
   };
 
   // Mobile-Optimized Header
-  const renderHeader = () => (
-    <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 h-16 flex items-center shadow-lg transition-all">
-        <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-                {currentView !== AppView.HOME ? (
-                    <button 
-                        onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}
-                        className="p-2 -ml-2 rounded-full text-white hover:bg-white/10 transition-all flex items-center gap-2"
-                    >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                        <span className="text-sm font-bold md:hidden">Back</span>
-                    </button>
-                ) : (
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
-                        <div className="w-8 h-8 md:w-9 md:h-9 bg-white rounded-xl flex items-center justify-center shadow-xl"><span className="font-display font-bold text-brand-blue text-lg md:text-xl">N</span></div>
-                        <span className="font-display font-bold text-white text-base md:text-lg tracking-tight">Shiko Progresin</span>
-                    </div>
-                )}
-                
-                {/* Desktop Breadcrumb for Non-Home */}
-                {currentView !== AppView.HOME && (
-                    <div className="hidden md:flex items-center gap-2 text-slate-500 text-sm border-l border-white/10 pl-4 ml-2">
-                        <span onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }} className="cursor-pointer hover:text-white transition-colors">Home</span>
-                        <span>/</span>
-                        <span className="text-white font-medium truncate max-w-[200px]">{activeProject ? activeProject.name : text.profileTitle}</span>
-                    </div>
-                )}
-            </div>
+  const renderHeader = () => {
+    // If in full screen mode (lightbox or 3D view), hide the header completely
+    if (isFullScreenMode) return null;
 
-            <div className="flex items-center gap-2 md:gap-5">
-                <InstallButton language={language} />
-                <button 
-                    onClick={() => setCurrentView(AppView.PROFILE)} 
-                    className={`p-2 rounded-full transition-colors ${currentView === AppView.PROFILE ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                </button>
-                {/* Hide logout on mobile to save space, it is available in profile */}
-                <button onClick={handleLogout} className="hidden md:block p-2 rounded-full bg-white/5 text-slate-400 hover:text-red-400 transition-colors" title={text.logout}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
-                </button>
+    return (
+        <header className="bg-brand-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 h-16 flex items-center shadow-lg transition-all animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    {currentView !== AppView.HOME ? (
+                        <button 
+                            onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}
+                            className="p-2 -ml-2 rounded-full text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                            <span className="text-sm font-bold md:hidden">Back</span>
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
+                            <div className="w-8 h-8 md:w-9 md:h-9 bg-white rounded-xl flex items-center justify-center shadow-xl"><span className="font-display font-bold text-brand-blue text-lg md:text-xl">N</span></div>
+                            <span className="font-display font-bold text-white text-base md:text-lg tracking-tight">Shiko Progresin</span>
+                        </div>
+                    )}
+                    
+                    {/* Desktop Breadcrumb for Non-Home */}
+                    {currentView !== AppView.HOME && (
+                        <div className="hidden md:flex items-center gap-2 text-slate-500 text-sm border-l border-white/10 pl-4 ml-2">
+                            <span onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }} className="cursor-pointer hover:text-white transition-colors">Home</span>
+                            <span>/</span>
+                            <span className="text-white font-medium truncate max-w-[200px]">{activeProject ? activeProject.name : text.profileTitle}</span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2 md:gap-5">
+                    <InstallButton language={language} />
+                    <button 
+                        onClick={() => setCurrentView(AppView.PROFILE)} 
+                        className={`p-2 rounded-full transition-colors ${currentView === AppView.PROFILE ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+                    >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    </button>
+                    {/* Hide logout on mobile to save space, it is available in profile */}
+                    <button onClick={handleLogout} className="hidden md:block p-2 rounded-full bg-white/5 text-slate-400 hover:text-red-400 transition-colors" title={text.logout}>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
+                    </button>
+                </div>
             </div>
-        </div>
-    </header>
-  );
+        </header>
+    );
+  };
 
   if (!isOnline) return <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white"><h1>Offline</h1></div>;
   
-  // New: Show loading screen while checking auth session to prevent flash of login screen
   if (isAuthChecking) {
       return (
         <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white">
@@ -509,9 +515,9 @@ const App: React.FC = () => {
                            </div>
                            <div className="relative">
                               {heroTab === '3d' ? (
-                                <SplatViewer type="3d" url={activeProject.updates[activeUpdateIndex].splatUrl} title="Polycam 3D Render" />
+                                <SplatViewer type="3d" url={activeProject.updates[activeUpdateIndex].splatUrl} title="Polycam 3D Render" onFullScreenChange={setIsFullScreenMode} />
                               ) : (
-                                <SplatViewer type="360" url={activeProject.updates[activeUpdateIndex].floorfyUrl} title="Floorfy 360 Tour" />
+                                <SplatViewer type="360" url={activeProject.updates[activeUpdateIndex].floorfyUrl} title="Floorfy 360 Tour" onFullScreenChange={setIsFullScreenMode} />
                               )}
                            </div>
                         </div>
@@ -519,7 +525,7 @@ const App: React.FC = () => {
                         {/* Gallery Section */}
                         <div className="pt-8 md:pt-10 border-t border-white/5">
                            <h2 className="text-lg md:text-xl font-display font-bold text-white mb-6 md:mb-8">Site Footage Gallery</h2>
-                           <MediaGrid media={activeProject.updates[activeUpdateIndex].media} />
+                           <MediaGrid media={activeProject.updates[activeUpdateIndex].media} onFullScreenChange={setIsFullScreenMode} />
                         </div>
                     </div>
 

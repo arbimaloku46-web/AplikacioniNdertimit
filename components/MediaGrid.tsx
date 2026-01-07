@@ -4,6 +4,7 @@ import { MediaItem } from '../types';
 
 interface MediaGridProps {
   media: MediaItem[];
+  onFullScreenChange?: (isFullScreen: boolean) => void;
 }
 
 type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
@@ -212,7 +213,7 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center overflow-hidden touch-none"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -220,14 +221,14 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
     >
       {/* --- UI Controls Layer (Z-50) --- */}
       
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-[110] bg-gradient-to-b from-black/80 to-transparent">
-         <span className="text-white font-medium text-sm drop-shadow-md">
+      {/* Header - Added padding-top for safe areas (iPhone notch) */}
+      <div className="absolute top-0 left-0 right-0 p-4 pt-12 md:pt-4 flex justify-between items-center z-[110] bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+         <span className="text-white font-medium text-sm drop-shadow-md pointer-events-auto">
              {currentIndex + 1} of {items.length}
          </span>
          <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors pointer-events-auto"
          >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -245,9 +246,11 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
       </button>
 
       {/* Footer Info */}
-      <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-[110] transition-opacity duration-300 ${scale > 1.1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-         <h3 className="text-white font-bold text-lg">{currentMedia.description}</h3>
-         <p className="text-slate-300 text-xs uppercase tracking-widest mt-1">{currentMedia.category} • {currentMedia.type}</p>
+      <div className={`absolute bottom-0 left-0 right-0 p-6 pb-10 md:pb-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-[110] transition-opacity duration-300 pointer-events-none ${scale > 1.1 ? 'opacity-0' : 'opacity-100'}`}>
+         <div className="pointer-events-auto">
+            <h3 className="text-white font-bold text-lg">{currentMedia.description}</h3>
+            <p className="text-slate-300 text-xs uppercase tracking-widest mt-1">{currentMedia.category} • {currentMedia.type}</p>
+         </div>
       </div>
 
       {/* --- Content Layer --- */}
@@ -287,10 +290,17 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
 
 // --- Main MediaGrid Component ---
 
-export const MediaGrid: React.FC<MediaGridProps> = ({ media }) => {
+export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange }) => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
+
+  // Trigger parent full screen state
+  useEffect(() => {
+    if (onFullScreenChange) {
+        onFullScreenChange(lightboxIndex !== null);
+    }
+  }, [lightboxIndex, onFullScreenChange]);
 
   const filteredMedia = useMemo(() => {
     let list = [...media];

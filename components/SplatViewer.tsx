@@ -6,9 +6,10 @@ interface EmbedViewerProps {
   url?: string;
   title: string;
   type: '3d' | '360';
+  onFullScreenChange?: (isFullScreen: boolean) => void;
 }
 
-export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) => {
+export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFullScreenChange }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
@@ -16,6 +17,13 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isFullscreen = isNativeFullscreen || isCssFullscreen;
+
+  // Sync with Parent (App.tsx) to hide header
+  useEffect(() => {
+    if (onFullScreenChange) {
+        onFullScreenChange(isFullscreen);
+    }
+  }, [isFullscreen, onFullScreenChange]);
 
   // Handle Scroll Locking and Fullscreen Events
   useEffect(() => {
@@ -113,7 +121,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type }) =>
     >
       {/* Top Controls Bar - Always visible in fullscreen */}
       {isFullscreen && (
-          <div className="absolute top-0 left-0 right-0 z-[5100] p-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none safe-area-inset-top">
+          <div className="absolute top-0 left-0 right-0 z-[5100] p-4 pt-12 md:pt-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
               <div className="pointer-events-auto">
                  <button 
                     onClick={() => setIsInteracting(!isInteracting)}
