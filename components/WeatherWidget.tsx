@@ -3,6 +3,7 @@ import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Su
 
 interface WeatherWidgetProps {
   location: string;
+  date?: string;
 }
 
 interface WeatherData {
@@ -11,7 +12,7 @@ interface WeatherData {
   windSpeed: number;
 }
 
-export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location }) => {
+export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -20,6 +21,10 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location }) => {
     let mounted = true;
 
     const fetchWeather = async () => {
+      if (!location) {
+          if (mounted) setLoading(false);
+          return;
+      }
       setLoading(true);
       setError(false);
       try {
@@ -33,17 +38,51 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location }) => {
 
         const { latitude, longitude } = geoData.results[0];
 
-        // Step 2: Weather Forecast
-        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=celsius&wind_speed_unit=kmh`);
-        const weatherData = await weatherResponse.json();
+        // Step 2: Weather Forecast or Historical
+        let weatherData: any;
+        const today = new Date().toISOString().split('T')[0];
+        const targetDate = date || today;
 
-        if (mounted && weatherData.current) {
-          setWeather({
-            temperature: weatherData.current.temperature_2m,
-            weatherCode: weatherData.current.weather_code,
-            windSpeed: weatherData.current.wind_speed_10m,
-          });
+        if (targetDate < today) {
+            // Historical
+            const weatherResponse = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${targetDate}&end_date=${targetDate}&daily=temperature_2m_max,weather_code,wind_speed_10m_max&timezone=auto`);
+            weatherData = await weatherResponse.json();
+            
+            if (mounted && weatherData.daily && weatherData.daily.time && weatherData.daily.time.length > 0) {
+              setWeather({
+                temperature: weatherData.daily.temperature_2m_max[0],
+                weatherCode: weatherData.daily.weather_code[0],
+                windSpeed: weatherData.daily.wind_speed_10m_max[0],
+              });
+            } else {
+               throw new Error('Historical data not available');
+            }
+        } else if (targetDate === today) {
+            // Current live
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=celsius&wind_speed_unit=kmh`);
+            weatherData = await weatherResponse.json();
+            if (mounted && weatherData.current) {
+              setWeather({
+                temperature: weatherData.current.temperature_2m,
+                weatherCode: weatherData.current.weather_code,
+                windSpeed: weatherData.current.wind_speed_10m,
+              });
+            }
+        } else {
+             // Future forecast
+             const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&start_date=${targetDate}&end_date=${targetDate}&daily=temperature_2m_max,weather_code,wind_speed_10m_max&timezone=auto`);
+             weatherData = await weatherResponse.json();
+             if (mounted && weatherData.daily && weatherData.daily.time && weatherData.daily.time.length > 0) {
+              setWeather({
+                temperature: weatherData.daily.temperature_2m_max[0],
+                weatherCode: weatherData.daily.weather_code[0],
+                windSpeed: weatherData.daily.wind_speed_10m_max[0],
+              });
+            } else {
+               throw new Error('Forecast data not available');
+            }
         }
+
       } catch (err) {
         console.error('Failed to fetch weather:', err);
         if (mounted) setError(true);
@@ -57,7 +96,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location }) => {
     return () => {
       mounted = false;
     };
-  }, [location]);
+  }, [location, date]);
 
   if (loading) {
     return (

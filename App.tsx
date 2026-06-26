@@ -314,6 +314,13 @@ const App: React.FC = () => {
     try { await dbService.updateProject(updatedProject); } catch {}
   };
 
+  const handleProjectField = async (field: string, value: any) => {
+    if (!activeProject) return;
+    const updatedProject = { ...activeProject, [field]: value };
+    setActiveProject(updatedProject);
+    try { await dbService.updateProject(updatedProject); } catch {}
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
@@ -554,6 +561,10 @@ const App: React.FC = () => {
                             
                             {isAdmin ? (
                                 <div className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Project Location</label><input className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white" value={activeProject.location} onChange={e => handleProjectField('location', e.target.value)} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Update Date</label><input type="date" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white [color-scheme:dark]" value={activeProject.updates[activeUpdateIndex].date} onChange={e => handleUpdateField('date', e.target.value)} /></div>
+                                    </div>
                                     {/* Admin Inputs - Kept same structure */}
                                     <div>
                                         <label className="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-2">3D Polycam Embed</label>
@@ -574,10 +585,14 @@ const App: React.FC = () => {
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Completion %</label><input type="number" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm" value={activeProject.updates[activeUpdateIndex].stats.completion} onChange={e => handleUpdateField('stats.completion', parseInt(e.target.value))} /></div>
-                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Workers</label><input type="number" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm" value={activeProject.updates[activeUpdateIndex].stats.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Completion %</label><input type="number" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.completion} onChange={e => handleUpdateField('stats.completion', parseInt(e.target.value))} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Workers</label><input type="number" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
                                     </div>
-                                    <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 h-32 resize-none text-sm" value={activeProject.updates[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
+                                    <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 h-32 resize-none text-sm text-white" value={activeProject.updates[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
+                                    <div className="pt-4 border-t border-white/5">
+                                        <label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Weather Preview</label>
+                                        <div className="h-24"><WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} /></div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-6 md:space-y-8">
@@ -586,7 +601,7 @@ const App: React.FC = () => {
                                        <p className="text-sm text-slate-400 mt-4 leading-relaxed whitespace-pre-line">{activeProject.updates[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4 pt-6 md:pt-8 border-t border-white/5">
-                                        <WeatherWidget location={activeProject.location} />
+                                        <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
                                         <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
                                           <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Workforce</span>
                                           <span className="text-white text-lg font-display font-bold leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} Active</span>
