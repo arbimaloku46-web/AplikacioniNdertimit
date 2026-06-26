@@ -12,6 +12,7 @@ import { Language, translations } from './translations';
 import { dbService } from './services/db';
 import { logoutUser } from './services/authService';
 import { supabase } from './services/supabaseClient';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -533,6 +534,22 @@ const App: React.FC = () => {
                         {/* Site Stats & Summary */}
                         <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl relative z-30 shadow-2xl">
                             <h3 className="text-[10px] uppercase font-bold text-brand-blue mb-6 tracking-widest">Executive Update</h3>
+                            
+                            <div className="h-48 w-full mb-8">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={[...activeProject.updates].sort((a, b) => a.weekNumber - b.weekNumber)}>
+                                        <XAxis dataKey="weekNumber" stroke="#64748b" fontSize={10} tickFormatter={(tick) => `W${tick}`} axisLine={false} tickLine={false} />
+                                        <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(tick) => `${tick}%`} width={35} />
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', color: '#f1f5f9' }} 
+                                            itemStyle={{ color: '#60a5fa' }}
+                                            formatter={(value: any) => [`${value}%`, 'Completion']} 
+                                            labelFormatter={(label) => `Week ${label}`}
+                                        />
+                                        <Line type="monotone" dataKey="stats.completion" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#0f172a' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
                             
                             {isAdmin ? (
                                 <div className="space-y-6">

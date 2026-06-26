@@ -90,56 +90,56 @@ export const dbService = {
   },
 
   async uploadFile(file: File, projectId: string, onProgress?: (percent: number) => void): Promise<string> {
-    // 1. Create a unique file path
     const fileExt = file.name.split('.').pop();
+    // Sanitize filename to ensure no weird chars cause issues
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${projectId}/${fileName}`;
     const bucket = 'project-media';
 
-    // We use XMLHttpRequest to track upload progress, as standard fetch/supabase.upload doesn't expose it easily.
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const url = `${supabaseUrl}/storage/v1/object/${bucket}/${filePath}`;
-        
-        xhr.open('POST', url);
-        
-        // Required Headers for Supabase Storage
-        xhr.setRequestHeader('apikey', supabaseKey);
-        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-        xhr.setRequestHeader('x-upsert', 'false');
+    // We use the official Supabase SDK upload method which handles large files/videos much better 
+    // than a custom XMLHttpRequest.
+    
+    // Note: The standard SDK upload() method does not emit granular progress events.
+    // We simulate progress to keep the UI responsive for the user during the upload.
+    let currentProgress = 0;
+    const progressInterval = setInterval(() => {
+        // Increment progress slowly up to 90%
+        if (currentProgress < 90) {
+            // Slower increment for larger files roughly approximated
+            currentProgress += (file.size > 10 * 1024 * 1024) ? 2 : 5; 
+            if (onProgress) onProgress(currentProgress);
+        }
+    }, 500);
 
-        // Authenticate with the current session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.access_token) {
-                xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-            } else {
-                // Fallback (might fail if bucket is private)
-                xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
-            }
+    try {
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type // Explicitly set content type to avoid detection issues
+            });
 
-            // Track Progress
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable && onProgress) {
-                    const percent = (event.loaded / event.total) * 100;
-                    onProgress(percent);
-                }
-            };
+        clearInterval(progressInterval);
 
-            // Handle Completion
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                     // Get the Public URL
-                     const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-                     resolve(data.publicUrl);
-                } else {
-                    reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
-                }
-            };
+        if (error) {
+            console.error('Supabase Upload Error:', error);
+            throw error;
+        }
 
-            xhr.onerror = () => reject(new Error('Network error during upload'));
-            
-            xhr.send(file);
-        });
-    });
+        // Complete the progress bar
+        if (onProgress) onProgress(100);
+
+        const { data: publicData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath);
+
+        return publicData.publicUrl;
+
+    } catch (e) {
+        clearInterval(progressInterval);
+        console.error("Upload exception:", e);
+        throw e;
+    }
   }
 };
