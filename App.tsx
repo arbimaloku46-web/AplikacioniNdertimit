@@ -13,6 +13,7 @@ import { dbService } from './services/db';
 import { logoutUser } from './services/authService';
 import { supabase } from './services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { WeatherWidget } from './components/WeatherWidget';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -585,13 +586,10 @@ const App: React.FC = () => {
                                        <p className="text-sm text-slate-400 mt-4 leading-relaxed whitespace-pre-line">{activeProject.updates[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4 pt-6 md:pt-8 border-t border-white/5">
-                                        <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl">
-                                          <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Weather</span>
-                                          <span className="text-white text-xs font-bold">{activeProject.updates[activeUpdateIndex].stats.weatherConditions}</span>
-                                        </div>
-                                        <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl">
+                                        <WeatherWidget location={activeProject.location} />
+                                        <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
                                           <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Workforce</span>
-                                          <span className="text-white text-xs font-bold">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} Active</span>
+                                          <span className="text-white text-lg font-display font-bold leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} Active</span>
                                         </div>
                                     </div>
                                 </div>
