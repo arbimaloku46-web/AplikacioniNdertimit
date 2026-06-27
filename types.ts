@@ -28,6 +28,7 @@ export interface Project {
   name: string;
   clientName: string;
   location: string;
+  coordinates?: { lat: number; lng: number };
   thumbnailUrl: string;
   accessCode: string;
   updates: WeeklyUpdate[];

@@ -15,6 +15,8 @@ import { supabase } from './services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { WeatherWidget } from './components/WeatherWidget';
 import { ProjectTimeline } from './components/ProjectTimeline';
+import { DashboardMap } from './components/DashboardMap';
+import { LocationPicker } from './components/LocationPicker';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -57,7 +59,9 @@ const App: React.FC = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
 
-  const [newProjectForm, setNewProjectForm] = useState({
+  const [newProjectForm, setNewProjectForm] = useState<{
+    name: string; clientName: string; location: string; accessCode: string; description: string; thumbnailUrl: string; coordinates?: { lat: number; lng: number };
+  }>({
     name: '', clientName: '', location: '', accessCode: '', description: '', thumbnailUrl: ''
   });
 
@@ -411,13 +415,22 @@ const App: React.FC = () => {
       
       {showCreateProject && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-             <div className="bg-slate-900 border border-white/5 rounded-3xl p-8 w-full max-w-2xl shadow-2xl my-8">
-                <h2 className="text-2xl font-bold text-white mb-8">New Project Entry</h2>
+             <div className="bg-slate-900 border border-white/5 rounded-3xl p-8 w-full max-w-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <h2 className="text-2xl font-display font-bold text-white mb-8">New Project Entry</h2>
                 <form onSubmit={handleCreateProject} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Project Name</label><input required className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-white" value={newProjectForm.name} onChange={e => setNewProjectForm({...newProjectForm, name: e.target.value})} /></div>
                     <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Client</label><input required className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-white" value={newProjectForm.clientName} onChange={e => setNewProjectForm({...newProjectForm, clientName: e.target.value})} /></div>
-                    <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Location</label><input required className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-white" value={newProjectForm.location} onChange={e => setNewProjectForm({...newProjectForm, location: e.target.value})} /></div>
-                    <div className="md:col-span-2 flex justify-end gap-4 mt-8">
+                    <div><label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Location (City, Area)</label><input required className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-white" value={newProjectForm.location} onChange={e => setNewProjectForm({...newProjectForm, location: e.target.value})} /></div>
+                    
+                    <div className="md:col-span-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Exact Map Location</label>
+                        <LocationPicker 
+                            onLocationSelect={(lat, lng) => setNewProjectForm({...newProjectForm, coordinates: { lat, lng }})} 
+                        />
+                        <p className="text-[10px] text-slate-400 mt-2">Click on the map to place the project marker.</p>
+                    </div>
+
+                    <div className="md:col-span-2 flex justify-end gap-4 mt-4">
                         <Button type="button" variant="secondary" onClick={() => setShowCreateProject(false)}>Cancel</Button>
                         <Button type="submit" isLoading={isCreatingProject}>Initialize Project</Button>
                     </div>
@@ -439,6 +452,17 @@ const App: React.FC = () => {
                     </div>
                     {isAdmin && <Button onClick={() => setShowCreateProject(true)}>{text.addNewProject}</Button>}
                 </div>
+                
+                {/* Project Map View */}
+                {!loadingProjects && projects.length > 0 && (
+                    <DashboardMap 
+                        projects={projects} 
+                        onProjectClick={handleProjectSelect} 
+                        unlockedProjectIds={unlockedProjectIds}
+                        isAdmin={isAdmin}
+                    />
+                )}
+
                 {loadingProjects ? (
                     <div className="flex items-center justify-center py-20">
                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
