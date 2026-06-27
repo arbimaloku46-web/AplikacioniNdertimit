@@ -563,6 +563,14 @@ const App: React.FC = () => {
                                         <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Project Location</label><input className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white" value={activeProject.location} onChange={e => handleProjectField('location', e.target.value)} /></div>
                                         <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Update Date</label><input type="date" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white [color-scheme:dark]" value={activeProject.updates[activeUpdateIndex].date} onChange={e => handleUpdateField('date', e.target.value)} /></div>
                                     </div>
+                                    <div>
+                                        <label className="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-2">Exact Map Location</label>
+                                        <LocationPicker 
+                                            initialPosition={activeProject.coordinates} 
+                                            onLocationSelect={(lat, lng) => handleProjectField('coordinates', { lat, lng })} 
+                                        />
+                                        <p className="text-[10px] text-slate-400 mt-2">Click on the map to update the project marker location.</p>
+                                    </div>
                                     {/* Admin Inputs - Kept same structure */}
                                     <div>
                                         <label className="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-2">3D Polycam Embed</label>
@@ -605,6 +613,15 @@ const App: React.FC = () => {
                                           <span className="text-white text-2xl md:text-3xl font-display font-bold leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} <span className="text-sm text-slate-400 font-sans font-medium">Active</span></span>
                                         </div>
                                     </div>
+                                    {activeProject.coordinates && (
+                                        <div className="pt-6 md:pt-8 border-t border-white/5">
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-4">Exact Location</span>
+                                            <LocationPicker 
+                                                initialPosition={activeProject.coordinates}
+                                                readOnly={true}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

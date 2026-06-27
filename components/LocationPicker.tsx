@@ -13,13 +13,16 @@ L.Icon.Default.mergeOptions({
 
 interface LocationPickerProps {
   initialPosition?: { lat: number; lng: number };
-  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  readOnly?: boolean;
 }
 
-const LocationMarker = ({ position, onSelect }: { position: { lat: number; lng: number } | null, onSelect: (lat: number, lng: number) => void }) => {
+const LocationMarker = ({ position, onSelect, readOnly }: { position: { lat: number; lng: number } | null, onSelect?: (lat: number, lng: number) => void, readOnly?: boolean }) => {
   useMapEvents({
     click(e) {
-      onSelect(e.latlng.lat, e.latlng.lng);
+      if (!readOnly && onSelect) {
+        onSelect(e.latlng.lat, e.latlng.lng);
+      }
     },
   });
 
@@ -28,12 +31,19 @@ const LocationMarker = ({ position, onSelect }: { position: { lat: number; lng: 
   );
 };
 
-export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onLocationSelect }) => {
+export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onLocationSelect, readOnly = false }) => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(initialPosition || null);
 
+  useEffect(() => {
+    if (initialPosition) {
+      setPosition(initialPosition);
+    }
+  }, [initialPosition]);
+
   const handleSelect = (lat: number, lng: number) => {
+    if (readOnly) return;
     setPosition({ lat, lng });
-    onLocationSelect(lat, lng);
+    if (onLocationSelect) onLocationSelect(lat, lng);
   };
 
   const defaultCenter = { lat: 41.3275, lng: 19.8187 }; // Tirana center as default
@@ -45,7 +55,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <LocationMarker position={position} onSelect={handleSelect} />
+        <LocationMarker position={position} onSelect={handleSelect} readOnly={readOnly} />
       </MapContainer>
     </div>
   );
