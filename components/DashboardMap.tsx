@@ -15,11 +15,9 @@ L.Icon.Default.mergeOptions({
 interface DashboardMapProps {
   projects: Project[];
   onProjectClick: (project: Project) => void;
-  unlockedProjectIds: string[];
-  isAdmin: boolean;
 }
 
-export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectClick, unlockedProjectIds, isAdmin }) => {
+export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectClick }) => {
   const mapCenter = { lat: 41.3275, lng: 19.8187 }; // Default center (Tirana)
 
   // Filter projects to only those with coordinates

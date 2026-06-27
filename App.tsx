@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
-import { LoginScreen } from './components/LoginScreen';
 import { GlobalAuth } from './components/GlobalAuth';
 import { Button } from './components/Button';
 import { SplatViewer } from './components/SplatViewer';
@@ -18,7 +17,6 @@ import { ProjectTimeline } from './components/ProjectTimeline';
 import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 
-const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
 interface UploadItem {
@@ -32,14 +30,12 @@ const App: React.FC = () => {
   // --- STATE ---
   const [user, setUser] = useState<User | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [unlockedProjectIds, setUnlockedProjectIds] = useState<string[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [language, setLanguage] = useState<Language>('en');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [currentView, setCurrentView] = useState<AppView>(AppView.HOME);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
-  const [pendingProject, setPendingProject] = useState<Project | null>(null);
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
   const [heroTab, setHeroTab] = useState<'3d' | '360'>('3d');
   
@@ -170,9 +166,6 @@ const App: React.FC = () => {
         }
     });
 
-    const storedUnlocked = localStorage.getItem(STORAGE_UNLOCKED_KEY);
-    if (storedUnlocked) setUnlockedProjectIds(JSON.parse(storedUnlocked));
-
     const storedLang = localStorage.getItem(STORAGE_LANGUAGE_KEY);
     if (storedLang === 'en' || storedLang === 'sq') setLanguage(storedLang as Language);
 
@@ -242,18 +235,6 @@ const App: React.FC = () => {
     setActiveProject(project);
     setActiveUpdateIndex(0);
     setCurrentView(AppView.PROJECT_DETAIL);
-  };
-
-  const handleAuthenticationSuccess = () => {
-    if (pendingProject) {
-      const newUnlocked = [...unlockedProjectIds, pendingProject.id];
-      setUnlockedProjectIds(newUnlocked);
-      localStorage.setItem(STORAGE_UNLOCKED_KEY, JSON.stringify(newUnlocked));
-      setActiveProject(pendingProject);
-      setActiveUpdateIndex(0);
-      setPendingProject(null);
-      setCurrentView(AppView.PROJECT_DETAIL);
-    }
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -407,8 +388,6 @@ const App: React.FC = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
     >
-      {pendingProject && <LoginScreen targetProject={pendingProject} onLogin={handleAuthenticationSuccess} onCancel={() => setPendingProject(null)} />}
-      
       {showCreateProject && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
              <div className="bg-slate-900 border border-white/5 rounded-3xl p-8 w-full max-w-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -454,8 +433,6 @@ const App: React.FC = () => {
                     <DashboardMap 
                         projects={projects} 
                         onProjectClick={handleProjectSelect} 
-                        unlockedProjectIds={unlockedProjectIds}
-                        isAdmin={isAdmin}
                     />
                 )}
 
