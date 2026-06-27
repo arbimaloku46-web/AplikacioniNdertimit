@@ -46,7 +46,6 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
             {mappedProjects.map((project) => {
-                const isAccessible = isAdmin || unlockedProjectIds.includes(project.id);
                 return (
                     <Marker 
                         key={project.id} 
@@ -60,7 +59,7 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
                                     onClick={() => onProjectClick(project)}
                                     className="w-full bg-brand-blue text-white text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg hover:bg-blue-600 transition-colors"
                                 >
-                                    {isAccessible ? 'View Project' : 'Enter Code'}
+                                    View Project
                                 </button>
                             </div>
                         </Popup>

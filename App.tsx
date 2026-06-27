@@ -239,13 +239,9 @@ const App: React.FC = () => {
   };
 
   const handleProjectSelect = (project: Project) => {
-    if (isAdmin || unlockedProjectIds.includes(project.id)) {
-        setActiveProject(project);
-        setActiveUpdateIndex(0);
-        setCurrentView(AppView.PROJECT_DETAIL);
-    } else {
-        setPendingProject(project);
-    }
+    setActiveProject(project);
+    setActiveUpdateIndex(0);
+    setCurrentView(AppView.PROJECT_DETAIL);
   };
 
   const handleAuthenticationSuccess = () => {
@@ -815,9 +811,9 @@ const App: React.FC = () => {
                                     {text.myUnlockedProjects}
                                 </h3>
                                 
-                                {projects.filter(p => unlockedProjectIds.includes(p.id)).length > 0 ? (
+                                {projects.length > 0 ? (
                                     <div className="grid gap-4">
-                                        {projects.filter(p => unlockedProjectIds.includes(p.id)).map(p => (
+                                        {projects.map(p => (
                                             <div key={p.id} onClick={() => handleProjectSelect(p)} className="group flex items-center gap-4 md:gap-5 p-3 md:p-4 rounded-2xl bg-slate-950 border border-white/5 cursor-pointer hover:border-brand-blue/50 hover:bg-slate-900 transition-all active:scale-[0.99]">
                                                 <div className="w-16 h-12 md:w-20 md:h-16 rounded-xl overflow-hidden shadow-lg relative">
                                                     <img src={p.thumbnailUrl} className="w-full h-full object-cover" />
