@@ -133,17 +133,17 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) 
   return (
     <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[8px] text-slate-500 font-bold uppercase block">Live Weather</span>
+        <span className="text-[10px] text-slate-500 font-bold uppercase block">Live Weather</span>
         {icon}
       </div>
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
-          <span className="text-white text-lg font-display font-bold leading-none">{Math.round(weather.temperature)}°C</span>
-          <span className="text-slate-400 text-[10px] mt-1 truncate max-w-[80px]">{desc}</span>
+          <span className="text-white text-2xl md:text-3xl font-display font-bold leading-none">{Math.round(weather.temperature)}°C</span>
+          <span className="text-slate-400 text-sm mt-1 truncate max-w-[100px]">{desc}</span>
         </div>
         <div className="flex items-center gap-1 text-slate-500">
           <Wind className="w-3 h-3" />
-          <span className="text-[10px]">{Math.round(weather.windSpeed)} km/h</span>
+          <span className="text-xs">{Math.round(weather.windSpeed)} km/h</span>
         </div>
       </div>
     </div>

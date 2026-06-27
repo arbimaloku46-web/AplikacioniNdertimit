@@ -213,7 +213,7 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[1000] w-[100dvw] h-[100dvh] bg-black flex items-center justify-center overflow-hidden touch-none"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -265,19 +265,19 @@ const Lightbox: React.FC<LightboxProps> = ({ items, initialIndex, onClose }) => 
         onMouseUp={endDrag}
         onMouseLeave={endDrag}
       >
-         <div className="w-full h-full flex items-center justify-center" onDoubleClick={handleDoubleClick}>
+         <div className="w-[100dvw] h-[100dvh] flex items-center justify-center" onDoubleClick={handleDoubleClick}>
             {currentMedia.type === 'video' ? (
                 (() => {
                     const info = getVideoInfo(currentMedia.url);
                     return info.type === 'file' 
-                    ? <video controls autoPlay playsInline className="max-w-full max-h-full object-contain" src={currentMedia.url} />
-                    : <iframe src={info.embedUrl} className="w-full aspect-video max-h-[80vh] shadow-2xl pointer-events-auto" allow="autoplay; encrypted-media" allowFullScreen />
+                    ? <video controls autoPlay playsInline className="w-full h-full object-contain" src={currentMedia.url} />
+                    : <iframe src={info.embedUrl} className="w-full md:w-[80vw] aspect-video max-h-[100dvh] shadow-2xl pointer-events-auto" allow="autoplay; encrypted-media" allowFullScreen />
                 })()
             ) : (
                 <img 
                     src={currentMedia.url} 
                     alt={currentMedia.description} 
-                    className="max-w-full max-h-full object-contain select-none"
+                    className="w-full h-full object-contain select-none"
                     draggable={false}
                 />
             )}

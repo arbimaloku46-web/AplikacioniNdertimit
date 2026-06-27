@@ -483,7 +483,7 @@ const App: React.FC = () => {
                 {/* Project Header - Mobile Optimized */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
                     <div>
-                        <h1 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-2">{activeProject.name}</h1>
+                        <h1 className="text-3xl md:text-5xl font-display font-bold text-white leading-tight mb-2">{activeProject.name}</h1>
                         <p className="text-slate-500 text-sm flex items-center gap-2">
                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                            {activeProject.location}
@@ -493,7 +493,7 @@ const App: React.FC = () => {
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-0 md:mb-1 mr-4 md:mr-0">Total Progress</span>
                         <div className="flex items-center gap-4">
-                           <div className="text-2xl md:text-3xl font-bold text-white">{activeProject.updates[activeUpdateIndex].stats.completion}%</div>
+                           <div className="text-3xl md:text-4xl font-display font-bold text-white">{activeProject.updates[activeUpdateIndex].stats.completion}%</div>
                            <div className="w-20 md:w-24 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
                               <div className="h-full bg-brand-blue transition-all duration-1000" style={{ width: `${activeProject.updates[activeUpdateIndex].stats.completion}%` }} />
                            </div>
@@ -542,7 +542,7 @@ const App: React.FC = () => {
                     <div className="lg:col-span-4 space-y-8 relative z-20">
                         {/* Site Stats & Summary */}
                         <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl relative z-30 shadow-2xl">
-                            <h3 className="text-[10px] uppercase font-bold text-brand-blue mb-6 tracking-widest">Executive Update</h3>
+                            <h3 className="text-xs uppercase font-bold text-brand-blue mb-6 tracking-widest">Executive Update</h3>
                             
                             <div className="h-48 w-full mb-8">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -598,14 +598,14 @@ const App: React.FC = () => {
                             ) : (
                                 <div className="space-y-6 md:space-y-8">
                                     <div>
-                                       <h2 className="text-xl md:text-2xl font-bold text-white leading-snug">{activeProject.updates[activeUpdateIndex].title}</h2>
-                                       <p className="text-sm text-slate-400 mt-4 leading-relaxed whitespace-pre-line">{activeProject.updates[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
+                                       <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-snug">{activeProject.updates[activeUpdateIndex].title}</h2>
+                                       <p className="text-base text-slate-300 mt-4 leading-relaxed whitespace-pre-line">{activeProject.updates[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4 pt-6 md:pt-8 border-t border-white/5">
                                         <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
                                         <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
-                                          <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Workforce</span>
-                                          <span className="text-white text-lg font-display font-bold leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} Active</span>
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Workforce</span>
+                                          <span className="text-white text-2xl md:text-3xl font-display font-bold leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} <span className="text-sm text-slate-400 font-sans font-medium">Active</span></span>
                                         </div>
                                     </div>
                                 </div>

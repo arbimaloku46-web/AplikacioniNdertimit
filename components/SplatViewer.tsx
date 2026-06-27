@@ -113,7 +113,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
         className={`
             transition-all duration-300 bg-black group shadow-2xl overflow-hidden
             ${isFullscreen 
-                ? 'fixed inset-0 z-[5000] w-screen h-screen rounded-none' 
+                ? 'fixed inset-0 z-[5000] w-[100dvw] h-[100dvh] rounded-none' 
                 : 'relative w-full aspect-video rounded-3xl border border-white/5'
             }
         `}
