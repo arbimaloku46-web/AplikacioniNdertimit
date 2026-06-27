@@ -14,6 +14,7 @@ import { logoutUser } from './services/authService';
 import { supabase } from './services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { WeatherWidget } from './components/WeatherWidget';
+import { ProjectTimeline } from './components/ProjectTimeline';
 
 const STORAGE_UNLOCKED_KEY = 'ndertimi_unlocked_projects';
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -693,6 +694,12 @@ const App: React.FC = () => {
                         )}
                     </div>
                 </div>
+                
+                <ProjectTimeline 
+                   updates={activeProject.updates} 
+                   activeIndex={activeUpdateIndex} 
+                   onSelect={setActiveUpdateIndex} 
+                />
             </main>
          </div>
       )}

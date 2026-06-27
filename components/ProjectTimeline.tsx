@@ -1,0 +1,103 @@
+import React, { useRef, useEffect } from 'react';
+import { WeeklyUpdate } from '../types';
+import { CheckCircle2, Circle } from 'lucide-react';
+
+interface ProjectTimelineProps {
+  updates: WeeklyUpdate[];
+  activeIndex: number;
+  onSelect: (index: number) => void;
+}
+
+export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activeIndex, onSelect }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to active item on mount and index change
+  useEffect(() => {
+    if (scrollRef.current) {
+       const activeEl = scrollRef.current.children[activeIndex] as HTMLElement;
+       if (activeEl) {
+           const containerWidth = scrollRef.current.clientWidth;
+           const elLeft = activeEl.offsetLeft;
+           const elWidth = activeEl.clientWidth;
+           scrollRef.current.scrollTo({
+               left: elLeft - (containerWidth / 2) + (elWidth / 2),
+               behavior: 'smooth'
+           });
+       }
+    }
+  }, [activeIndex, updates.length]);
+
+  return (
+    <div className="mt-12 bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+      <h3 className="text-xs uppercase font-bold text-brand-blue tracking-widest mb-6">Project Timeline & Milestones</h3>
+      
+      {/* Background Line */}
+      <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -z-10 translate-y-[20px]" />
+
+      <div 
+         ref={scrollRef}
+         className="flex items-end gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-4 md:px-0"
+         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {updates.map((update, index) => {
+          const isActive = index === activeIndex;
+          const isPast = index < activeIndex;
+          
+          return (
+            <div 
+               key={index} 
+               onClick={() => onSelect(index)}
+               className={`snap-center flex-shrink-0 flex flex-col items-center cursor-pointer transition-all duration-300 w-32 md:w-40 relative group ${isActive ? 'scale-110' : 'opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
+            >
+                {/* Information Bubble */}
+                <div className={`mb-4 w-full p-3 rounded-xl border text-center transition-colors ${
+                    isActive 
+                       ? 'bg-brand-blue border-brand-blue shadow-lg shadow-brand-blue/20' 
+                       : 'bg-slate-950 border-white/5 group-hover:border-white/20'
+                }`}>
+                   <span className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-white/80' : 'text-slate-500'}`}>
+                      Week {update.weekNumber}
+                   </span>
+                   <span className={`block text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>
+                      {update.title || 'Update'}
+                   </span>
+                   <span className={`block text-[9px] mt-1 ${isActive ? 'text-white/70' : 'text-slate-600'}`}>
+                      {new Date(update.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                   </span>
+                </div>
+
+                {/* Node Connector */}
+                <div className="relative flex items-center justify-center w-full">
+                   {/* Connecting line that goes left to right */}
+                   {index !== 0 && (
+                      <div className={`absolute left-[-50%] right-[50%] top-1/2 h-0.5 -translate-y-1/2 -z-10 transition-colors ${
+                         isActive || isPast ? 'bg-brand-blue' : 'bg-transparent'
+                      }`} />
+                   )}
+                   {/* Node Icon */}
+                   <div className="bg-brand-dark p-1 rounded-full z-10">
+                      {isActive || isPast ? (
+                         <CheckCircle2 className={`w-5 h-5 ${isActive ? 'text-brand-blue' : 'text-slate-400'}`} />
+                      ) : (
+                         <Circle className="w-5 h-5 text-slate-600" />
+                      )}
+                   </div>
+                   {index !== updates.length - 1 && (
+                       <div className={`absolute left-[50%] right-[-50%] top-1/2 h-0.5 -translate-y-1/2 -z-10 transition-colors ${
+                         isPast ? 'bg-brand-blue' : 'bg-transparent'
+                      }`} />
+                   )}
+                </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* CSS to hide scrollbar */}
+      <style>{`
+         .scrollbar-hide::-webkit-scrollbar {
+             display: none;
+         }
+      `}</style>
+    </div>
+  );
+};
