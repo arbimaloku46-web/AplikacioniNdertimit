@@ -28,7 +28,7 @@ export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activ
   }, [activeIndex, updates.length]);
 
   return (
-    <div className="mt-12 bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div id="project-timeline" className="mt-12 bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
       <h3 className="text-xs uppercase font-bold text-brand-blue tracking-widest mb-6">Project Timeline & Milestones</h3>
       
       {/* Background Line */}

@@ -17,6 +17,7 @@ import { WeatherWidget } from './components/WeatherWidget';
 import { ProjectTimeline } from './components/ProjectTimeline';
 import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
+import { OnboardingGuide } from './components/OnboardingGuide';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -47,6 +48,25 @@ const App: React.FC = () => {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isAddingWeek, setIsAddingWeek] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin && currentView === AppView.PROJECT_DETAIL && activeProject) {
+        const hasSeenOnboarding = localStorage.getItem(`onboarding_${activeProject.id}`);
+        if (!hasSeenOnboarding) {
+            setShowOnboarding(true);
+        }
+    } else {
+        setShowOnboarding(false);
+    }
+  }, [isAdmin, currentView, activeProject]);
+
+  const handleDismissOnboarding = () => {
+      setShowOnboarding(false);
+      if (activeProject) {
+          localStorage.setItem(`onboarding_${activeProject.id}`, 'true');
+      }
+  };
 
   // Admin Edit State
   const [newMediaCategory, setNewMediaCategory] = useState<'inside' | 'outside' | 'drone' | 'interior' | 'other'>('outside');
@@ -547,7 +567,7 @@ const App: React.FC = () => {
                                  <button onClick={() => setHeroTab('360')} className={`flex-1 md:flex-none px-4 md:px-5 py-2.5 md:py-2 rounded-lg md:rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${heroTab === '360' ? 'bg-brand-blue text-white shadow-lg' : 'text-slate-500'}`}>360 Tour</button>
                               </div>
                            </div>
-                           <div className="relative">
+                           <div id="splat-viewer" className="relative">
                               {heroTab === '3d' ? (
                                 <SplatViewer type="3d" url={activeProject.updates[activeUpdateIndex].splatUrl} title="Polycam 3D Render" onFullScreenChange={setIsFullScreenMode} />
                               ) : (
@@ -557,7 +577,7 @@ const App: React.FC = () => {
                         </div>
 
                         {/* Gallery Section */}
-                        <div className="pt-8 md:pt-10 border-t border-white/5">
+                        <div id="media-gallery" className="pt-8 md:pt-10 border-t border-white/5">
                            <h2 className="text-lg md:text-xl font-display font-bold text-white mb-6 md:mb-8">Site Footage Gallery</h2>
                            <MediaGrid 
                                media={activeProject.updates[activeUpdateIndex].media} 
@@ -777,6 +797,8 @@ const App: React.FC = () => {
                 />
                 </>
                 )}
+                
+                <OnboardingGuide isVisible={showOnboarding} onDismiss={handleDismissOnboarding} />
             </main>
          </div>
       )}
