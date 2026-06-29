@@ -19,6 +19,7 @@ import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { WifiOff } from 'lucide-react';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -416,6 +417,13 @@ const App: React.FC = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
     >
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500/90 text-white px-4 py-2.5 text-xs font-bold flex items-center justify-center shadow-lg shadow-amber-500/20 backdrop-blur-md">
+          <WifiOff className="w-4 h-4 mr-2 flex-shrink-0" />
+          <span className="text-center">You are currently offline. Viewing cached data and may not have the most recent updates.</span>
+        </div>
+      )}
+
       {showCreateProject && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
              <div className="bg-slate-900 border border-white/5 rounded-3xl p-8 w-full max-w-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
