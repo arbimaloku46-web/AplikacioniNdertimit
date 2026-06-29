@@ -532,7 +532,15 @@ const App: React.FC = () => {
                         {/* Gallery Section */}
                         <div className="pt-8 md:pt-10 border-t border-white/5">
                            <h2 className="text-lg md:text-xl font-display font-bold text-white mb-6 md:mb-8">Site Footage Gallery</h2>
-                           <MediaGrid media={activeProject.updates[activeUpdateIndex].media} onFullScreenChange={setIsFullScreenMode} />
+                           <MediaGrid 
+                               media={activeProject.updates[activeUpdateIndex].media} 
+                               onFullScreenChange={setIsFullScreenMode} 
+                               isAdmin={isAdmin}
+                               onMediaUpdate={(mediaId, updatedMedia) => {
+                                   const newMedia = activeProject.updates[activeUpdateIndex].media.map(m => m.id === mediaId ? updatedMedia : m);
+                                   handleUpdateField('media', newMedia);
+                               }}
+                           />
                         </div>
                     </div>
 

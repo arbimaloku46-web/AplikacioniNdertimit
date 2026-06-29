@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { MediaItem } from '../types';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { MediaItem, Hotspot } from '../types';
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Video from "yet-another-react-lightbox/plugins/video";
@@ -11,6 +11,8 @@ import "yet-another-react-lightbox/plugins/captions.css";
 interface MediaGridProps {
   media: MediaItem[];
   onFullScreenChange?: (isFullScreen: boolean) => void;
+  isAdmin?: boolean;
+  onMediaUpdate?: (mediaId: string, updatedMedia: MediaItem) => void;
 }
 
 type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
@@ -47,9 +49,162 @@ const VideoDuration = () => (
     </div>
 );
 
+// --- Hotspot Components ---
+
+const HotspotEditorOverlay: React.FC<{
+  mediaItem: MediaItem;
+  isAdmin?: boolean;
+  onUpdate?: (updated: MediaItem) => void;
+}> = ({ mediaItem, isAdmin, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
+  const [editingHotspot, setEditingHotspot] = useState<Partial<Hotspot> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const hotspots = mediaItem.hotspots || [];
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    if (!isAdmin || !isEditing) {
+      setActiveHotspot(null);
+      return;
+    }
+    
+    if (editingHotspot) return; // Currently editing one
+
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setEditingHotspot({
+      id: Math.random().toString(36).substr(2, 9),
+      x,
+      y,
+      title: '',
+      description: '',
+      status: 'pending'
+    });
+  };
+
+  const saveHotspot = () => {
+    if (!editingHotspot || !editingHotspot.title || !onUpdate) return;
+    
+    const isExisting = hotspots.some(h => h.id === editingHotspot.id);
+    const newHotspots = isExisting 
+      ? hotspots.map(h => h.id === editingHotspot.id ? (editingHotspot as Hotspot) : h)
+      : [...hotspots, (editingHotspot as Hotspot)];
+      
+    onUpdate({ ...mediaItem, hotspots: newHotspots });
+    setEditingHotspot(null);
+  };
+
+  const deleteHotspot = (id: string) => {
+    if (!onUpdate) return;
+    onUpdate({ ...mediaItem, hotspots: hotspots.filter(h => h.id !== id) });
+    setEditingHotspot(null);
+    setActiveHotspot(null);
+  };
+
+  return (
+    <div 
+        ref={containerRef} 
+        className="absolute inset-0 z-[120]"
+        onClick={handleImageClick}
+        style={{ cursor: isEditing ? 'crosshair' : 'default' }}
+    >
+        {isAdmin && (
+            <div className="absolute top-4 right-4 z-[130]">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); setEditingHotspot(null); setActiveHotspot(null); }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${isEditing ? 'bg-emerald-500 text-white' : 'bg-brand-blue text-white shadow-lg'}`}
+                >
+                    {isEditing ? 'Done' : 'Add Hotspots'}
+                </button>
+            </div>
+        )}
+
+        {hotspots.map(hotspot => (
+            <div 
+                key={hotspot.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (isEditing) {
+                        setEditingHotspot(hotspot);
+                    } else {
+                        setActiveHotspot(activeHotspot?.id === hotspot.id ? null : hotspot);
+                    }
+                }}
+            >
+                <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-transform hover:scale-110 ${hotspot.status === 'completed' ? 'bg-emerald-500' : hotspot.status === 'in-progress' ? 'bg-amber-500' : 'bg-brand-blue'}`}>
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                </div>
+
+                {/* Info Card */}
+                {activeHotspot?.id === hotspot.id && !isEditing && (
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 rounded-xl p-4 w-64 shadow-2xl z-[150] cursor-default" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-2">
+                            <h4 className="text-white font-bold text-sm">{hotspot.title}</h4>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${hotspot.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : hotspot.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-blue/20 text-brand-blue'}`}>
+                                {hotspot.status}
+                            </span>
+                        </div>
+                        <p className="text-slate-400 text-xs">{hotspot.description}</p>
+                    </div>
+                )}
+            </div>
+        ))}
+
+        {/* Editing Modal */}
+        {editingHotspot && (
+            <div 
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-white/10 rounded-xl p-4 w-72 shadow-2xl z-[150]"
+                style={{ left: `${editingHotspot.x}%`, top: `${editingHotspot.y}%` }}
+                onClick={e => e.stopPropagation()}
+            >
+                <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Edit Hotspot</h4>
+                <div className="space-y-3">
+                    <input 
+                        type="text" 
+                        placeholder="Title (e.g. HVAC Installation)" 
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                        value={editingHotspot.title || ''}
+                        onChange={e => setEditingHotspot({...editingHotspot, title: e.target.value})}
+                    />
+                    <textarea 
+                        placeholder="Details or materials used..." 
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white resize-none h-20"
+                        value={editingHotspot.description || ''}
+                        onChange={e => setEditingHotspot({...editingHotspot, description: e.target.value})}
+                    />
+                    <select 
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                        value={editingHotspot.status || 'pending'}
+                        onChange={e => setEditingHotspot({...editingHotspot, status: e.target.value as any})}
+                    >
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <div className="flex gap-2 pt-2">
+                        <button onClick={saveHotspot} className="flex-1 bg-brand-blue text-white text-xs font-bold py-2 rounded-lg">Save</button>
+                        <button onClick={() => setEditingHotspot(null)} className="flex-1 bg-white/10 text-white text-xs font-bold py-2 rounded-lg">Cancel</button>
+                    </div>
+                    {editingHotspot.id && (
+                        <button onClick={() => deleteHotspot(editingHotspot.id!)} className="w-full text-red-400 text-xs font-bold mt-2 hover:underline">Delete Hotspot</button>
+                    )}
+                </div>
+            </div>
+        )}
+    </div>
+  );
+};
+
+
 // --- Main MediaGrid Component ---
 
-export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange }) => {
+export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange, isAdmin, onMediaUpdate }) => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
@@ -166,17 +321,23 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange 
         index={lightboxIndex || 0}
         plugins={[Captions, Video, Zoom]}
         slides={filteredMedia.map(item => {
+          const baseProps = {
+            mediaId: item.id,
+            title: item.description,
+            description: `${item.category} • ${item.type}`,
+          };
+          
           if (item.type === 'video') {
             const info = getVideoInfo(item.url);
             if (info.type === 'youtube' || info.type === 'vimeo') {
                 return {
+                    ...baseProps,
                     type: "custom-video",
                     embedUrl: info.embedUrl,
-                    title: item.description,
-                    description: `${item.category} • ${item.type}`,
                 };
             }
             return {
+                ...baseProps,
                 type: "video",
                 width: 1280,
                 height: 720,
@@ -184,30 +345,74 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange 
                 sources: [
                     { src: item.url, type: "video/mp4" }
                 ],
-                title: item.description,
-                description: `${item.category} • ${item.type}`,
             };
           }
           return { 
+            ...baseProps,
+            type: "custom-image", // Override default image type
             src: item.url,
-            title: item.description,
-            description: `${item.category} • ${item.type}`,
           };
         })}
         render={{
             slide: ({ slide }) => {
+                const mediaItem = media.find(m => m.id === (slide as any).mediaId);
+
                 if (slide.type === "custom-video") {
                     return (
                         <div className="w-full h-full flex items-center justify-center p-4 md:p-12">
-                            <iframe 
-                                src={slide.embedUrl} 
-                                className="w-full aspect-video max-h-[80vh] shadow-2xl" 
-                                allow="autoplay; encrypted-media" 
-                                allowFullScreen 
-                            />
+                            <div className="relative w-full max-w-[1280px] aspect-video max-h-[80vh] shadow-2xl">
+                                <iframe 
+                                    src={(slide as any).embedUrl} 
+                                    className="w-full h-full relative z-10" 
+                                    allow="autoplay; encrypted-media" 
+                                    allowFullScreen 
+                                />
+                                {mediaItem && (
+                                    <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
+                                )}
+                            </div>
                         </div>
                     );
                 }
+
+                if (slide.type === "custom-image") {
+                    return (
+                        <div className="w-full h-full flex items-center justify-center p-4 md:p-12 relative">
+                            <div className="relative max-w-full max-h-full inline-block flex items-center justify-center">
+                                <img 
+                                    src={(slide as any).src} 
+                                    alt={slide.title} 
+                                    className="max-w-full max-h-[80vh] object-contain shadow-2xl pointer-events-none" 
+                                    draggable={false}
+                                />
+                                {mediaItem && (
+                                    <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
+                                )}
+                            </div>
+                        </div>
+                    );
+                }
+                
+                // Fallback for native videos (using container wrapper)
+                if (slide.type === "video") {
+                     return (
+                        <div className="w-full h-full flex items-center justify-center p-4 md:p-12 relative">
+                             <div className="relative max-w-full max-h-full inline-block flex items-center justify-center">
+                                 <video 
+                                     controls 
+                                     autoPlay 
+                                     playsInline 
+                                     className="max-w-full max-h-[80vh] object-contain shadow-2xl relative z-10" 
+                                     src={(slide as any).sources[0].src} 
+                                 />
+                                 {mediaItem && (
+                                    <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
+                                 )}
+                             </div>
+                        </div>
+                     );
+                }
+
                 return undefined;
             }
         }}

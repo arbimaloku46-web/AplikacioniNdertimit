@@ -1,4 +1,13 @@
 
+export interface Hotspot {
+  id: string;
+  x: number;
+  y: number;
+  title: string;
+  description: string;
+  status?: 'pending' | 'in-progress' | 'completed';
+}
+
 export interface MediaItem {
   id: string;
   type: 'photo' | 'video' | '360';
@@ -6,6 +15,7 @@ export interface MediaItem {
   thumbnail?: string;
   description: string;
   category?: 'inside' | 'outside' | 'drone' | 'interior' | 'other';
+  hotspots?: Hotspot[];
 }
 
 export interface WeeklyUpdate {
