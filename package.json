@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
+    "@tanstack/react-virtual": "^3.14.4",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.21.0",
     "motion": "^12.42.0",

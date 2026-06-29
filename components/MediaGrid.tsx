@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from "motion/react";
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { MediaItem, Hotspot } from '../types';
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
@@ -225,6 +226,34 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
     return list;
   }, [media, activeFilter, activeTab]);
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [columns, setColumns] = useState(3);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        setContainerWidth(width);
+        if (width >= 1024) setColumns(5);
+        else if (width >= 768) setColumns(4);
+        else setColumns(3);
+      }
+    });
+    if (parentRef.current) observer.observe(parentRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const gap = columns >= 4 ? 4 : 2;
+  const itemSize = containerWidth > 0 ? (containerWidth - (columns - 1) * gap) / columns : 150;
+
+  const rowVirtualizer = useVirtualizer({
+    count: Math.ceil(filteredMedia.length / columns),
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => itemSize + gap,
+    overscan: 2,
+  });
+
   const categories: { id: FilterType; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'outside', label: 'Outside' },
@@ -277,44 +306,61 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
           No footage found in this category.
         </div>
       ) : (
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 bg-slate-950/50 rounded-xl overflow-hidden p-0.5">
-          {filteredMedia.map((item, index) => {
-             const isVideo = item.type === 'video';
-             // Generate thumbnail url or use image url
-             const vidInfo = isVideo ? getVideoInfo(item.url) : null;
-             const thumbUrl = isVideo && vidInfo?.thumbnail ? vidInfo.thumbnail : item.url;
+        <div ref={parentRef} className="h-[60vh] max-h-[600px] overflow-y-auto bg-slate-950/50 rounded-xl p-0.5 no-scrollbar">
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const startIndex = virtualRow.index * columns;
+                    const rowItems = filteredMedia.slice(startIndex, startIndex + columns);
 
-             return (
-                <motion.div 
-                  key={item.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.05, ease: "easeOut" }}
-                  onClick={() => setLightboxIndex(index)}
-                  className="relative aspect-square cursor-pointer group overflow-hidden bg-slate-900"
-                >
-                  <img 
-                    src={thumbUrl} 
-                    alt={item.description}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  
-                  {/* Video Overlays */}
-                  {isVideo && (
-                    <>
-                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
-                        <VideoIndicator />
-                        <VideoDuration />
-                    </>
-                  )}
-                  
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                </motion.div>
-             );
-          })}
+                    return (
+                        <div
+                            key={virtualRow.index}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: `${itemSize}px`,
+                                transform: `translateY(${virtualRow.start}px)`,
+                                display: 'flex',
+                                gap: `${gap}px`
+                            }}
+                        >
+                            {rowItems.map((item, colIndex) => {
+                                const index = startIndex + colIndex;
+                                const isVideo = item.type === 'video';
+                                const vidInfo = isVideo ? getVideoInfo(item.url) : null;
+                                const thumbUrl = isVideo && vidInfo?.thumbnail ? vidInfo.thumbnail : item.url;
+
+                                return (
+                                    <div 
+                                        key={item.id}
+                                        onClick={() => setLightboxIndex(index)}
+                                        style={{ width: `${itemSize}px`, height: `${itemSize}px` }}
+                                        className="relative cursor-pointer group overflow-hidden bg-slate-900 rounded-lg"
+                                    >
+                                        <img 
+                                            src={thumbUrl} 
+                                            alt={item.description}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                        {isVideo && (
+                                            <>
+                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                                                <VideoIndicator />
+                                                <VideoDuration />
+                                            </>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
       )}
 
