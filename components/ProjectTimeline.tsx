@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { WeeklyUpdate } from '../types';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle, Calendar as CalendarIcon, AlignLeft } from 'lucide-react';
+import { ProjectCalendar } from './ProjectCalendar';
 
 interface ProjectTimelineProps {
   updates: WeeklyUpdate[];
@@ -10,10 +11,11 @@ interface ProjectTimelineProps {
 
 export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activeIndex, onSelect }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline');
   
   // Auto-scroll to active item on mount and index change
   useEffect(() => {
-    if (scrollRef.current) {
+    if (viewMode === 'timeline' && scrollRef.current) {
        const activeEl = scrollRef.current.children[activeIndex] as HTMLElement;
        if (activeEl) {
            const containerWidth = scrollRef.current.clientWidth;
@@ -25,24 +27,49 @@ export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activ
            });
        }
     }
-  }, [activeIndex, updates.length]);
+  }, [activeIndex, updates.length, viewMode]);
 
   return (
     <div id="project-timeline" className="mt-12 bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-      <h3 className="text-xs uppercase font-bold text-brand-blue tracking-widest mb-6">Project Timeline & Milestones</h3>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <h3 className="text-xs uppercase font-bold text-brand-blue tracking-widest">Project Timeline & Milestones</h3>
+        <div className="flex bg-slate-950 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${
+              viewMode === 'timeline' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:text-white'
+            }`}
+          >
+            <AlignLeft className="w-3 h-3" />
+            Timeline
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${
+              viewMode === 'calendar' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:text-white'
+            }`}
+          >
+            <CalendarIcon className="w-3 h-3" />
+            Calendar
+          </button>
+        </div>
+      </div>
       
-      {/* Background Line */}
-      <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -z-10 translate-y-[20px]" />
+      {viewMode === 'timeline' ? (
+        <>
+          {/* Background Line */}
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -z-10 translate-y-[20px]" />
 
-      <div 
-         ref={scrollRef}
-         className="flex items-end gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-4 md:px-0"
-         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {updates.map((update, index) => {
-          const isActive = index === activeIndex;
-          const isPast = index < activeIndex;
-          
+          <div 
+             ref={scrollRef}
+             className="flex items-end gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-4 md:px-0"
+             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {updates.map((update, index) => {
+              const isActive = index === activeIndex;
+              const isPast = index < activeIndex;
+              
+
           return (
             <div 
                key={index} 
@@ -103,6 +130,10 @@ export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activ
              display: none;
          }
       `}</style>
+      </>
+      ) : (
+        <ProjectCalendar updates={updates} activeIndex={activeIndex} onSelect={onSelect} />
+      )}
     </div>
   );
 };
