@@ -25,6 +25,7 @@ export interface WeeklyUpdate {
   summary: string;
   splatUrl?: string; // Polycam / 3D Render
   floorfyUrl?: string; // Floorfy / 360 Tour
+  status?: 'draft' | 'published';
   media: MediaItem[];
   stats: {
     completion: number;

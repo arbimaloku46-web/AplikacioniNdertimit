@@ -50,11 +50,16 @@ export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({ updates, activ
                className={`snap-center flex-shrink-0 flex flex-col items-center cursor-pointer transition-all duration-300 w-32 md:w-40 relative group ${isActive ? 'scale-110' : 'opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
             >
                 {/* Information Bubble */}
-                <div className={`mb-4 w-full p-3 rounded-xl border text-center transition-colors ${
+                <div className={`relative mb-4 w-full p-3 rounded-xl border text-center transition-colors ${
                     isActive 
                        ? 'bg-brand-blue border-brand-blue shadow-lg shadow-brand-blue/20' 
                        : 'bg-slate-950 border-white/5 group-hover:border-white/20'
                 }`}>
+                   {update.status === 'draft' && (
+                       <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shadow-lg">
+                           Draft
+                       </div>
+                   )}
                    <span className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-white/80' : 'text-slate-500'}`}>
                       Week {update.weekNumber}
                    </span>

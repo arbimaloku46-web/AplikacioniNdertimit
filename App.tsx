@@ -234,7 +234,12 @@ const App: React.FC = () => {
 
   const handleProjectSelect = (project: Project) => {
     setActiveProject(project);
-    setActiveUpdateIndex(0);
+    let firstIndex = 0;
+    if (!isAdmin) {
+      firstIndex = project.updates.findIndex(u => u.status !== 'draft');
+      if (firstIndex === -1) firstIndex = 0;
+    }
+    setActiveUpdateIndex(firstIndex);
     setCurrentView(AppView.PROJECT_DETAIL);
   };
 
@@ -265,6 +270,7 @@ const App: React.FC = () => {
         const latestWeek = activeProject.updates.length > 0 ? Math.max(...activeProject.updates.map(u => u.weekNumber)) : 0;
         const newUpdate: WeeklyUpdate = {
             weekNumber: latestWeek + 1, date: new Date().toISOString().split('T')[0], title: `Week ${latestWeek + 1}`, summary: '', media: [],
+            status: 'draft',
             stats: { completion: activeProject.updates[0]?.stats.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
         };
         const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
@@ -509,14 +515,27 @@ const App: React.FC = () => {
                 {/* Week Selector - Swipable */}
                 <div className="flex gap-3 overflow-x-auto pb-6 mb-8 no-scrollbar snap-x">
                     {isAdmin && <button onClick={handleAddNewWeek} disabled={isAddingWeek} className="min-w-[80px] md:min-w-[120px] h-16 md:h-20 border-2 border-dashed border-brand-blue/30 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-blue hover:bg-brand-blue/5 transition-all text-xl shrink-0 snap-start">+</button>}
-                    {activeProject.updates.map((u, i) => (
-                        <button key={i} onClick={() => setActiveUpdateIndex(i)} className={`min-w-[130px] md:min-w-[160px] p-4 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900'}`}>
+                    {activeProject.updates.map((u, i) => {
+                        if (!isAdmin && u.status === 'draft') return null;
+                        return (
+                        <button key={i} onClick={() => setActiveUpdateIndex(i)} className={`relative min-w-[130px] md:min-w-[160px] p-4 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900'}`}>
+                            {isAdmin && u.status === 'draft' && <span className="absolute top-2 right-3 text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-bold uppercase">Draft</span>}
                             <span className="text-[8px] md:text-[9px] block text-slate-500 font-bold uppercase tracking-widest mb-1">Update {u.weekNumber}</span>
                             <span className={`text-xs md:text-sm font-bold block ${i === activeUpdateIndex ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{u.date}</span>
                         </button>
-                    ))}
+                    )})}
                 </div>
 
+                {!isAdmin && (!activeProject.updates[activeUpdateIndex] || activeProject.updates[activeUpdateIndex].status === 'draft') ? (
+                    <div className="text-center py-24 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
+                        <div className="inline-block p-4 rounded-full bg-slate-800 mb-4">
+                            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">No Updates Published</h3>
+                        <p className="text-slate-500 max-w-md mx-auto">The project manager has not published any weekly updates for this project yet. Please check back later.</p>
+                    </div>
+                ) : (
+                <>
                 {/* Hero Experience Suite */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 mb-16 relative z-10">
                     <div className="lg:col-span-8 space-y-6 md:space-y-8">
@@ -559,7 +578,7 @@ const App: React.FC = () => {
                             
                             <div className="h-48 w-full mb-8">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={[...activeProject.updates].sort((a, b) => a.weekNumber - b.weekNumber)}>
+                                    <LineChart data={[...(isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft'))].sort((a, b) => a.weekNumber - b.weekNumber)}>
                                         <XAxis dataKey="weekNumber" stroke="#64748b" fontSize={10} tickFormatter={(tick) => `W${tick}`} axisLine={false} tickLine={false} />
                                         <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(tick) => `${tick}%`} width={35} />
                                         <Tooltip 
@@ -611,6 +630,24 @@ const App: React.FC = () => {
                                         <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Workers</label><input type="number" className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
                                     </div>
                                     <div><label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-slate-700 rounded-xl px-4 py-3 h-32 resize-none text-sm text-white" value={activeProject.updates[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
+                                    <div className="pt-4 border-t border-white/5">
+                                        <label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Update Visibility Status</label>
+                                        <div className="flex bg-slate-900/80 p-1 rounded-xl border border-white/5 w-full">
+                                            <button 
+                                                onClick={() => handleUpdateField('status', 'draft')} 
+                                                className={`flex-1 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeProject.updates[activeUpdateIndex].status === 'draft' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                            >
+                                                Draft
+                                            </button>
+                                            <button 
+                                                onClick={() => handleUpdateField('status', 'published')} 
+                                                className={`flex-1 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeProject.updates[activeUpdateIndex].status !== 'draft' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                            >
+                                                Published
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-2">Drafts are only visible to administrators.</p>
+                                    </div>
                                     <div className="pt-4 border-t border-white/5">
                                         <label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Weather Preview</label>
                                         <div className="h-24"><WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} /></div>
@@ -726,10 +763,20 @@ const App: React.FC = () => {
                 </div>
                 
                 <ProjectTimeline 
-                   updates={activeProject.updates} 
-                   activeIndex={activeUpdateIndex} 
-                   onSelect={setActiveUpdateIndex} 
+                   updates={isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft')} 
+                   activeIndex={isAdmin ? activeUpdateIndex : activeProject.updates.filter(u => u.status !== 'draft').findIndex(u => u.weekNumber === activeProject.updates[activeUpdateIndex]?.weekNumber)} 
+                   onSelect={(idx) => {
+                       if (isAdmin) {
+                           setActiveUpdateIndex(idx);
+                       } else {
+                           const visible = activeProject.updates.filter(u => u.status !== 'draft');
+                           const originalIdx = activeProject.updates.findIndex(u => u.weekNumber === visible[idx].weekNumber);
+                           setActiveUpdateIndex(originalIdx);
+                       }
+                   }} 
                 />
+                </>
+                )}
             </main>
          </div>
       )}
