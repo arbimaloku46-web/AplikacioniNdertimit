@@ -137,8 +137,8 @@ const HotspotEditorOverlay: React.FC<{
                     }
                 }}
             >
-                <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-transform hover:scale-110 ${hotspot.status === 'completed' ? 'bg-emerald-500' : hotspot.status === 'in-progress' ? 'bg-amber-500' : 'bg-brand-blue'}`}>
-                    <div className="w-2 h-2 bg-white rounded-full" />
+                <div className={`w-6 h-6 rounded-full border-2 border-white/50 flex items-center justify-center cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-transform hover:scale-110 ${hotspot.status === 'completed' ? 'bg-emerald-500/50' : hotspot.status === 'in-progress' ? 'bg-amber-500/50' : 'bg-brand-blue/50'}`}>
+                    <div className="w-2 h-2 bg-white/70 rounded-full" />
                 </div>
 
                 {/* Info Card */}
@@ -320,6 +320,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
         close={() => setLightboxIndex(null)}
         index={lightboxIndex || 0}
         plugins={[Captions, Video, Zoom]}
+        zoom={{ scrollToZoom: true, maxZoomPixelRatio: 5, supports: ["custom-image"] }}
         slides={filteredMedia.map(item => {
           const baseProps = {
             mediaId: item.id,
@@ -377,18 +378,16 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
 
                 if (slide.type === "custom-image") {
                     return (
-                        <div className="w-full h-full flex items-center justify-center p-4 md:p-12 relative">
-                            <div className="relative max-w-full max-h-full inline-block flex items-center justify-center">
-                                <img 
-                                    src={(slide as any).src} 
-                                    alt={slide.title} 
-                                    className="max-w-full max-h-[80vh] object-contain shadow-2xl pointer-events-none" 
-                                    draggable={false}
-                                />
-                                {mediaItem && (
-                                    <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
-                                )}
-                            </div>
+                        <div className="relative inline-flex items-center justify-center max-w-full max-h-full shadow-2xl">
+                            <img 
+                                src={(slide as any).src} 
+                                alt={slide.title} 
+                                className="max-w-full max-h-[80vh] w-auto h-auto object-contain pointer-events-none" 
+                                draggable={false}
+                            />
+                            {mediaItem && (
+                                <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
+                            )}
                         </div>
                     );
                 }
