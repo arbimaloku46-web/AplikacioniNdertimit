@@ -21,6 +21,29 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url, request }) => 
+                request.destination === 'image' || 
+                request.destination === 'video' || 
+                request.destination === 'audio' ||
+                url.pathname.match(/\.(mp4|webm|mkv|jpg|jpeg|png|gif|webp|svg)$/i),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'media-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 30 * 24 * 60 * 60 // 30 Days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
+        },
         manifest: {
           name: 'Shiko Progresin',
           short_name: 'Ndërtimi',
