@@ -18,6 +18,7 @@ import { ProjectTimeline } from './components/ProjectTimeline';
 import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -444,7 +445,7 @@ const App: React.FC = () => {
       {currentView === AppView.HOME && (
         <div className="min-h-screen flex flex-col">
             {renderHeader()}
-            <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
+            <main className="flex-1 max-w-7xl mx-auto w-full px-6 pt-12 pb-24 md:pb-12">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
                     <div>
                         <h1 className="text-3xl md:text-5xl font-display font-bold text-white leading-tight">
@@ -806,7 +807,7 @@ const App: React.FC = () => {
       {currentView === AppView.PROFILE && user && (
         <div className="min-h-screen flex flex-col bg-brand-dark">
             {renderHeader()}
-            <main className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <main className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 pt-8 pb-24 md:pt-12 md:pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-4 mb-8 md:mb-10">
                     <button onClick={() => setCurrentView(AppView.HOME)} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                         <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -922,6 +923,10 @@ const App: React.FC = () => {
             </main>
             <Footer />
         </div>
+      )}
+      
+      {currentView !== AppView.PROJECT_DETAIL && (
+        <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} text={text} />
       )}
     </div>
   );
