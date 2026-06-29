@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from "motion/react";
 import { MediaItem, Hotspot } from '../types';
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
@@ -284,8 +285,11 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
              const thumbUrl = isVideo && vidInfo?.thumbnail ? vidInfo.thumbnail : item.url;
 
              return (
-                <div 
+                <motion.div 
                   key={item.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.05, ease: "easeOut" }}
                   onClick={() => setLightboxIndex(index)}
                   className="relative aspect-square cursor-pointer group overflow-hidden bg-slate-900"
                 >
@@ -308,7 +312,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                   
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                </div>
+                </motion.div>
              );
           })}
         </div>

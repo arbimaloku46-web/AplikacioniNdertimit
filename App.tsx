@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from "motion/react";
 import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
 import { GlobalAuth } from './components/GlobalAuth';
 import { Button } from './components/Button';
@@ -444,8 +445,15 @@ const App: React.FC = () => {
                     <>
                         {projects.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {projects.map(p => (
-                                    <div key={p.id} onClick={() => handleProjectSelect(p)} className="group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1 active:scale-[0.98]">
+                                {projects.map((p, i) => (
+                                    <motion.div 
+                                        key={p.id} 
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                                        onClick={() => handleProjectSelect(p)} 
+                                        className="group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1 active:scale-[0.98]"
+                                    >
                                         <div className="aspect-video relative overflow-hidden">
                                         <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
@@ -454,7 +462,7 @@ const App: React.FC = () => {
                                             <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-brand-blue transition-colors">{p.name}</h3>
                                             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         ) : (
