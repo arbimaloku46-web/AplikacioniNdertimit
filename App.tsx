@@ -19,9 +19,58 @@ import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { InteractiveBuildingViewer } from './components/InteractiveBuildingViewer';
 import { WifiOff } from 'lucide-react';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
+
+const DEMO_INTERACTIVE_BUILDING: any = {
+  renderUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=1600&fit=crop",
+  floors: [
+    {
+      id: 'floor-1',
+      name: 'Penthouse Floor',
+      level: 10,
+      hitbox: { x: 30, y: 15, width: 40, height: 10 },
+      floorPlanUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop",
+      units: [
+        {
+          id: 'unit-ph1',
+          name: 'Penthouse A',
+          hitbox: { x: 20, y: 30, width: 30, height: 40 },
+          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          specs: { beds: 4, baths: 3.5, area: 250, price: "$2,500,000" },
+          status: 'available'
+        }
+      ]
+    },
+    {
+      id: 'floor-2',
+      name: '7th Floor',
+      level: 7,
+      hitbox: { x: 30, y: 40, width: 40, height: 10 },
+      floorPlanUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop",
+      units: [
+        {
+          id: 'unit-7a',
+          name: 'Unit 7A',
+          hitbox: { x: 20, y: 30, width: 25, height: 40 },
+          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          specs: { beds: 2, baths: 2, area: 110, price: "$850,000" },
+          status: 'available'
+        },
+        {
+          id: 'unit-7b',
+          name: 'Unit 7B',
+          hitbox: { x: 55, y: 30, width: 25, height: 40 },
+          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          specs: { beds: 3, baths: 2, area: 140, price: "$1,150,000" },
+          status: 'sold'
+        }
+      ]
+    }
+  ]
+};
 
 interface UploadItem {
   id: string;
@@ -48,6 +97,7 @@ const App: React.FC = () => {
   
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showInteractiveBuilding, setShowInteractiveBuilding] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isAddingWeek, setIsAddingWeek] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -524,10 +574,21 @@ const App: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
                     <div>
                         <h1 className="text-3xl md:text-5xl font-display font-bold text-white leading-tight mb-2">{activeProject.name}</h1>
-                        <p className="text-slate-500 text-sm flex items-center gap-2">
+                        <p className="text-slate-500 text-sm flex items-center gap-2 mb-4">
                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                            {activeProject.location}
                         </p>
+                        
+                        {/* Interactive Building Viewer Button */}
+                        {(activeProject.interactiveBuilding || isAdmin) && (
+                          <button 
+                            onClick={() => setShowInteractiveBuilding(true)}
+                            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all group"
+                          >
+                            <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            Explore Building
+                          </button>
+                        )}
                     </div>
                     {/* Progress Bar - Compact on Mobile */}
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
@@ -935,6 +996,13 @@ const App: React.FC = () => {
       
       {currentView !== AppView.PROJECT_DETAIL && (
         <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} text={text} />
+      )}
+
+      {showInteractiveBuilding && activeProject && (
+        <InteractiveBuildingViewer 
+          building={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
+          onClose={() => setShowInteractiveBuilding(false)}
+        />
       )}
     </div>
   );

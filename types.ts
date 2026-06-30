@@ -34,6 +34,35 @@ export interface WeeklyUpdate {
   };
 }
 
+export interface Unit {
+  id: string;
+  name: string;
+  hitbox: { x: number; y: number; width: number; height: number }; // Percentage based 0-100
+  detailsPlanUrl?: string;
+  virtualTourUrl?: string;
+  specs?: {
+    beds: number;
+    baths: number;
+    area: number; // sqm
+    price: string;
+  };
+  status: 'available' | 'reserved' | 'sold';
+}
+
+export interface Floor {
+  id: string;
+  name: string;
+  level: number;
+  hitbox: { x: number; y: number; width: number; height: number }; // Percentage based 0-100 on the main render
+  floorPlanUrl: string;
+  units: Unit[];
+}
+
+export interface InteractiveBuilding {
+  renderUrl: string;
+  floors: Floor[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -44,6 +73,7 @@ export interface Project {
   accessCode: string;
   updates: WeeklyUpdate[];
   description: string;
+  interactiveBuilding?: InteractiveBuilding;
 }
 
 export interface User {

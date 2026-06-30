@@ -11,7 +11,8 @@ const mapFromDB = (row: any): Project => ({
   thumbnailUrl: row.thumbnail_url,
   accessCode: row.access_code,
   description: row.description,
-  updates: row.updates || []
+  updates: row.updates || [],
+  interactiveBuilding: row.interactive_building,
 });
 
 const mapToDB = (project: Project) => ({
@@ -22,7 +23,8 @@ const mapToDB = (project: Project) => ({
   thumbnail_url: project.thumbnailUrl,
   access_code: project.accessCode,
   description: project.description,
-  updates: project.updates // JSONB column handles the array structure automatically
+  updates: project.updates, // JSONB column handles the array structure automatically
+  interactive_building: project.interactiveBuilding,
 });
 
 export const dbService = {
