@@ -18,6 +18,15 @@ export interface MediaItem {
   hotspots?: Hotspot[];
 }
 
+export interface Comment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  timestamp: string;
+  isAdmin: boolean;
+}
+
 export interface WeeklyUpdate {
   weekNumber: number;
   date: string;
@@ -26,6 +35,7 @@ export interface WeeklyUpdate {
   splatUrl?: string; // Polycam / 3D Render
   floorfyUrl?: string; // Floorfy / 360 Tour
   status?: 'draft' | 'published';
+  comments?: Comment[];
   media: MediaItem[];
   stats: {
     completion: number;

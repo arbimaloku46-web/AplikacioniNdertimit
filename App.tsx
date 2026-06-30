@@ -20,6 +20,7 @@ import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { InteractiveBuildingViewer } from './components/InteractiveBuildingViewer';
+import { UpdateComments } from './components/UpdateComments';
 import { WifiOff } from 'lucide-react';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
@@ -375,6 +376,25 @@ const App: React.FC = () => {
     try { await dbService.updateProject(updatedProject); } catch {}
   };
 
+  const handleAddComment = async (text: string) => {
+    if (!activeProject || !user) return;
+    const updatedUpdates = [...activeProject.updates];
+    const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
+    const newComment = {
+      id: Math.random().toString(),
+      text,
+      authorName: user.name,
+      authorId: user.uid,
+      isAdmin: user.isAdmin || false,
+      timestamp: new Date().toISOString()
+    };
+    currentUpdate.comments = [...(currentUpdate.comments || []), newComment];
+    updatedUpdates[activeUpdateIndex] = currentUpdate;
+    const updatedProject = { ...activeProject, updates: updatedUpdates };
+    setActiveProject(updatedProject);
+    try { await dbService.updateProject(updatedProject); } catch {}
+  };
+
   const handleProjectField = async (field: string, value: any) => {
     if (!activeProject) return;
     const updatedProject = { ...activeProject, [field]: value };
@@ -659,6 +679,15 @@ const App: React.FC = () => {
                                }}
                            />
                         </div>
+                        
+                        {/* Weekly Discussion Comments */}
+                        {user && activeProject.updates[activeUpdateIndex] && (
+                          <UpdateComments
+                            comments={activeProject.updates[activeUpdateIndex].comments || []}
+                            currentUser={user}
+                            onAddComment={handleAddComment}
+                          />
+                        )}
                     </div>
 
                     <div className="lg:col-span-4 space-y-8 relative z-20">
