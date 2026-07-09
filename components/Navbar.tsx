@@ -28,13 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
           className="flex items-center gap-3 cursor-pointer group" 
           onClick={() => onNavigate('HOME')}
         >
-          <div className="w-10 h-10 bg-amber-500 rounded flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
-            <span className="font-display font-bold text-black text-2xl">N</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-white text-xl tracking-tight leading-none">NDËRTIMI</span>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest leading-none mt-1">Construction Visuals</span>
-          </div>
+          <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-10 object-contain" />
         </div>
 
         {/* Desktop Nav */}

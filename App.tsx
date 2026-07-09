@@ -431,8 +431,7 @@ const App: React.FC = () => {
                         </button>
                     ) : (
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
-                            <div className="w-8 h-8 md:w-9 md:h-9 bg-white rounded-xl flex items-center justify-center shadow-xl"><span className="font-display font-bold text-brand-blue text-lg md:text-xl">N</span></div>
-                            <span className="font-display font-bold text-white text-base md:text-lg tracking-tight">Shiko Progresin</span>
+                            <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-8 md:h-10 object-contain" />
                         </div>
                     )}
                     
@@ -469,8 +468,8 @@ const App: React.FC = () => {
   if (isAuthChecking) {
       return (
         <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white">
-            <div className="w-16 h-16 bg-white rounded flex items-center justify-center shadow-lg mb-6 animate-pulse">
-                <span className="font-display font-bold text-brand-blue text-3xl">N</span>
+            <div className="mb-6 animate-pulse">
+                <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-16 object-contain" />
             </div>
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mb-4"></div>
             <p className="text-slate-400 text-sm font-medium animate-pulse">Establishing Secure Connection...</p>

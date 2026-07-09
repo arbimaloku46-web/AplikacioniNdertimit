@@ -7,8 +7,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-6">
-               <div className="w-8 h-8 bg-white rounded flex items-center justify-center text-brand-blue font-bold">N</div>
-               <span className="font-display font-bold text-white text-xl">Shiko Progresin</span>
+               <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-8 object-contain" />
             </div>
             <p className="text-slate-400 max-w-md leading-relaxed">
               Elevating construction monitoring with state-of-the-art drone cinematography and 3D Gaussian Splat technology. We bring the job site to your screen, anywhere in the world.

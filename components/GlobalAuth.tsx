@@ -186,8 +186,8 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         />
         <div className="relative z-20 p-12 flex flex-col justify-between h-full text-white">
           <div>
-            <div className="w-16 h-16 bg-white rounded flex items-center justify-center shadow-lg mb-6">
-                <span className="font-display font-bold text-brand-blue text-3xl">N</span>
+            <div className="mb-6">
+                <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-16 object-contain" />
             </div>
             <h1 className="text-5xl font-display font-bold leading-tight mb-4 text-white">
               {text.appName} <br/>
@@ -232,10 +232,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         <div className="w-full max-w-md space-y-8 mt-12 md:mt-0">
           
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-             <div className="w-10 h-10 bg-white rounded flex items-center justify-center shadow-lg">
-                <span className="font-display font-bold text-brand-blue text-2xl">N</span>
-            </div>
-            <span className="font-display font-bold text-white text-2xl">{text.appName}</span>
+             <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-12 object-contain" />
           </div>
 
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
