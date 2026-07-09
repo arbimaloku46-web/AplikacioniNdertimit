@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
 
+import { Logo } from './Logo';
+
 interface NavbarProps {
   onNavigate: (view: 'HOME' | 'CONTACT') => void;
 }
@@ -28,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
           className="flex items-center gap-3 cursor-pointer group" 
           onClick={() => onNavigate('HOME')}
         >
-          <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-10 object-contain" />
+          <Logo className="h-10" />
         </div>
 
         {/* Desktop Nav */}

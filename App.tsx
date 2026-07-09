@@ -22,6 +22,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { InteractiveBuildingViewer } from './components/InteractiveBuildingViewer';
 import { UpdateComments } from './components/UpdateComments';
 import { WifiOff } from 'lucide-react';
+import { Logo } from './components/Logo';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -431,7 +432,7 @@ const App: React.FC = () => {
                         </button>
                     ) : (
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
-                            <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-8 md:h-10 object-contain" />
+                            <Logo className="h-8 md:h-10" />
                         </div>
                     )}
                     
@@ -469,7 +470,7 @@ const App: React.FC = () => {
       return (
         <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white">
             <div className="mb-6 animate-pulse">
-                <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-16 object-contain" />
+                <Logo className="h-16" />
             </div>
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mb-4"></div>
             <p className="text-slate-400 text-sm font-medium animate-pulse">Establishing Secure Connection...</p>

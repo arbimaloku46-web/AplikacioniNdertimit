@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { loginUser, registerUser, loginWithGoogle, resendVerificationEmail, getRedirectUrl } from '../services/authService';
 import { Language, translations } from '../translations';
 import { User } from '../types';
+import { Logo } from './Logo';
 
 interface GlobalAuthProps {
   onLogin: (user: User, isAdmin: boolean) => void;
@@ -187,7 +188,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         <div className="relative z-20 p-12 flex flex-col justify-between h-full text-white">
           <div>
             <div className="mb-6">
-                <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-16 object-contain" />
+                <Logo className="h-16" />
             </div>
             <h1 className="text-5xl font-display font-bold leading-tight mb-4 text-white">
               {text.appName} <br/>
@@ -232,7 +233,7 @@ export const GlobalAuth: React.FC<GlobalAuthProps> = ({ onLogin, language, setLa
         <div className="w-full max-w-md space-y-8 mt-12 md:mt-0">
           
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-             <img src="https://storage.googleapis.com/aistudio-artifacts-public/user-images/1720563443152-32b0c611-13c5-4dce-b248-cbcc5a51052f.png" alt="Ndërtimi Shiko Progresin" className="h-12 object-contain" />
+             <Logo className="h-12" />
           </div>
 
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
