@@ -23,6 +23,7 @@ import { InteractiveBuildingViewer } from './components/InteractiveBuildingViewe
 import { UpdateComments } from './components/UpdateComments';
 import { WifiOff } from 'lucide-react';
 import { Logo } from './components/Logo';
+import { CustomTooltip } from './components/ChartTooltip';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
@@ -701,12 +702,20 @@ const App: React.FC = () => {
                                         <XAxis dataKey="weekNumber" stroke="#64748b" fontSize={10} tickFormatter={(tick) => `W${tick}`} axisLine={false} tickLine={false} />
                                         <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(tick) => `${tick}%`} width={35} />
                                         <Tooltip 
-                                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', color: '#f1f5f9' }} 
-                                            itemStyle={{ color: '#60a5fa' }}
-                                            formatter={(value: any) => [`${value}%`, 'Completion']} 
-                                            labelFormatter={(label) => `Week ${label}`}
+                                            content={<CustomTooltip />}
+                                            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2, strokeDasharray: '4 4' }}
                                         />
-                                        <Line type="monotone" dataKey="stats.completion" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#0f172a' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                                        <Line 
+                                            type="monotone" 
+                                            dataKey="stats.completion" 
+                                            stroke="#3b82f6" 
+                                            strokeWidth={3} 
+                                            dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#0f172a' }} 
+                                            activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+                                            isAnimationActive={true}
+                                            animationDuration={1500}
+                                            animationEasing="ease-out"
+                                        />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
