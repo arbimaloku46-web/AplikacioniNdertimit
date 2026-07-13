@@ -3,29 +3,52 @@ import { supabase, supabaseUrl, supabaseKey } from './supabaseClient';
 import { Project } from '../types';
 
 // Map database column names (snake_case) to application types (camelCase)
-const mapFromDB = (row: any): Project => ({
-  id: row.id,
-  name: row.name,
-  clientName: row.client_name,
-  location: row.location,
-  thumbnailUrl: row.thumbnail_url,
-  accessCode: row.access_code,
-  description: row.description,
-  updates: row.updates || [],
-  interactiveBuilding: row.interactive_building,
-});
+const IB_SEPARATOR = '\n\n---IB_DATA---\n';
 
-const mapToDB = (project: Project) => ({
-  id: project.id,
-  name: project.name,
-  client_name: project.clientName,
-  location: project.location,
-  thumbnail_url: project.thumbnailUrl,
-  access_code: project.accessCode,
-  description: project.description,
-  updates: project.updates, // JSONB column handles the array structure automatically
-  interactive_building: project.interactiveBuilding,
-});
+const mapFromDB = (row: any): Project => {
+  let description = row.description || '';
+  let interactiveBuilding = undefined;
+  
+  if (description.includes(IB_SEPARATOR)) {
+    const parts = description.split(IB_SEPARATOR);
+    description = parts[0];
+    try {
+      interactiveBuilding = JSON.parse(parts[1]);
+    } catch(e) {
+      console.error('Failed to parse interactive building data', e);
+    }
+  }
+
+  return {
+    id: row.id,
+    name: row.name,
+    clientName: row.client_name,
+    location: row.location,
+    thumbnailUrl: row.thumbnail_url,
+    accessCode: row.access_code,
+    description: description,
+    updates: row.updates || [],
+    interactiveBuilding: interactiveBuilding,
+  };
+};
+
+const mapToDB = (project: Project) => {
+  let description = project.description || '';
+  if (project.interactiveBuilding) {
+    description += IB_SEPARATOR + JSON.stringify(project.interactiveBuilding);
+  }
+
+  return {
+    id: project.id,
+    name: project.name,
+    client_name: project.clientName,
+    location: project.location,
+    thumbnail_url: project.thumbnailUrl,
+    access_code: project.accessCode,
+    description: description,
+    updates: project.updates,
+  };
+};
 
 export const dbService = {
   // Subscribe to Realtime Changes
