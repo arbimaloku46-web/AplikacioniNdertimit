@@ -47,9 +47,8 @@ export interface WeeklyUpdate {
 export interface Unit {
   id: string;
   name: string;
-  hitbox: { x: number; y: number; width: number; height: number }; // Percentage based 0-100
-  detailsPlanUrl?: string;
-  virtualTourUrl?: string;
+  svgPath: string;
+  floorPlanUrl: string;
   specs?: {
     beds: number;
     baths: number;
@@ -62,14 +61,15 @@ export interface Unit {
 export interface Floor {
   id: string;
   name: string;
-  level: number;
-  hitbox: { x: number; y: number; width: number; height: number }; // Percentage based 0-100 on the main render
+  svgPath: string; // Polygon path
   floorPlanUrl: string;
   units: Unit[];
 }
 
 export interface InteractiveBuilding {
-  renderUrl: string;
+  id?: string;
+  name?: string;
+  mainImageUrl: string;
   floors: Floor[];
 }
 
@@ -99,5 +99,6 @@ export interface User {
 export enum AppView {
   HOME = 'HOME',
   PROJECT_DETAIL = 'PROJECT_DETAIL',
-  PROFILE = 'PROFILE'
+  PROFILE = 'PROFILE',
+  MAPPER = 'MAPPER'
 }

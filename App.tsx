@@ -19,29 +19,31 @@ import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { InteractiveBuildingViewer } from './components/InteractiveBuildingViewer';
+import { AdminCoordinateMapper } from './components/AdminCoordinateMapper';
+import { InteractiveViewer } from './components/InteractiveViewer';
 import { UpdateComments } from './components/UpdateComments';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, ArrowLeft, Map } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { CustomTooltip } from './components/ChartTooltip';
 
 const STORAGE_LANGUAGE_KEY = 'ndertimi_language_pref';
 
 const DEMO_INTERACTIVE_BUILDING: any = {
-  renderUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=1600&fit=crop",
+  id: 'b1',
+  name: 'Sunset Residences',
+  mainImageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=1600&fit=crop",
   floors: [
     {
       id: 'floor-1',
       name: 'Penthouse Floor',
-      level: 10,
-      hitbox: { x: 30, y: 15, width: 40, height: 10 },
+      svgPath: "M 20 15 L 80 15 L 80 25 L 20 25 Z",
       floorPlanUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop",
       units: [
         {
           id: 'unit-ph1',
           name: 'Penthouse A',
-          hitbox: { x: 20, y: 30, width: 30, height: 40 },
-          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          svgPath: "M 10 10 L 90 10 L 90 90 L 10 90 Z",
+          floorPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
           specs: { beds: 4, baths: 3.5, area: 250, price: "$2,500,000" },
           status: 'available'
         }
@@ -50,23 +52,22 @@ const DEMO_INTERACTIVE_BUILDING: any = {
     {
       id: 'floor-2',
       name: '7th Floor',
-      level: 7,
-      hitbox: { x: 30, y: 40, width: 40, height: 10 },
+      svgPath: "M 20 40 L 80 40 L 80 50 L 20 50 Z",
       floorPlanUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop",
       units: [
         {
           id: 'unit-7a',
           name: 'Unit 7A',
-          hitbox: { x: 20, y: 30, width: 25, height: 40 },
-          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          svgPath: "M 10 10 L 45 10 L 45 90 L 10 90 Z",
+          floorPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
           specs: { beds: 2, baths: 2, area: 110, price: "$850,000" },
           status: 'available'
         },
         {
           id: 'unit-7b',
           name: 'Unit 7B',
-          hitbox: { x: 55, y: 30, width: 25, height: 40 },
-          detailsPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
+          svgPath: "M 55 10 L 90 10 L 90 90 L 55 90 Z",
+          floorPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
           specs: { beds: 3, baths: 2, area: 140, price: "$1,150,000" },
           status: 'sold'
         }
@@ -991,6 +992,28 @@ const App: React.FC = () => {
                             </div>
                         </div>
 
+                        {user.isAdmin && (
+                            <div className="bg-slate-900/50 border border-brand-blue/20 rounded-3xl p-6 md:p-8 backdrop-blur-xl mt-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 blur-3xl rounded-full" />
+                                <h3 className="text-lg font-bold text-brand-blue mb-6 flex items-center gap-2">
+                                    <Map className="w-5 h-5" />
+                                    Admin Tools
+                                </h3>
+                                <button onClick={() => setCurrentView(AppView.MAPPER)} className="w-full bg-slate-950 border border-brand-blue/30 hover:border-brand-blue hover:bg-brand-blue/10 text-white rounded-2xl p-4 md:p-6 transition-all group flex items-center justify-between shadow-lg shadow-brand-blue/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center text-brand-blue">
+                                            <Map className="w-6 h-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h4 className="font-bold text-white text-base md:text-lg mb-1 group-hover:text-brand-blue transition-colors">Coordinate Mapper</h4>
+                                            <p className="text-slate-400 text-xs md:text-sm">Generate SVG polygons for interactive building layers</p>
+                                        </div>
+                                    </div>
+                                    <svg className="w-5 h-5 text-brand-blue opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            </div>
+                        )}
+
                         {!user.isAdmin && (
                             <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
@@ -1032,13 +1055,25 @@ const App: React.FC = () => {
         </div>
       )}
       
-      {currentView !== AppView.PROJECT_DETAIL && (
+      {currentView === AppView.MAPPER && user?.isAdmin && (
+        <div className="min-h-screen bg-brand-dark overflow-y-auto">
+          {renderHeader()}
+          <div className="pt-20 px-4 md:px-8 pb-12">
+            <button onClick={() => setCurrentView(AppView.PROFILE)} className="flex items-center gap-2 text-brand-blue hover:text-white transition-colors mb-6 font-medium">
+              <ArrowLeft className="w-4 h-4" /> Back to Profile
+            </button>
+            <AdminCoordinateMapper />
+          </div>
+        </div>
+      )}
+
+      {currentView !== AppView.PROJECT_DETAIL && currentView !== AppView.MAPPER && (
         <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} text={text} />
       )}
 
       {showInteractiveBuilding && activeProject && (
-        <InteractiveBuildingViewer 
-          building={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
+        <InteractiveViewer 
+          data={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
           onClose={() => setShowInteractiveBuilding(false)}
         />
       )}
