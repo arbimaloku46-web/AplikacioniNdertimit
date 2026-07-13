@@ -19,7 +19,7 @@ import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { AdminCoordinateMapper } from './components/AdminCoordinateMapper';
+import { BuildingConfigurator } from './components/BuildingConfigurator';
 import { InteractiveViewer } from './components/InteractiveViewer';
 import { UpdateComments } from './components/UpdateComments';
 import { WifiOff, ArrowLeft, Map } from 'lucide-react';
@@ -601,6 +601,7 @@ const App: React.FC = () => {
                            {activeProject.location}
                         </p>
                         
+                        <div className="flex flex-wrap items-center gap-3">
                         {/* Interactive Building Viewer Button */}
                         {(activeProject.interactiveBuilding || isAdmin) && (
                           <button 
@@ -611,6 +612,17 @@ const App: React.FC = () => {
                             Explore Building
                           </button>
                         )}
+                        
+                        {isAdmin && (
+                          <button 
+                            onClick={() => setCurrentView(AppView.MAPPER)}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all"
+                          >
+                            <Map className="w-4 h-4" />
+                            Configure Building
+                          </button>
+                        )}
+                        </div>
                     </div>
                     {/* Progress Bar - Compact on Mobile */}
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
@@ -1055,14 +1067,19 @@ const App: React.FC = () => {
         </div>
       )}
       
-      {currentView === AppView.MAPPER && user?.isAdmin && (
+      {currentView === AppView.MAPPER && user?.isAdmin && activeProject && (
         <div className="min-h-screen bg-brand-dark overflow-y-auto">
           {renderHeader()}
           <div className="pt-20 px-4 md:px-8 pb-12">
-            <button onClick={() => setCurrentView(AppView.PROFILE)} className="flex items-center gap-2 text-brand-blue hover:text-white transition-colors mb-6 font-medium">
-              <ArrowLeft className="w-4 h-4" /> Back to Profile
-            </button>
-            <AdminCoordinateMapper />
+            <BuildingConfigurator 
+              project={activeProject} 
+              onSave={async (updatedProject) => {
+                await dbService.updateProject(updatedProject);
+                setActiveProject(updatedProject);
+                setCurrentView(AppView.PROJECT_DETAIL);
+              }}
+              onClose={() => setCurrentView(AppView.PROJECT_DETAIL)}
+            />
           </div>
         </div>
       )}
