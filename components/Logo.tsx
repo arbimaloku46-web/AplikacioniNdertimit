@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const Logo: React.FC<{ className?: string }> = ({ className = "h-10" }) => (
-  <div className="bg-[#f0f8ff] px-3 py-1.5 rounded-xl shadow-sm inline-flex items-center justify-center">
+  <div className="bg-[#f0f8ff] px-3 py-1.5 rounded-2xl shadow-sm inline-flex items-center justify-center">
     <svg 
       viewBox="0 0 400 120" 
       className={className} 

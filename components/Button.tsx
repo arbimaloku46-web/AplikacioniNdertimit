@@ -12,13 +12,13 @@ export const Button: React.FC<ButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseStyles = "px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles = "px-8 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-brand-blue hover:bg-[#1a4d85] text-white shadow-[0_0_15px_rgba(34,100,171,0.3)]",
-    secondary: "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700",
-    outline: "border border-brand-blue/50 text-brand-blue hover:bg-brand-blue/10",
-    ghost: "text-slate-400 hover:text-white hover:bg-white/5"
+    primary: "bg-brand-blue hover:bg-[#1a4d85] hover:scale-[1.02] active:scale-95 transition-all duration-300 ease-in-out text-white shadow-[0_0_15px_rgba(34,100,171,0.3)] hover:shadow-[0_0_25px_rgba(34,100,171,0.5)]",
+    secondary: "bg-slate-800/80 backdrop-blur-xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 text-white border border-white/5 shadow-2xl shadow-black/40",
+    outline: "border border-brand-blue/50 text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95",
+    ghost: "text-slate-500 hover:text-white hover:bg-white/5"
   };
 
   return (

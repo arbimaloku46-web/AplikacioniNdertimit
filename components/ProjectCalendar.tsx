@@ -47,19 +47,19 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
     <div className="w-full">
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-6">
-        <h4 className="text-white font-display font-bold text-lg md:text-xl">
+        <h4 className="text-white font-display font-extrabold tracking-tight text-lg md:text-xl">
           {monthNames[month]} {year}
         </h4>
         <div className="flex items-center gap-2">
           <button 
             onClick={prevMonth}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="p-2 rounded-lg bg-slate-800/80 backdrop-blur-xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 text-slate-500 transition-all duration-300 ease-in-out"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button 
             onClick={nextMonth}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="p-2 rounded-lg bg-slate-800/80 backdrop-blur-xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 text-slate-500 transition-all duration-300 ease-in-out"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -70,7 +70,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
       <div className="grid grid-cols-7 gap-1 md:gap-2">
         {/* Day Headers */}
         {daysOfWeek.map((day) => (
-          <div key={day} className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500 py-2">
+          <div key={day} className="text-center text-[10px] font-extrabold tracking-tight uppercase tracking-widest text-slate-500 py-2">
             {day}
           </div>
         ))}
@@ -94,7 +94,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
           return (
             <div 
               key={dayNumber} 
-              className={`aspect-square relative rounded-xl border flex flex-col items-center justify-center p-1 md:p-2 transition-all ${
+              className={`aspect-square relative rounded-2xl border flex flex-col items-center justify-center p-1 md:p-2 transition-all ${
                 hasUpdate 
                   ? 'cursor-pointer hover:-translate-y-1' 
                   : 'opacity-30 cursor-not-allowed bg-slate-900/50 border-white/5'
@@ -102,7 +102,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
                 isActive
                   ? 'bg-brand-blue border-brand-blue shadow-lg shadow-brand-blue/20 scale-105 z-10'
                   : hasUpdate 
-                    ? 'bg-slate-800 border-white/10 hover:border-brand-blue/50' 
+                    ? 'bg-slate-800/80 backdrop-blur-xl border-white/10 hover:border-brand-blue/50' 
                     : ''
               }`}
               onClick={() => {
@@ -111,14 +111,14 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
                 }
               }}
             >
-              <span className={`text-sm md:text-base font-medium ${isActive ? 'text-white' : hasUpdate ? 'text-slate-200' : 'text-slate-600'}`}>
+              <span className={`text-sm md:text-base font-medium ${isActive ? 'text-white' : hasUpdate ? 'text-slate-500' : 'text-slate-600'}`}>
                 {dayNumber}
               </span>
               
               {hasUpdate && (
                 <div className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center">
                    {updateData.update.status === 'draft' && (
-                     <div className="absolute -top-6 bg-amber-500 text-white text-[8px] font-bold uppercase tracking-widest px-1 py-0.5 rounded shadow-lg whitespace-nowrap">
+                     <div className="absolute -top-6 bg-amber-500 text-white text-[8px] font-extrabold tracking-tight uppercase tracking-widest px-1 py-0.5 rounded shadow-lg whitespace-nowrap">
                        Draft
                      </div>
                    )}

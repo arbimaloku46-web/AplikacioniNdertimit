@@ -21,10 +21,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
       isScrolled 
-        ? 'bg-slate-950/90 backdrop-blur-md border-white/10 py-4' 
-        : 'bg-transparent border-transparent py-6'
+        ? 'bg-slate-950/90 backdrop-blur-md border-white/10 py-6' 
+        : 'bg-transparent border-transparent py-8'
     }`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
         {/* Logo */}
         <div 
           className="flex items-center gap-3 cursor-pointer group" 
@@ -35,10 +35,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          <button onClick={() => onNavigate('HOME')} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</button>
-          <button onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Services</button>
-          <button onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Projects</button>
-          <Button variant="outline" className="!py-2 !px-4 !text-xs" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button onClick={() => onNavigate('HOME')} className="text-sm font-medium text-slate-500 hover:text-white transition-all duration-300 ease-in-out">Home</button>
+          <button onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-medium text-slate-500 hover:text-white transition-all duration-300 ease-in-out">Services</button>
+          <button onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-medium text-slate-500 hover:text-white transition-all duration-300 ease-in-out">Projects</button>
+          <Button variant="outline" className="!py-2 !px-6 !text-xs" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
             Contact Us
           </Button>
         </div>

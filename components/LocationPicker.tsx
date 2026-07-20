@@ -33,11 +33,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
 
   if (!hasValidKey) {
     return (
-      <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center text-center p-6 relative z-10">
+      <div className="w-full h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40 bg-slate-900/90 backdrop-blur-2xl flex items-center justify-center text-center p-8 relative z-10">
         <div>
-          <h2 className="text-white font-bold mb-2">Google Maps API Key Required</h2>
-          <p className="text-sm text-slate-400 mb-2"><strong>Step 1:</strong> <a href="https://console.cloud.google.com/google/maps-apis/start?utm_campaign=gmp-code-assist-ais" target="_blank" rel="noopener" className="text-brand-blue hover:underline">Get an API Key</a></p>
-          <div className="text-left text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-white font-extrabold tracking-tight mb-2">Google Maps API Key Required</h2>
+          <p className="text-sm text-slate-500 mb-2"><strong>Step 1:</strong> <a href="https://console.cloud.google.com/google/maps-apis/start?utm_campaign=gmp-code-assist-ais" target="_blank" rel="noopener" className="text-brand-blue hover:underline">Get an API Key</a></p>
+          <div className="text-left text-xs text-slate-500 leading-relaxed">
             <p><strong>Step 2:</strong> Add your key as a secret in AI Studio:</p>
             <ul className="list-disc pl-4 mt-1">
               <li>Open <strong>Settings</strong> (⚙️ gear icon, <strong>top-right corner</strong>)</li>
@@ -52,7 +52,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
   }
 
   return (
-    <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 relative z-10 group">
+    <div className="w-full h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40 relative z-10 group">
       <APIProvider apiKey={API_KEY} version="weekly">
         <Map
           defaultCenter={initialPosition || defaultCenter}
@@ -81,7 +81,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
       {readOnly && position && (
         <button 
           onClick={openGoogleMaps}
-          className="absolute bottom-4 left-4 z-[400] bg-white text-slate-900 px-4 py-2 rounded-lg font-bold text-sm shadow-xl hover:bg-brand-blue hover:text-white transition-colors flex items-center gap-2"
+          className="absolute bottom-4 left-4 z-[400] bg-white text-slate-900 px-6 py-2 rounded-lg font-extrabold tracking-tight text-sm shadow-xl hover:bg-blue-600 hover:scale-[1.02] active:scale-95 hover:text-white transition-all duration-300 ease-in-out flex items-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>

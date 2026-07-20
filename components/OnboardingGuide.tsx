@@ -157,39 +157,39 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({ isVisible, onD
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: -10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-slate-900 border border-brand-blue shadow-2xl shadow-brand-blue/20 p-5 rounded-2xl relative"
+            className="bg-slate-900/90 backdrop-blur-2xl border border-brand-blue shadow-2xl shadow-brand-blue/20 p-5 rounded-2xl relative"
           >
-            <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-brand-blue flex items-center justify-center text-white text-sm font-bold shadow-[0_0_20px_rgba(34,100,171,0.8)]">
+            <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-brand-blue flex items-center justify-center text-white text-sm font-extrabold tracking-tight shadow-[0_0_20px_rgba(34,100,171,0.8)]">
               <div className="absolute inset-0 rounded-full border-2 border-brand-blue animate-ping opacity-70" />
               {step}
             </div>
 
             {step === 1 && (
               <>
-                <h3 className="text-base font-bold text-white mb-1.5">Interactive Site View</h3>
-                <p className="text-slate-400 text-xs mb-5 leading-relaxed">Explore the project site in 3D or 360-degree tours. Drag to look around and zoom in to see details.</p>
+                <h3 className="text-base font-extrabold tracking-tight text-white mb-1.5">Interactive Site View</h3>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Explore the project site in 3D or 360-degree tours. Drag to look around and zoom in to see details.</p>
               </>
             )}
 
             {step === 2 && (
               <>
-                <h3 className="text-base font-bold text-white mb-1.5">Media Gallery</h3>
-                <p className="text-slate-400 text-xs mb-5 leading-relaxed">View high-resolution photos and videos of the latest progress. Click any item to expand it.</p>
+                <h3 className="text-base font-extrabold tracking-tight text-white mb-1.5">Media Gallery</h3>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">View high-resolution photos and videos of the latest progress. Click any item to expand it.</p>
               </>
             )}
 
             {step === 3 && (
               <>
-                <h3 className="text-base font-bold text-white mb-1.5">Project Timeline</h3>
-                <p className="text-slate-400 text-xs mb-5 leading-relaxed">Navigate through past updates using the timeline at the bottom to see how the project has evolved over time.</p>
+                <h3 className="text-base font-extrabold tracking-tight text-white mb-1.5">Project Timeline</h3>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Navigate through past updates using the timeline at the bottom to see how the project has evolved over time.</p>
               </>
             )}
 
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Step {step} of 3</span>
+              <span className="text-[10px] text-slate-500 font-extrabold tracking-tight uppercase tracking-widest">Step {step} of 3</span>
               <button 
                 onClick={nextStep} 
-                className="bg-brand-blue hover:bg-brand-blue/80 text-white text-xs font-bold py-2 px-5 rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg"
+                className="bg-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 text-white text-xs font-extrabold tracking-tight py-2 px-5 rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg"
               >
                 {step === 3 ? 'Got it' : 'Next'}
               </button>

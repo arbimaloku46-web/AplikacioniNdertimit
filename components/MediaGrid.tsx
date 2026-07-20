@@ -118,7 +118,7 @@ const HotspotEditorOverlay: React.FC<{
             <div className="absolute top-4 right-4 z-[130]">
                 <button 
                     onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); setEditingHotspot(null); setActiveHotspot(null); }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${isEditing ? 'bg-emerald-500 text-white' : 'bg-brand-blue text-white shadow-lg'}`}
+                    className={`px-6 py-2 rounded-2xl text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${isEditing ? 'bg-emerald-500 text-white' : 'bg-brand-blue text-white shadow-lg'}`}
                 >
                     {isEditing ? 'Done' : 'Add Hotspots'}
                 </button>
@@ -145,14 +145,14 @@ const HotspotEditorOverlay: React.FC<{
 
                 {/* Info Card */}
                 {activeHotspot?.id === hotspot.id && !isEditing && (
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 rounded-xl p-4 w-64 shadow-2xl z-[150] cursor-default" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/40 rounded-2xl p-6 w-64 shadow-2xl z-[150] cursor-default" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-white font-bold text-sm">{hotspot.title}</h4>
-                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${hotspot.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : hotspot.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-blue/20 text-brand-blue'}`}>
+                            <h4 className="text-white font-extrabold tracking-tight text-sm">{hotspot.title}</h4>
+                            <span className={`text-[9px] font-extrabold tracking-tight uppercase tracking-widest px-2 py-0.5 rounded-full ${hotspot.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : hotspot.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-blue/20 text-brand-blue'}`}>
                                 {hotspot.status}
                             </span>
                         </div>
-                        <p className="text-slate-400 text-xs">{hotspot.description}</p>
+                        <p className="text-slate-500 text-xs">{hotspot.description}</p>
                     </div>
                 )}
             </div>
@@ -161,27 +161,27 @@ const HotspotEditorOverlay: React.FC<{
         {/* Editing Modal */}
         {editingHotspot && (
             <div 
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-white/10 rounded-xl p-4 w-72 shadow-2xl z-[150]"
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/90 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/40 rounded-2xl p-6 w-72 shadow-2xl z-[150]"
                 style={{ left: `${editingHotspot.x}%`, top: `${editingHotspot.y}%` }}
                 onClick={e => e.stopPropagation()}
             >
-                <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Edit Hotspot</h4>
+                <h4 className="text-white text-xs font-extrabold tracking-tight uppercase tracking-widest mb-4">Edit Hotspot</h4>
                 <div className="space-y-3">
                     <input 
                         type="text" 
                         placeholder="Title (e.g. HVAC Installation)" 
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white"
                         value={editingHotspot.title || ''}
                         onChange={e => setEditingHotspot({...editingHotspot, title: e.target.value})}
                     />
                     <textarea 
                         placeholder="Details or materials used..." 
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white resize-none h-20"
+                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white resize-none h-20"
                         value={editingHotspot.description || ''}
                         onChange={e => setEditingHotspot({...editingHotspot, description: e.target.value})}
                     />
                     <select 
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white"
                         value={editingHotspot.status || 'pending'}
                         onChange={e => setEditingHotspot({...editingHotspot, status: e.target.value as any})}
                     >
@@ -190,11 +190,11 @@ const HotspotEditorOverlay: React.FC<{
                         <option value="completed">Completed</option>
                     </select>
                     <div className="flex gap-2 pt-2">
-                        <button onClick={saveHotspot} className="flex-1 bg-brand-blue text-white text-xs font-bold py-2 rounded-lg">Save</button>
-                        <button onClick={() => setEditingHotspot(null)} className="flex-1 bg-white/10 text-white text-xs font-bold py-2 rounded-lg">Cancel</button>
+                        <button onClick={saveHotspot} className="flex-1 bg-brand-blue text-white text-xs font-extrabold tracking-tight py-2 rounded-lg">Save</button>
+                        <button onClick={() => setEditingHotspot(null)} className="flex-1 bg-white/10 text-white text-xs font-extrabold tracking-tight py-2 rounded-lg">Cancel</button>
                     </div>
                     {editingHotspot.id && (
-                        <button onClick={() => deleteHotspot(editingHotspot.id!)} className="w-full text-red-400 text-xs font-bold mt-2 hover:underline">Delete Hotspot</button>
+                        <button onClick={() => deleteHotspot(editingHotspot.id!)} className="w-full text-red-400 text-xs font-extrabold tracking-tight mt-2 hover:underline">Delete Hotspot</button>
                     )}
                 </div>
             </div>
@@ -265,14 +265,14 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
   return (
     <div className="space-y-6">
       {/* Controls Bar */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-white/5">
             {(['all', 'videos', 'photos'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                className={`flex-1 md:flex-none px-8 py-2 rounded-2xl text-xs font-extrabold tracking-tight uppercase tracking-wider transition-all ${
                   activeTab === tab ? 'bg-brand-blue text-white shadow-lg' : 'text-slate-500'
                 }`}
               >
@@ -288,10 +288,10 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
             <button
               key={cat.id}
               onClick={() => setActiveFilter(cat.id)}
-              className={`flex-shrink-0 px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              className={`flex-shrink-0 px-5 py-2 rounded-full text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all border ${
                 activeFilter === cat.id 
                   ? 'bg-white text-brand-dark border-white' 
-                  : 'bg-white/5 text-slate-400 border-white/5'
+                  : 'bg-white/5 text-slate-500 border-white/5'
               }`}
             >
               {cat.label}
@@ -306,7 +306,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
           No footage found in this category.
         </div>
       ) : (
-        <div ref={parentRef} className="h-[60vh] max-h-[600px] overflow-y-auto bg-slate-950/50 rounded-xl p-0.5 no-scrollbar">
+        <div ref={parentRef} className="h-[60vh] max-h-[600px] overflow-y-auto bg-slate-950/50 rounded-2xl p-0.5 no-scrollbar">
             <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                     const startIndex = virtualRow.index * columns;
@@ -337,7 +337,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                         key={item.id}
                                         onClick={() => setLightboxIndex(index)}
                                         style={{ width: `${itemSize}px`, height: `${itemSize}px` }}
-                                        className="relative cursor-pointer group overflow-hidden bg-slate-900 rounded-lg"
+                                        className="relative cursor-pointer group overflow-hidden bg-slate-900/90 backdrop-blur-2xl rounded-lg"
                                     >
                                         <img 
                                             src={thumbUrl} 
@@ -348,12 +348,12 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                         />
                                         {isVideo && (
                                             <>
-                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300 ease-in-out" />
                                                 <VideoIndicator />
                                                 <VideoDuration />
                                             </>
                                         )}
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 ease-in-out" />
                                     </div>
                                 );
                             })}
@@ -410,7 +410,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
 
                 if (slide.type === "custom-video") {
                     return (
-                        <div className="w-full h-full flex items-center justify-center p-4 md:p-12">
+                        <div className="w-full h-full flex items-center justify-center p-6 md:p-12">
                             <div className="relative w-full max-w-[1280px] aspect-video max-h-[80vh] shadow-2xl">
                                 <iframe 
                                     src={(slide as any).embedUrl} 
@@ -445,7 +445,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                 // Fallback for native videos (using container wrapper)
                 if (slide.type === "video") {
                      return (
-                        <div className="w-full h-full flex items-center justify-center p-4 md:p-12 relative">
+                        <div className="w-full h-full flex items-center justify-center p-6 md:p-12 relative">
                              <div className="relative max-w-full max-h-full inline-block flex items-center justify-center">
                                  <video 
                                      controls 

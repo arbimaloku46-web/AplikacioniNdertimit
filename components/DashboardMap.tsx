@@ -48,11 +48,11 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
 
   if (!hasValidKey) {
     return (
-      <div className="w-full h-96 rounded-3xl overflow-hidden border border-white/5 bg-slate-900 flex items-center justify-center text-center p-6 relative z-10 mt-12 mb-12">
+      <div className="w-full h-96 rounded-3xl overflow-hidden border border-white/5 bg-slate-900/90 backdrop-blur-2xl flex items-center justify-center text-center p-8 relative z-10 mt-12 mb-12">
         <div>
-          <h2 className="text-white font-bold mb-2">Google Maps API Key Required for Dashboard Map</h2>
-          <p className="text-sm text-slate-400 mb-2"><strong>Step 1:</strong> <a href="https://console.cloud.google.com/google/maps-apis/start?utm_campaign=gmp-code-assist-ais" target="_blank" rel="noopener" className="text-brand-blue hover:underline">Get an API Key</a></p>
-          <div className="text-left text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-white font-extrabold tracking-tight mb-2">Google Maps API Key Required for Dashboard Map</h2>
+          <p className="text-sm text-slate-500 mb-2"><strong>Step 1:</strong> <a href="https://console.cloud.google.com/google/maps-apis/start?utm_campaign=gmp-code-assist-ais" target="_blank" rel="noopener" className="text-brand-blue hover:underline">Get an API Key</a></p>
+          <div className="text-left text-xs text-slate-500 leading-relaxed">
             <p><strong>Step 2:</strong> Add your key as a secret in AI Studio:</p>
             <ul className="list-disc pl-4 mt-1">
               <li>Open <strong>Settings</strong> (⚙️ gear icon, <strong>top-right corner</strong>)</li>
@@ -95,11 +95,11 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
                   pixelOffset={[0, -30]}
                 >
                   <div className="p-1 min-w-[150px]">
-                      <h4 className="font-display font-bold text-slate-800 text-sm mb-1">{activeProject.name}</h4>
+                      <h4 className="font-display font-extrabold tracking-tight text-slate-800 text-sm mb-1">{activeProject.name}</h4>
                       <p className="text-xs text-slate-500 mb-3">{activeProject.location}</p>
                       <button 
                           onClick={() => onProjectClick(activeProject)}
-                          className="w-full bg-brand-blue text-white text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                          className="w-full bg-brand-blue text-white text-[10px] font-extrabold tracking-tight uppercase tracking-widest py-2 rounded-lg hover:bg-blue-600 transition-all duration-300 ease-in-out"
                       >
                           View Project
                       </button>

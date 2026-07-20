@@ -100,8 +100,8 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) 
 
   if (loading) {
     return (
-      <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl animate-pulse flex flex-col justify-between h-full min-h-[80px]">
-        <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Live Weather</span>
+      <div className="bg-white/5 p-3 md:p-6 rounded-2xl md:rounded-2xl animate-pulse flex flex-col justify-between h-full min-h-[80px]">
+        <span className="text-[8px] text-slate-500 font-extrabold tracking-tight uppercase block mb-1">Live Weather</span>
         <div className="h-4 bg-slate-700/50 rounded w-1/2"></div>
       </div>
     );
@@ -109,9 +109,9 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) 
 
   if (error || !weather) {
     return (
-      <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
-        <span className="text-[8px] text-slate-500 font-bold uppercase block mb-1">Live Weather</span>
-        <span className="text-white text-xs font-bold">Unavailable</span>
+      <div className="bg-white/5 p-3 md:p-6 rounded-2xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
+        <span className="text-[8px] text-slate-500 font-extrabold tracking-tight uppercase block mb-1">Live Weather</span>
+        <span className="text-white text-xs font-extrabold tracking-tight">Unavailable</span>
       </div>
     );
   }
@@ -119,8 +119,8 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) 
   // Map WMO weather codes to lucide-react icons and descriptions
   const getWeatherIconAndDesc = (code: number) => {
     if (code === 0) return { icon: <Sun className="w-4 h-4 text-amber-400" />, desc: 'Clear sky' };
-    if ([1, 2, 3].includes(code)) return { icon: <Cloud className="w-4 h-4 text-slate-300" />, desc: 'Partly cloudy' };
-    if ([45, 48].includes(code)) return { icon: <CloudFog className="w-4 h-4 text-slate-400" />, desc: 'Fog' };
+    if ([1, 2, 3].includes(code)) return { icon: <Cloud className="w-4 h-4 text-slate-500" />, desc: 'Partly cloudy' };
+    if ([45, 48].includes(code)) return { icon: <CloudFog className="w-4 h-4 text-slate-500" />, desc: 'Fog' };
     if ([51, 53, 55, 56, 57].includes(code)) return { icon: <CloudDrizzle className="w-4 h-4 text-brand-blue" />, desc: 'Drizzle' };
     if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { icon: <CloudRain className="w-4 h-4 text-blue-400" />, desc: 'Rain' };
     if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: <CloudSnow className="w-4 h-4 text-white" />, desc: 'Snow' };
@@ -131,15 +131,15 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ location, date }) 
   const { icon, desc } = getWeatherIconAndDesc(weather.weatherCode);
 
   return (
-    <div className="bg-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
+    <div className="bg-white/5 p-3 md:p-6 rounded-2xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px]">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] text-slate-500 font-bold uppercase block">Live Weather</span>
+        <span className="text-[10px] text-slate-500 font-extrabold tracking-tight uppercase block">Live Weather</span>
         {icon}
       </div>
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
-          <span className="text-white text-2xl md:text-3xl font-display font-bold leading-none">{Math.round(weather.temperature)}°C</span>
-          <span className="text-slate-400 text-sm mt-1 truncate max-w-[100px]">{desc}</span>
+          <span className="text-white text-2xl md:text-3xl font-display font-extrabold tracking-tight leading-none">{Math.round(weather.temperature)}°C</span>
+          <span className="text-slate-500 text-sm mt-1 truncate max-w-[100px]">{desc}</span>
         </div>
         <div className="flex items-center gap-1 text-slate-500">
           <Wind className="w-3 h-3" />

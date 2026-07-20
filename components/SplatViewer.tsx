@@ -94,8 +94,8 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
 
   if (!url) {
     return (
-      <div className="w-full h-full min-h-[350px] bg-slate-900/40 rounded-2xl border border-slate-800/50 flex flex-col items-center justify-center text-slate-600 p-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
+      <div className="w-full h-full min-h-[350px] bg-slate-900/40 rounded-2xl border border-white/5/50 flex flex-col items-center justify-center text-slate-600 p-8 text-center">
+        <div className="w-16 h-16 rounded-full bg-slate-800/80 backdrop-blur-xl/50 flex items-center justify-center mb-4">
            {type === '3d' ? (
              <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" /></svg>
            ) : (
@@ -121,11 +121,11 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
     >
       {/* Top Controls Bar - Always visible in fullscreen */}
       {isFullscreen && (
-          <div className="absolute top-0 left-0 right-0 z-[5100] p-4 pt-12 md:pt-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="absolute top-0 left-0 right-0 z-[5100] p-6 pt-12 md:pt-4 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
               <div className="pointer-events-auto">
                  <button 
                     onClick={() => setIsInteracting(!isInteracting)}
-                    className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all"
+                    className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-2 rounded-full text-xs font-extrabold tracking-tight uppercase tracking-wider hover:bg-white/20 transition-all"
                  >
                     {isInteracting ? 'Lock View' : 'Unlock View'}
                  </button>
@@ -136,7 +136,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
                 className="pointer-events-auto p-3 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-lg transition-transform active:scale-90 flex items-center gap-2 pr-5"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                <span className="font-bold text-sm uppercase tracking-wider">Close</span>
+                <span className="font-extrabold tracking-tight text-sm uppercase tracking-wider">Close</span>
               </button>
           </div>
       )}
@@ -145,7 +145,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
       {!isFullscreen && (
         <button 
             onClick={toggleFullScreen}
-            className="absolute top-4 right-4 z-[50] p-3 bg-black/60 hover:bg-brand-blue backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/10 hover:scale-110 shadow-lg active:scale-95"
+            className="absolute top-4 right-4 z-[50] p-3 bg-black/60 hover:bg-blue-600 hover:scale-[1.02] active:scale-95 backdrop-blur-md rounded-full text-white/90 hover:text-white transition-all border border-white/5 shadow-2xl shadow-black/40 hover:scale-110 shadow-lg active:scale-95"
             title="Enter Fullscreen"
         >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
@@ -158,10 +158,10 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
              <div className="relative">
                 <div className="w-12 h-12 rounded-full border-2 border-brand-blue/20 border-t-brand-blue animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                   <span className="text-[8px] font-bold text-brand-blue">{type.toUpperCase()}</span>
+                   <span className="text-[8px] font-extrabold tracking-tight text-brand-blue">{type.toUpperCase()}</span>
                 </div>
              </div>
-             <p className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Loading...</p>
+             <p className="mt-4 text-[10px] text-slate-500 font-extrabold tracking-tight uppercase tracking-widest">Loading...</p>
           </div>
         </div>
       )}
@@ -191,7 +191,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
       {isInteracting && !isFullscreen && (
          <div className="absolute top-4 left-4 z-30 animate-in fade-in slide-in-from-top-2 pointer-events-none">
             <div className="bg-black/40 backdrop-blur px-3 py-1.5 rounded-lg border border-white/5">
-                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Interactive Mode</span>
+                <span className="text-[10px] font-extrabold tracking-tight text-white/80 uppercase tracking-wider">Interactive Mode</span>
             </div>
          </div>
       )}
