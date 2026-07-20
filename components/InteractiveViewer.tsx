@@ -38,6 +38,29 @@ interface InteractiveViewerProps {
 
 type ViewLevel = 'exterior' | 'floor' | 'unit';
 
+const getPathCenter = (pathStr: string) => {
+  const points = pathStr.match(/-?\d+\.?\d*/g);
+  if (!points || points.length < 2) return { x: 50, y: 50 };
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < points.length; i += 2) {
+    const x = parseFloat(points[i]);
+    const y = parseFloat(points[i + 1]);
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  }
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+};
+
+const FLOOR_COLORS = [
+  { base: 'rgba(59, 130, 246, 0.25)', hover: 'rgba(59, 130, 246, 0.5)', border: '#3b82f6' }, // blue
+  { base: 'rgba(16, 185, 129, 0.25)', hover: 'rgba(16, 185, 129, 0.5)', border: '#10b981' }, // emerald
+  { base: 'rgba(245, 158, 11, 0.25)', hover: 'rgba(245, 158, 11, 0.5)', border: '#f59e0b' }, // amber
+  { base: 'rgba(168, 85, 247, 0.25)', hover: 'rgba(168, 85, 247, 0.5)', border: '#a855f7' }, // purple
+  { base: 'rgba(236, 72, 153, 0.25)', hover: 'rgba(236, 72, 153, 0.5)', border: '#ec4899' }, // pink
+];
+
 export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onClose }) => {
   const [level, setLevel] = useState<ViewLevel>('exterior');
   const [activeFloor, setActiveFloor] = useState<FloorData | null>(null);
@@ -138,21 +161,52 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                   viewBox="0 0 100 100" 
                   preserveAspectRatio="none"
                 >
-                  {data.floors.map(floor => (
-                    <path
-                      key={floor.id}
-                      d={floor.svgPath}
-                      fill={hoveredPath === floor.id ? "rgba(59, 130, 246, 0.4)" : "rgba(59, 130, 246, 0.05)"}
-                      stroke={hoveredPath === floor.id ? "#3b82f6" : "rgba(255,255,255,0.2)"}
-                      strokeWidth="0.5"
-                      vectorEffect="non-scaling-stroke"
-                      className="cursor-pointer transition-all duration-300"
-                      onMouseEnter={() => setHoveredPath(floor.id)}
-                      onMouseLeave={() => setHoveredPath(null)}
-                      onClick={() => handleFloorClick(floor)}
-                    />
-                  ))}
+                  {data.floors.map((floor, index) => {
+                    const colorScheme = FLOOR_COLORS[index % FLOOR_COLORS.length];
+                    return (
+                      <path
+                        key={floor.id}
+                        d={floor.svgPath}
+                        fill={hoveredPath === floor.id ? colorScheme.hover : colorScheme.base}
+                        stroke={hoveredPath === floor.id ? colorScheme.border : "rgba(255,255,255,0.4)"}
+                        strokeWidth="0.5"
+                        vectorEffect="non-scaling-stroke"
+                        className="cursor-pointer transition-all duration-300"
+                        onMouseEnter={() => setHoveredPath(floor.id)}
+                        onMouseLeave={() => setHoveredPath(null)}
+                        onClick={() => handleFloorClick(floor)}
+                      />
+                    );
+                  })}
                 </svg>
+
+                {/* Floor Labels Overlay */}
+                {data.floors.map((floor, index) => {
+                  const center = getPathCenter(floor.svgPath);
+                  const isHovered = hoveredPath === floor.id;
+                  const colorScheme = FLOOR_COLORS[index % FLOOR_COLORS.length];
+                  
+                  return (
+                    <div 
+                      key={`label-${floor.id}`}
+                      className="absolute flex flex-col items-center justify-center pointer-events-none transition-all duration-300"
+                      style={{ 
+                        left: `${center.x}%`, 
+                        top: `${center.y}%`, 
+                        transform: `translate(-50%, -50%) scale(${isHovered ? 1.1 : 1})`,
+                        opacity: hoveredPath && !isHovered ? 0.3 : 1,
+                        zIndex: isHovered ? 20 : 10
+                      }}
+                    >
+                      <div 
+                        className="bg-slate-900/80 backdrop-blur-md border text-white text-[10px] sm:text-xs font-bold px-2.5 py-1 sm:py-1.5 rounded-lg shadow-xl whitespace-nowrap transition-colors"
+                        style={{ borderColor: isHovered ? colorScheme.border : 'rgba(255,255,255,0.2)' }}
+                      >
+                        {floor.name}
+                      </div>
+                    </div>
+                  );
+                })}
                 
                 {/* Custom Tooltip overlay for floors */}
                 <div className="absolute top-4 right-4 pointer-events-none">
