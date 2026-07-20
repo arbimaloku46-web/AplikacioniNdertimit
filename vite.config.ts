@@ -82,6 +82,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(env.GOOGLE_MAPS_PLATFORM_KEY || '')
     },
     build: {
       outDir: 'dist', // Changed from 'build' to 'dist' for Vercel compatibility

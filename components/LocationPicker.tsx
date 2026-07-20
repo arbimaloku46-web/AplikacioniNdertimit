@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix for default marker icons in React-Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { APIProvider, Map, AdvancedMarker, Pin, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
 
 interface LocationPickerProps {
   initialPosition?: { lat: number; lng: number };
@@ -17,19 +7,12 @@ interface LocationPickerProps {
   readOnly?: boolean;
 }
 
-const LocationMarker = ({ position, onSelect, readOnly }: { position: { lat: number; lng: number } | null, onSelect?: (lat: number, lng: number) => void, readOnly?: boolean }) => {
-  useMapEvents({
-    click(e) {
-      if (!readOnly && onSelect) {
-        onSelect(e.latlng.lat, e.latlng.lng);
-      }
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position} />
-  );
-};
+const API_KEY =
+  process.env.GOOGLE_MAPS_PLATFORM_KEY ||
+  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
+  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY ||
+  '';
+const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onLocationSelect, readOnly = false }) => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(initialPosition || null);
@@ -40,12 +23,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
     }
   }, [initialPosition]);
 
-  const handleSelect = (lat: number, lng: number) => {
-    if (readOnly) return;
-    setPosition({ lat, lng });
-    if (onLocationSelect) onLocationSelect(lat, lng);
-  };
-
   const defaultCenter = { lat: 41.3275, lng: 19.8187 }; // Tirana center as default
 
   const openGoogleMaps = () => {
@@ -54,15 +31,53 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
     }
   };
 
+  if (!hasValidKey) {
+    return (
+      <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center text-center p-6 relative z-10">
+        <div>
+          <h2 className="text-white font-bold mb-2">Google Maps API Key Required</h2>
+          <p className="text-sm text-slate-400 mb-2"><strong>Step 1:</strong> <a href="https://console.cloud.google.com/google/maps-apis/start?utm_campaign=gmp-code-assist-ais" target="_blank" rel="noopener" className="text-brand-blue hover:underline">Get an API Key</a></p>
+          <div className="text-left text-xs text-slate-400 leading-relaxed">
+            <p><strong>Step 2:</strong> Add your key as a secret in AI Studio:</p>
+            <ul className="list-disc pl-4 mt-1">
+              <li>Open <strong>Settings</strong> (⚙️ gear icon, <strong>top-right corner</strong>)</li>
+              <li>Select <strong>Secrets</strong></li>
+              <li>Type <code>GOOGLE_MAPS_PLATFORM_KEY</code> as the secret name, press <strong>Enter</strong></li>
+              <li>Paste your API key as the value, press <strong>Enter</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 relative z-10 group">
-      <MapContainer center={initialPosition || defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; Google Maps'
-          url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-        />
-        <LocationMarker position={position} onSelect={handleSelect} readOnly={readOnly} />
-      </MapContainer>
+      <APIProvider apiKey={API_KEY} version="weekly">
+        <Map
+          defaultCenter={initialPosition || defaultCenter}
+          defaultZoom={13}
+          mapId="DEMO_MAP_ID"
+          internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
+          style={{ width: '100%', height: '100%' }}
+          disableDefaultUI={readOnly}
+          gestureHandling={readOnly ? 'cooperative' : 'auto'}
+          onClick={(e) => {
+            if (!readOnly && e.detail.latLng) {
+              const lat = e.detail.latLng.lat;
+              const lng = e.detail.latLng.lng;
+              setPosition({ lat, lng });
+              if (onLocationSelect) onLocationSelect(lat, lng);
+            }
+          }}
+        >
+          {position && (
+            <AdvancedMarker position={position}>
+              <Pin background="#4285F4" glyphColor="#fff" borderColor="#1e3a8a" />
+            </AdvancedMarker>
+          )}
+        </Map>
+      </APIProvider>
       {readOnly && position && (
         <button 
           onClick={openGoogleMaps}
