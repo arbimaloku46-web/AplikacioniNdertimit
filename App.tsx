@@ -22,7 +22,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { BuildingConfigurator } from './components/BuildingConfigurator';
 import { InteractiveViewer } from './components/InteractiveViewer';
 import { UpdateComments } from './components/UpdateComments';
-import { WifiOff, ArrowLeft, Map } from 'lucide-react';
+import { WifiOff, ArrowLeft, Map, LayoutGrid, List, Trash2, ArchiveRestore } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { CustomTooltip } from './components/ChartTooltip';
 
@@ -93,9 +93,13 @@ const App: React.FC = () => {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [currentView, setCurrentView] = useState<AppView>(AppView.HOME);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [projectListView, setProjectListView] = useState<'grid' | 'list'>('grid');
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
   const [heroTab, setHeroTab] = useState<'3d' | '360'>('3d');
   
+  const activeProjectsList = projects.filter(p => !p.deletedAt);
+  const binnedProjectsList = projects.filter(p => p.deletedAt);
+
   // UI State
   const [isFullScreenMode, setIsFullScreenMode] = useState(false);
   
@@ -533,13 +537,23 @@ const App: React.FC = () => {
                         </h1>
                         <p className="text-slate-500 mt-2 text-sm md:text-base">Active construction projects & site monitoring.</p>
                     </div>
-                    {isAdmin && <Button onClick={() => setShowCreateProject(true)}>{text.addNewProject}</Button>}
+                    <div className="flex items-center gap-4">
+                        <div className="hidden md:flex bg-slate-900/50 rounded-xl p-1 border border-white/5">
+                            <button className={`p-2 rounded-lg transition-all duration-300 ease-in-out ${projectListView === 'grid' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`} onClick={() => setProjectListView('grid')} title="Grid View">
+                                <LayoutGrid className="w-5 h-5" />
+                            </button>
+                            <button className={`p-2 rounded-lg transition-all duration-300 ease-in-out ${projectListView === 'list' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`} onClick={() => setProjectListView('list')} title="List View">
+                                <List className="w-5 h-5" />
+                            </button>
+                        </div>
+                        {isAdmin && <Button onClick={() => setShowCreateProject(true)}>{text.addNewProject}</Button>}
+                    </div>
                 </div>
                 
                 {/* Project Map View */}
-                {!loadingProjects && projects.length > 0 && (
+                {!loadingProjects && activeProjectsList.length > 0 && (
                     <DashboardMap 
-                        projects={projects} 
+                        projects={activeProjectsList} 
                         onProjectClick={handleProjectSelect} 
                     />
                 )}
@@ -550,25 +564,42 @@ const App: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                        {projects.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {projects.map((p, i) => (
+                        {activeProjectsList.length > 0 ? (
+                            <div className={projectListView === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "grid grid-cols-1 gap-4"}>
+                                {activeProjectsList.map((p, i) => (
                                     <motion.div 
                                         key={p.id} 
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
                                         onClick={() => handleProjectSelect(p)} 
-                                        className="group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1 active:scale-[0.98]"
+                                        className={`group bg-slate-900/40 rounded-3xl overflow-hidden border border-white/5 cursor-pointer hover:border-brand-blue/30 transition-all hover:-translate-y-1 active:scale-[0.98] ${projectListView === 'list' ? 'flex items-center p-4' : ''}`}
                                     >
-                                        <div className="aspect-video relative overflow-hidden">
-                                        <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                                        </div>
-                                        <div className="p-8 md:p-8">
-                                            <h3 className="text-lg md:text-xl font-extrabold tracking-tight text-white group-hover:text-brand-blue transition-all duration-300 ease-in-out">{p.name}</h3>
-                                            <p className="text-slate-500 text-xs font-extrabold tracking-tight uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
-                                        </div>
+                                        {projectListView === 'grid' ? (
+                                            <>
+                                                <div className="aspect-video relative overflow-hidden">
+                                                    <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                                                </div>
+                                                <div className="p-8 md:p-8">
+                                                    <h3 className="text-lg md:text-xl font-extrabold tracking-tight text-white group-hover:text-brand-blue transition-all duration-300 ease-in-out">{p.name}</h3>
+                                                    <p className="text-slate-500 text-xs font-extrabold tracking-tight uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-lg">
+                                                    <img src={p.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                                </div>
+                                                <div className="ml-6 flex-1">
+                                                    <h3 className="text-lg md:text-xl font-extrabold tracking-tight text-white group-hover:text-brand-blue transition-all duration-300 ease-in-out">{p.name}</h3>
+                                                    <p className="text-slate-500 text-xs font-extrabold tracking-tight uppercase tracking-widest mt-2">{p.clientName} • {p.location}</p>
+                                                </div>
+                                                <div className="w-10 h-10 mr-4 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover:bg-brand-blue group-hover:text-white transition-all shrink-0">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                                </div>
+                                            </>
+                                        )}
                                     </motion.div>
                                 ))}
                             </div>
@@ -614,6 +645,7 @@ const App: React.FC = () => {
                         )}
                         
                         {isAdmin && (
+                          <>
                           <button 
                             onClick={() => setCurrentView(AppView.MAPPER)}
                             className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 text-white px-6 py-2 rounded-2xl text-sm font-extrabold tracking-tight shadow-lg transition-all"
@@ -621,6 +653,22 @@ const App: React.FC = () => {
                             <Map className="w-4 h-4" />
                             Configure Building
                           </button>
+
+                          <button 
+                            onClick={async () => {
+                                if(window.confirm('Are you sure you want to move this project to the bin? It will be permanently deleted after 30 days.')) {
+                                    const pCopy = {...activeProject, deletedAt: new Date().toISOString()};
+                                    await dbService.updateProject(pCopy);
+                                    setActiveProject(null);
+                                    setCurrentView(AppView.HOME);
+                                }
+                            }}
+                            className="flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 px-6 py-2 rounded-2xl text-sm font-extrabold tracking-tight transition-all hover:scale-[1.02] active:scale-95"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Bin Project
+                          </button>
+                          </>
                         )}
                         </div>
                     </div>
@@ -1005,6 +1053,7 @@ const App: React.FC = () => {
                         </div>
 
                         {user.isAdmin && (
+                            <>
                             <div className="bg-slate-900/50 border border-brand-blue/20 rounded-3xl p-8 md:p-8 backdrop-blur-xl mt-6 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 blur-3xl rounded-full" />
                                 <h3 className="text-lg font-extrabold tracking-tight text-brand-blue mb-6 flex items-center gap-2">
@@ -1024,6 +1073,51 @@ const App: React.FC = () => {
                                     <svg className="w-5 h-5 text-brand-blue opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                                 </button>
                             </div>
+                            
+                            <div className="bg-slate-900/50 border border-rose-500/20 rounded-3xl p-8 md:p-8 backdrop-blur-xl mt-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-3xl rounded-full" />
+                                <h3 className="text-lg font-extrabold tracking-tight text-rose-500 mb-6 flex items-center gap-2">
+                                    <Trash2 className="w-5 h-5" />
+                                    Binned Projects (Auto-delete after 30 days)
+                                </h3>
+                                
+                                {binnedProjectsList.length > 0 ? (
+                                    <div className="grid gap-6">
+                                        {binnedProjectsList.map(p => (
+                                            <div key={p.id} className="group flex flex-col md:flex-row md:items-center gap-4 p-4 md:p-6 rounded-2xl bg-slate-950 border border-rose-500/10 transition-all">
+                                                <div className="w-16 h-12 md:w-20 md:h-16 rounded-2xl overflow-hidden shadow-lg relative shrink-0">
+                                                    <img src={p.thumbnailUrl} className="w-full h-full object-cover grayscale opacity-70" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-white font-extrabold tracking-tight text-sm md:text-base">{p.name}</h4>
+                                                    <p className="text-slate-500 text-[10px] md:text-xs font-medium uppercase tracking-wider mt-1">Deleted: {p.deletedAt ? new Date(p.deletedAt).toLocaleDateString() : 'Unknown'}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-4 md:mt-0">
+                                                    <button onClick={async () => {
+                                                        const pCopy = {...p};
+                                                        delete pCopy.deletedAt;
+                                                        await dbService.updateProject(pCopy);
+                                                    }} className="px-4 py-2 bg-white/5 hover:bg-brand-blue/20 text-brand-blue rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+                                                        <ArchiveRestore className="w-4 h-4" />
+                                                        Restore
+                                                    </button>
+                                                    <button onClick={async () => {
+                                                        if(window.confirm('Are you sure you want to permanently delete this project? This cannot be undone.')) {
+                                                            await dbService.deleteProject(p.id);
+                                                        }
+                                                    }} className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Delete Forever
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500">The bin is empty.</p>
+                                )}
+                            </div>
+                            </>
                         )}
 
                         {!user.isAdmin && (
@@ -1033,9 +1127,9 @@ const App: React.FC = () => {
                                     {text.myUnlockedProjects}
                                 </h3>
                                 
-                                {projects.length > 0 ? (
+                                {activeProjectsList.length > 0 ? (
                                     <div className="grid gap-6">
-                                        {projects.map(p => (
+                                        {activeProjectsList.map(p => (
                                             <div key={p.id} onClick={() => handleProjectSelect(p)} className="group flex items-center gap-6 md:gap-5 p-3 md:p-6 rounded-2xl bg-slate-950 border border-white/5 cursor-pointer hover:border-brand-blue/50 hover:bg-slate-900/90 backdrop-blur-2xl transition-all active:scale-[0.99]">
                                                 <div className="w-16 h-12 md:w-20 md:h-16 rounded-2xl overflow-hidden shadow-lg relative">
                                                     <img src={p.thumbnailUrl} className="w-full h-full object-cover" />

@@ -84,6 +84,7 @@ export interface Project {
   updates: WeeklyUpdate[];
   description: string;
   interactiveBuilding?: InteractiveBuilding;
+  deletedAt?: string;
 }
 
 export interface User {

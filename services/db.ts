@@ -4,11 +4,24 @@ import { Project } from '../types';
 
 // Map database column names (snake_case) to application types (camelCase)
 const IB_SEPARATOR = '\n\n---IB_DATA---\n';
+const META_SEPARATOR = '\n\n---META_DATA---\n';
 
 const mapFromDB = (row: any): Project => {
   let description = row.description || '';
   let interactiveBuilding = undefined;
+  let deletedAt = undefined;
   
+  if (description.includes(META_SEPARATOR)) {
+    const parts = description.split(META_SEPARATOR);
+    description = parts[0];
+    try {
+      const meta = JSON.parse(parts[1]);
+      deletedAt = meta.deletedAt;
+    } catch(e) {
+      console.error('Failed to parse meta data', e);
+    }
+  }
+
   if (description.includes(IB_SEPARATOR)) {
     const parts = description.split(IB_SEPARATOR);
     description = parts[0];
@@ -29,6 +42,7 @@ const mapFromDB = (row: any): Project => {
     description: description,
     updates: row.updates || [],
     interactiveBuilding: interactiveBuilding,
+    deletedAt: deletedAt,
   };
 };
 
@@ -36,6 +50,10 @@ const mapToDB = (project: Project) => {
   let description = project.description || '';
   if (project.interactiveBuilding) {
     description += IB_SEPARATOR + JSON.stringify(project.interactiveBuilding);
+  }
+  
+  if (project.deletedAt) {
+    description += META_SEPARATOR + JSON.stringify({ deletedAt: project.deletedAt });
   }
 
   return {
@@ -66,7 +84,21 @@ export const dbService = {
         return;
       }
       
-      callback((data || []).map(mapFromDB));
+      const mappedProjects = (data || []).map(mapFromDB);
+      
+      // Cleanup binned projects older than 30 days
+      const now = new Date().getTime();
+      mappedProjects.forEach(p => {
+        if (p.deletedAt) {
+          const binnedDate = new Date(p.deletedAt).getTime();
+          if (now - binnedDate > 30 * 24 * 60 * 60 * 1000) {
+            // Delete permanently (fire and forget)
+            dbService.deleteProject(p.id).catch(console.error);
+          }
+        }
+      });
+
+      callback(mappedProjects);
     };
 
     fetchProjects();
