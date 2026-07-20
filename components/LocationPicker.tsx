@@ -48,15 +48,33 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
 
   const defaultCenter = { lat: 41.3275, lng: 19.8187 }; // Tirana center as default
 
+  const openGoogleMaps = () => {
+    if (position) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${position.lat},${position.lng}`, '_blank');
+    }
+  };
+
   return (
-    <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 relative z-10">
+    <div className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 relative z-10 group">
       <MapContainer center={initialPosition || defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; Google Maps'
+          url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
         />
         <LocationMarker position={position} onSelect={handleSelect} readOnly={readOnly} />
       </MapContainer>
+      {readOnly && position && (
+        <button 
+          onClick={openGoogleMaps}
+          className="absolute bottom-4 left-4 z-[400] bg-white text-slate-900 px-4 py-2 rounded-lg font-bold text-sm shadow-xl hover:bg-brand-blue hover:text-white transition-colors flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          Open in Google Maps
+        </button>
+      )}
     </div>
   );
 };
