@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { APIProvider, Map, AdvancedMarker, Pin, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 
 interface LocationPickerProps {
   initialPosition?: { lat: number; lng: number };
@@ -7,15 +7,18 @@ interface LocationPickerProps {
   readOnly?: boolean;
 }
 
-const API_KEY =
-  process.env.GOOGLE_MAPS_PLATFORM_KEY ||
-  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
-  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY ||
+const API_KEY = 
+  process.env.GOOGLE_MAPS_PLATFORM_KEY || 
+  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY || 
+  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY || 
   '';
+
 const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition, onLocationSelect, readOnly = false }) => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(initialPosition || null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (initialPosition) {
@@ -24,6 +27,32 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
   }, [initialPosition]);
 
   const defaultCenter = { lat: 41.3275, lng: 19.8187 }; // Tirana center as default
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const res = await fetch('/api/geocode-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery })
+      });
+      if (!res.ok) {
+         const errData = await res.json().catch(() => ({}));
+         throw new Error(errData.error || await res.text());
+      }
+      const data = await res.json();
+      if (data.lat && data.lng) {
+        setPosition(data);
+        if (onLocationSelect) onLocationSelect(data.lat, data.lng);
+      }
+    } catch (err: any) {
+      alert("Failed to find location: " + err.message);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const openGoogleMaps = () => {
     if (position) {
@@ -53,9 +82,29 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
 
   return (
     <div className="w-full h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40 relative z-10 group">
+      {!readOnly && (
+        <form onSubmit={handleSearch} className="absolute top-4 left-4 right-14 z-[400] flex gap-2 max-w-sm">
+          <input 
+            type="text" 
+            placeholder="AI Location Search..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="flex-1 bg-white/95 backdrop-blur-md text-slate-900 px-4 py-2.5 rounded-xl text-sm font-medium shadow-xl border border-white/20 outline-none focus:ring-2 focus:ring-brand-blue placeholder:text-slate-500"
+          />
+          <button 
+            type="submit"
+            disabled={isSearching || !searchQuery.trim()}
+            className="bg-brand-blue text-white px-4 py-2.5 rounded-xl text-sm font-extrabold tracking-tight shadow-xl hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-brand-blue transition-all flex items-center justify-center min-w-[70px]"
+          >
+            {isSearching ? <div className="w-4 h-4 border-2 border-white/30 border-t-brand-blue rounded-full animate-spin" /> : "Find"}
+          </button>
+        </form>
+      )}
+
       <APIProvider apiKey={API_KEY} version="weekly">
         <Map
           defaultCenter={initialPosition || defaultCenter}
+          center={position || defaultCenter}
           defaultZoom={13}
           mapId="DEMO_MAP_ID"
           internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
@@ -78,6 +127,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
           )}
         </Map>
       </APIProvider>
+
       {readOnly && position && (
         <button 
           onClick={openGoogleMaps}
