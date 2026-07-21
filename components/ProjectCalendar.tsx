@@ -96,7 +96,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
               key={dayNumber} 
               className={`aspect-square relative rounded-2xl border flex flex-col items-center justify-center p-1 md:p-2 transition-all ${
                 hasUpdate 
-                  ? 'cursor-pointer hover:-translate-y-1' 
+                  ? 'cursor-pointer hover:-translate-y-1 group' 
                   : 'opacity-30 cursor-not-allowed bg-slate-900/50 border-white/5'
               } ${
                 isActive
@@ -111,19 +111,24 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
                 }
               }}
             >
-              <span className={`text-sm md:text-base font-medium ${isActive ? 'text-white' : hasUpdate ? 'text-slate-500' : 'text-slate-600'}`}>
+              <span className={`text-sm md:text-base font-medium ${isActive ? 'text-white' : hasUpdate ? 'text-slate-200' : 'text-slate-600'}`}>
                 {dayNumber}
               </span>
               
               {hasUpdate && (
-                <div className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center">
-                   {updateData.update.status === 'draft' && (
-                     <div className="absolute -top-6 bg-amber-500 text-white text-[8px] font-extrabold tracking-tight uppercase tracking-widest px-1 py-0.5 rounded shadow-lg whitespace-nowrap">
-                       Draft
-                     </div>
-                   )}
-                   <CheckCircle2 className={`w-3 h-3 md:w-4 md:h-4 ${isActive ? 'text-white' : 'text-brand-blue'}`} />
-                </div>
+                <>
+                  <span className={`text-[8px] md:text-[9px] text-center px-1 leading-tight mt-1 line-clamp-2 ${isActive ? 'text-white/80' : 'text-slate-400 group-hover:text-slate-300'}`}>
+                    {updateData.update.title}
+                  </span>
+                  <div className="absolute top-2 right-2 flex items-center justify-center">
+                     {updateData.update.status === 'draft' && (
+                       <div className="absolute -top-4 -right-1 bg-amber-500 text-white text-[8px] font-extrabold tracking-tight uppercase tracking-widest px-1 py-0.5 rounded shadow-lg whitespace-nowrap">
+                         Draft
+                       </div>
+                     )}
+                     <CheckCircle2 className={`w-3 h-3 md:w-4 md:h-4 ${isActive ? 'text-white' : 'text-brand-blue'}`} />
+                  </div>
+                </>
               )}
             </div>
           );

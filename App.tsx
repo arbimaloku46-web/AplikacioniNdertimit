@@ -538,7 +538,7 @@ const App: React.FC = () => {
                         <p className="text-slate-500 mt-2 text-sm md:text-base">Active construction projects & site monitoring.</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="hidden md:flex bg-slate-900/50 rounded-xl p-1 border border-white/5">
+                        <div className="flex bg-slate-900/50 rounded-xl p-1 border border-white/5">
                             <button className={`p-2 rounded-lg transition-all duration-300 ease-in-out ${projectListView === 'grid' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`} onClick={() => setProjectListView('grid')} title="Grid View">
                                 <LayoutGrid className="w-5 h-5" />
                             </button>
@@ -692,8 +692,8 @@ const App: React.FC = () => {
                         return (
                         <button key={i} onClick={() => setActiveUpdateIndex(i)} className={`relative min-w-[130px] md:min-w-[160px] p-6 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-2xl'}`}>
                             {isAdmin && u.status === 'draft' && <span className="absolute top-2 right-3 text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-extrabold tracking-tight uppercase">Draft</span>}
-                            <span className="text-[8px] md:text-[9px] block text-slate-500 font-extrabold tracking-tight uppercase tracking-widest mb-1">Update {u.weekNumber}</span>
-                            <span className={`text-xs md:text-sm font-extrabold tracking-tight block ${i === activeUpdateIndex ? 'text-white' : 'text-slate-500 group-hover:text-slate-500'}`}>{u.date}</span>
+                            <span className="text-[8px] md:text-[9px] block text-slate-500 font-extrabold tracking-tight uppercase tracking-widest mb-1">Week {u.weekNumber} • {u.date}</span>
+                            <span className={`text-xs md:text-sm font-extrabold tracking-tight block truncate ${i === activeUpdateIndex ? 'text-white' : 'text-slate-500 group-hover:text-slate-500'}`}>{u.title || `Update ${u.weekNumber}`}</span>
                         </button>
                     )})}
                 </div>
@@ -818,6 +818,7 @@ const App: React.FC = () => {
                                         <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Completion %</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.completion} onChange={e => handleUpdateField('stats.completion', parseInt(e.target.value))} /></div>
                                         <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Workers</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
                                     </div>
+                                    <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Title</label><input type="text" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].title || ''} onChange={e => handleUpdateField('title', e.target.value)} /></div>
                                     <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 h-32 resize-none text-sm text-white" value={activeProject.updates[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
                                     <div className="pt-4 border-t border-white/5">
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Visibility Status</label>
