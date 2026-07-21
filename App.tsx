@@ -14,7 +14,7 @@ import { logoutUser } from './services/authService';
 import { supabase } from './services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { WeatherWidget } from './components/WeatherWidget';
-import { ProjectTimeline } from './components/ProjectTimeline';
+import { ProjectCalendar } from './components/ProjectCalendar';
 import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
@@ -22,7 +22,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { BuildingConfigurator } from './components/BuildingConfigurator';
 import { InteractiveViewer } from './components/InteractiveViewer';
 import { UpdateComments } from './components/UpdateComments';
-import { WifiOff, ArrowLeft, Map, LayoutGrid, List, Trash2, ArchiveRestore } from 'lucide-react';
+import { WifiOff, ArrowLeft, Map, LayoutGrid, List, Trash2, ArchiveRestore, ChevronDown, ChevronUp } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { CustomTooltip } from './components/ChartTooltip';
 
@@ -102,6 +102,8 @@ const App: React.FC = () => {
 
   // UI State
   const [isFullScreenMode, setIsFullScreenMode] = useState(false);
+  const [isDiscussionExpanded, setIsDiscussionExpanded] = useState(false);
+  const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
   
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
@@ -741,15 +743,6 @@ const App: React.FC = () => {
                                }}
                            />
                         </div>
-                        
-                        {/* Weekly Discussion Comments */}
-                        {user && activeProject.updates[activeUpdateIndex] && (
-                          <UpdateComments
-                            comments={activeProject.updates[activeUpdateIndex].comments || []}
-                            currentUser={user}
-                            onAddComment={handleAddComment}
-                          />
-                        )}
                     </div>
 
                     <div className="lg:col-span-4 space-y-8 relative z-20">
@@ -951,20 +944,65 @@ const App: React.FC = () => {
                         )}
                     </div>
                 </div>
-                
-                <ProjectTimeline 
-                   updates={isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft')} 
-                   activeIndex={isAdmin ? activeUpdateIndex : activeProject.updates.filter(u => u.status !== 'draft').findIndex(u => u.weekNumber === activeProject.updates[activeUpdateIndex]?.weekNumber)} 
-                   onSelect={(idx) => {
-                       if (isAdmin) {
-                           setActiveUpdateIndex(idx);
-                       } else {
-                           const visible = activeProject.updates.filter(u => u.status !== 'draft');
-                           const originalIdx = activeProject.updates.findIndex(u => u.weekNumber === visible[idx].weekNumber);
-                           setActiveUpdateIndex(originalIdx);
-                       }
-                   }} 
-                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-12">
+                    {/* Weekly Discussion Tab */}
+                    <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
+                        <button 
+                            onClick={() => setIsDiscussionExpanded(!isDiscussionExpanded)}
+                            className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-white/[0.02] transition-colors"
+                        >
+                            <h3 className="text-sm uppercase font-extrabold tracking-tight text-brand-blue tracking-widest flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                Weekly Discussion
+                            </h3>
+                            {isDiscussionExpanded ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
+                        </button>
+                        
+                        {isDiscussionExpanded && user && activeProject.updates[activeUpdateIndex] && (
+                            <div className="p-6 md:p-8 pt-0 border-t border-white/5">
+                                <UpdateComments
+                                    comments={activeProject.updates[activeUpdateIndex].comments || []}
+                                    currentUser={user}
+                                    onAddComment={handleAddComment}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Project Calendar Tab */}
+                    <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
+                        <button 
+                            onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
+                            className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-white/[0.02] transition-colors"
+                        >
+                            <h3 className="text-sm uppercase font-extrabold tracking-tight text-brand-blue tracking-widest flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                Project Calendar
+                            </h3>
+                            {isCalendarExpanded ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
+                        </button>
+
+                        {isCalendarExpanded && (
+                            <div className="p-6 md:p-8 pt-0 border-t border-white/5">
+                                <ProjectCalendar 
+                                    updates={isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft')}
+                                    activeIndex={isAdmin ? activeUpdateIndex : activeProject.updates.filter(u => u.status !== 'draft').findIndex(u => u.weekNumber === activeProject.updates[activeUpdateIndex]?.weekNumber)}
+                                    onSelect={(idx) => {
+                                        if (isAdmin) {
+                                            setActiveUpdateIndex(idx);
+                                        } else {
+                                            const visible = activeProject.updates.filter(u => u.status !== 'draft');
+                                            const originalIdx = activeProject.updates.findIndex(u => u.weekNumber === visible[idx].weekNumber);
+                                            setActiveUpdateIndex(originalIdx);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 </>
                 )}
                 
