@@ -16,6 +16,10 @@ async function startServer() {
 
   app.use(express.json());
 
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   app.post("/api/geocode-location", async (req, res) => {
     try {
       const { query } = req.body;

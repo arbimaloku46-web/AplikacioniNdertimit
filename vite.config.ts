@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
-      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(env.GOOGLE_MAPS_PLATFORM_KEY || '')
+      'process.env.MAPTILER_API_KEY': JSON.stringify(env.MAPTILER_API_KEY || '')
     },
     server: {
     },
