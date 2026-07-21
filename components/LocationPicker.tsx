@@ -18,7 +18,7 @@ interface LocationPickerProps {
 }
 
 const API_KEY = 
-  process.env.MAPTILER_API_KEY || 
+  import.meta.env.VITE_MAPTILER_API_KEY || 
   (import.meta as any).env?.VITE_MAPTILER_API_KEY || 
   (globalThis as any).MAPTILER_API_KEY || 
   '';

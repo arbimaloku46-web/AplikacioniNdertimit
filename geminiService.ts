@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat } from "@google/genai";
-import { WeeklyUpdate, Project } from '../types';
+import { WeeklyUpdate, Project } from './types';
 
 const MAX_RETRIES = 3;
 const BASE_DELAY = 1000;
