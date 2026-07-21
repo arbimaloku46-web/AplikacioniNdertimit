@@ -17,11 +17,8 @@ interface LocationPickerProps {
   readOnly?: boolean;
 }
 
-const API_KEY = 
-  import.meta.env.VITE_MAPTILER_API_KEY || 
-  (import.meta as any).env?.VITE_MAPTILER_API_KEY || 
-  (globalThis as any).MAPTILER_API_KEY || 
-  '';
+declare const __MAPTILER_API_KEY__: string;
+const API_KEY = typeof __MAPTILER_API_KEY__ !== 'undefined' ? __MAPTILER_API_KEY__ : '';
 
 const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
