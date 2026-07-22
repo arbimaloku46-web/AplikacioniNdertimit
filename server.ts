@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import http from "http";
 
 dotenv.config();
+process.env.VITE_MAPTILER_API_KEY = process.env.MAPTILER_API_KEY;
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 

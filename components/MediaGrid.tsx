@@ -403,12 +403,12 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
             type: "custom-image", // Override default image type
             src: item.url,
           };
-        })}
+        }) as any}
         render={{
             slide: ({ slide }) => {
                 const mediaItem = media.find(m => m.id === (slide as any).mediaId);
 
-                if (slide.type === "custom-video") {
+                if ((slide as any).type === "custom-video") {
                     return (
                         <div className="w-full h-full flex items-center justify-center p-6 md:p-12">
                             <div className="relative w-full max-w-[1280px] aspect-video max-h-[80vh] shadow-2xl">
@@ -426,12 +426,12 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                     );
                 }
 
-                if (slide.type === "custom-image") {
+                if ((slide as any).type === "custom-image") {
                     return (
                         <div className="relative inline-flex items-center justify-center max-w-full max-h-full shadow-2xl">
                             <img 
                                 src={(slide as any).src} 
-                                alt={slide.title} 
+                                alt={(slide as any).title} 
                                 className="max-w-full max-h-[80vh] w-auto h-auto object-contain pointer-events-none" 
                                 draggable={false}
                             />

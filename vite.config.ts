@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
-      '__MAPTILER_API_KEY__': JSON.stringify(env.MAPTILER_API_KEY || '')
+      'import.meta.env.VITE_MAPTILER_API_KEY': JSON.stringify(env.MAPTILER_API_KEY || '')
     },
     server: {
     },
