@@ -3,13 +3,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Merge with process.env to ensure system variables are captured.
   const loadedEnv = loadEnv(mode, (process as any).cwd(), '');
   const env = { ...process.env, ...loadedEnv };
-
   return {
     resolve: {
       alias: {
@@ -20,29 +16,10 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        injectRegister: null,
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-          runtimeCaching: [
-            {
-              urlPattern: ({ url, request }) => 
-                request.destination === 'image' || 
-                request.destination === 'video' || 
-                request.destination === 'audio' ||
-                url.pathname.match(/\.(mp4|webm|mkv|jpg|jpeg|png|gif|webp|svg)$/i),
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'media-cache',
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 30 * 24 * 60 * 60 // 30 Days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            }
-          ]
+          clientsClaim: true,
+          skipWaiting: true
         },
         manifest: {
           name: 'Shiko Progresin',
@@ -68,7 +45,7 @@ export default defineConfig(({ mode }) => {
               src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any'  
+              purpose: 'any'
             },
             {
               src: 'maskable-icon-512x512.png',
@@ -87,7 +64,7 @@ export default defineConfig(({ mode }) => {
     server: {
     },
     build: {
-      outDir: 'dist', // Changed from 'build' to 'dist' for Vercel compatibility
+      outDir: 'dist',
       emptyOutDir: true,
       chunkSizeWarningLimit: 1000,
     }
