@@ -17,7 +17,7 @@ interface DashboardMapProps {
   onProjectClick: (project: Project) => void;
 }
 
-const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY || '';
+const API_KEY = '2XSQoYHYmYcpza7rCRwj';
 
 const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
