@@ -42,6 +42,22 @@ const BoundsFitter = ({ projects }: { projects: Project[] }) => {
   return null;
 };
 
+const MapInvalidator = () => {
+  const map = useMap();
+  useEffect(() => {
+    const timer1 = setTimeout(() => map.invalidateSize(), 100);
+    const timer2 = setTimeout(() => map.invalidateSize(), 500);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+  return null;
+};
+
 export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectClick }) => {
   const mapCenter = { lat: 41.3275, lng: 19.8187 }; // Default center (Tirana)
 
@@ -78,8 +94,9 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
         zoom={11} 
         style={{ height: '100%', width: '100%', background: '#020617' }}
       >
+        <MapInvalidator />
         <TileLayer
-          attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+          attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a>'
           url={`https://api.maptiler.com/maps/basic-v2-dark/{z}/{x}/{y}.png?key=${API_KEY}`}
         />
         <BoundsFitter projects={mappedProjects} />

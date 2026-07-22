@@ -109,6 +109,24 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
     return null;
   }
 
+  const MapInvalidator = () => {
+    const map = useMapEvents({});
+    useEffect(() => {
+      const timer1 = setTimeout(() => map.invalidateSize(), 100);
+      const timer2 = setTimeout(() => map.invalidateSize(), 500);
+      const handleResize = () => map.invalidateSize();
+      window.addEventListener('resize', handleResize);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        window.removeEventListener('resize', handleResize);
+      };
+    }, [map]);
+    return null;
+  };
+  
+  
+
   return (
     <div className="w-full h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40 relative z-10 group">
       {!readOnly && (
@@ -139,8 +157,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
         scrollWheelZoom={!readOnly}
         doubleClickZoom={!readOnly}
       >
+        <MapInvalidator />
         <TileLayer
-          attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+          attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> '
           url={`https://api.maptiler.com/maps/basic-v2-dark/{z}/{x}/{y}.png?key=${API_KEY}`}
         />
         <LocationMarker position={position} setPosition={setPosition} onLocationSelect={onLocationSelect} readOnly={readOnly} />
