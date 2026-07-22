@@ -1,4 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+const fs = require('fs');
+
+const maptilerLocationPicker = `import React, { useRef, useEffect, useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 
@@ -104,7 +106,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
 
   const openMap = () => {
     if (position) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${position.lat},${position.lng}`, '_blank');
+      window.open(\`https://www.google.com/maps/search/?api=1&query=\${position.lat},\${position.lng}\`, '_blank');
     }
   };
 
@@ -146,3 +148,112 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
     </div>
   );
 };
+`;
+
+fs.writeFileSync('components/LocationPicker.tsx', maptilerLocationPicker);
+
+const maptilerDashboardMap = `import React, { useRef, useEffect } from 'react';
+import { Project } from '../types';
+import * as maptilersdk from '@maptiler/sdk';
+import '@maptiler/sdk/dist/maptiler-sdk.css';
+
+interface DashboardMapProps {
+  projects: Project[];
+  onProjectClick: (project: Project) => void;
+}
+
+const API_KEY = '2XSQoYHYmYcpza7rCRwj';
+maptilersdk.config.apiKey = API_KEY;
+
+export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectClick }) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maptilersdk.Map | null>(null);
+  const markersRef = useRef<maptilersdk.Marker[]>([]);
+
+  const mappedProjects = projects.filter(p => p.coordinates);
+
+  useEffect(() => {
+    if (mapContainer.current && mappedProjects.length > 0 && !map.current) {
+      map.current = new maptilersdk.Map({
+        container: mapContainer.current,
+        style: maptilersdk.MapStyle.DATAVIZ.DARK,
+        center: [19.8187, 41.3275],
+        zoom: 11,
+      });
+      
+      const timer = setTimeout(() => {
+          if (map.current) map.current.resize();
+      }, 500);
+
+      const bounds = new maptilersdk.LngLatBounds();
+      
+      mappedProjects.forEach(project => {
+        if (!project.coordinates) return;
+        
+        const el = document.createElement('div');
+        el.className = 'w-4 h-4 bg-brand-blue rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform';
+        
+        const popupHtml = \`
+          <div class="p-1 min-w-[150px] font-sans">
+              <h4 class="font-extrabold text-slate-800 text-sm mb-1">\${project.name}</h4>
+              <p class="text-xs text-slate-500 mb-3">\${project.location}</p>
+              <button 
+                  id="btn-project-\${project.id}"
+                  class="w-full bg-[#0051ff] text-white text-[10px] font-extrabold uppercase tracking-widest py-2 rounded-lg hover:bg-blue-600 transition-all"
+              >
+                  View Project
+              </button>
+          </div>
+        \`;
+
+        const popup = new maptilersdk.Popup({ offset: 15, className: 'custom-maptiler-popup' })
+            .setHTML(popupHtml);
+
+        popup.on('open', () => {
+            setTimeout(() => {
+                const btn = document.getElementById(\`btn-project-\${project.id}\`);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        onProjectClick(project);
+                    });
+                }
+            }, 10);
+        });
+
+        const marker = new maptilersdk.Marker({ element: el })
+          .setLngLat([project.coordinates.lng, project.coordinates.lat])
+          .setPopup(popup)
+          .addTo(map.current!);
+          
+        markersRef.current.push(marker);
+        bounds.extend([project.coordinates.lng, project.coordinates.lat]);
+      });
+
+      if (!bounds.isEmpty()) {
+        map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+      }
+    }
+  }, [mappedProjects]);
+
+  if (mappedProjects.length === 0) { 
+    return null;
+  }
+
+  return (
+    <div className="w-full h-96 rounded-3xl overflow-hidden border border-white/5 relative z-10 shadow-2xl mt-12 mb-12">
+      <div ref={mapContainer} className="w-full h-full bg-[#020617]" />
+      
+      <style dangerouslySetInnerHTML={{__html: \`
+        .custom-maptiler-popup .maplibregl-popup-content {
+          border-radius: 16px;
+          padding: 12px;
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+      \`}} />
+    </div>
+  );
+};
+`;
+
+fs.writeFileSync('components/DashboardMap.tsx', maptilerDashboardMap);
+

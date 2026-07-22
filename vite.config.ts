@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         injectRegister: null,
         workbox: {
           clientsClaim: true,
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           skipWaiting: true
         },
         manifest: {
