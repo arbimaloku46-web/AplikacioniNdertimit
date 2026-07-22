@@ -77,7 +77,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
 
   const openMap = () => {
     if (position) {
-      window.open(`https://www.openstreetmap.org/?mlat=${position.lat}&mlon=${position.lng}#map=15/${position.lat}/${position.lng}`, '_blank');
+      window.open(`https://www.google.com/maps/search/?api=1&query=${position.lat},${position.lng}`, '_blank');
     }
   };
 

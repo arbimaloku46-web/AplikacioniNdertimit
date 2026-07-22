@@ -10,6 +10,7 @@ const mapFromDB = (row: any): Project => {
   let description = row.description || '';
   let interactiveBuilding = undefined;
   let deletedAt = undefined;
+  let coordinates = undefined;
   
   if (description.includes(META_SEPARATOR)) {
     const parts = description.split(META_SEPARATOR);
@@ -17,6 +18,7 @@ const mapFromDB = (row: any): Project => {
     try {
       const meta = JSON.parse(parts[1]);
       deletedAt = meta.deletedAt;
+      coordinates = meta.coordinates;
     } catch(e) {
       console.error('Failed to parse meta data', e);
     }
@@ -43,6 +45,7 @@ const mapFromDB = (row: any): Project => {
     updates: row.updates || [],
     interactiveBuilding: interactiveBuilding,
     deletedAt: deletedAt,
+    coordinates: coordinates,
   };
 };
 
@@ -52,8 +55,11 @@ const mapToDB = (project: Project) => {
     description += IB_SEPARATOR + JSON.stringify(project.interactiveBuilding);
   }
   
-  if (project.deletedAt) {
-    description += META_SEPARATOR + JSON.stringify({ deletedAt: project.deletedAt });
+  let meta: any = {};
+  if (project.deletedAt) meta.deletedAt = project.deletedAt;
+  if (project.coordinates) meta.coordinates = project.coordinates;
+  if (Object.keys(meta).length > 0) {
+    description += META_SEPARATOR + JSON.stringify(meta);
   }
 
   return {
