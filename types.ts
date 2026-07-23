@@ -41,6 +41,7 @@ export interface WeeklyUpdate {
     completion: number;
     workersOnSite: number;
     weatherConditions: string;
+    workerBreakdown?: { type: string; count: number }[];
   };
 }
 
