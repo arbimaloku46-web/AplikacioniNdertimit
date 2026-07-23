@@ -42,7 +42,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
         style: maptilersdk.MapStyle.DATAVIZ.DARK,
         center: [defaultCenter.lng, defaultCenter.lat],
         zoom: 13,
-        interactive: !readOnly,
+        interactive: true,
+        navigationControl: false,
+        geolocateControl: false,
+        maptilerLogo: false,
       });
 
       if (position) {
@@ -130,6 +133,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
       )}
       
       <div ref={mapContainer} className="w-full h-full bg-[#020617]" />
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        .maplibregl-control-container,
+        .maplibregl-ctrl-bottom-left,
+        .maplibregl-ctrl-bottom-right,
+        .maplibregl-ctrl-attrib,
+        .maptiler-logo {
+          display: none !important;
+        }
+      `}} />
 
       {readOnly && position && (
         <button 

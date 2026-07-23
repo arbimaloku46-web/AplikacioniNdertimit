@@ -15,7 +15,6 @@ import { supabase } from './services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { WeatherWidget } from './components/WeatherWidget';
 import { ProjectCalendar } from './components/ProjectCalendar';
-import { DashboardMap } from './components/DashboardMap';
 import { LocationPicker } from './components/LocationPicker';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -552,13 +551,7 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 
-                {/* Project Map View */}
-                {!loadingProjects && activeProjectsList.length > 0 && (
-                    <DashboardMap 
-                        projects={activeProjectsList} 
-                        onProjectClick={handleProjectSelect} 
-                    />
-                )}
+
 
                 {loadingProjects ? (
                     <div className="flex items-center justify-center py-20">
