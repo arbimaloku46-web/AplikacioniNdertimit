@@ -384,6 +384,24 @@ const App: React.FC = () => {
     try { await dbService.updateProject(updatedProject); } catch {}
   };
 
+  const handleUpdateFields = async (updates: Record<string, any>) => {
+    if (!activeProject) return;
+    const updatedUpdates = [...activeProject.updates];
+    const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
+    
+    Object.entries(updates).forEach(([field, value]) => {
+        if (field.startsWith('stats.')) {
+            const statKey = field.split('.')[1];
+            currentUpdate.stats = { ...currentUpdate.stats, [statKey]: value };
+        } else { (currentUpdate as any)[field] = value; }
+    });
+    
+    updatedUpdates[activeUpdateIndex] = currentUpdate;
+    const updatedProject = { ...activeProject, updates: updatedUpdates };
+    setActiveProject(updatedProject);
+    try { await dbService.updateProject(updatedProject); } catch {}
+  };
+
   const handleAddComment = async (text: string) => {
     if (!activeProject || !user) return;
     const updatedUpdates = [...activeProject.updates];
@@ -811,21 +829,25 @@ const App: React.FC = () => {
                                             <div key={idx} className="flex gap-2 mb-2 items-center">
                                                 <input className="flex-1 bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-xl px-4 py-2 text-xs text-white" placeholder="Type (e.g. Facade)" value={wb.type} onChange={e => {
                                                     const newBreakdown = [...(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || [])];
-                                                    newBreakdown[idx].type = e.target.value;
+                                                    newBreakdown[idx] = { ...newBreakdown[idx], type: e.target.value };
                                                     handleUpdateField('stats.workerBreakdown', newBreakdown);
                                                 }} />
-                                                <input type="number" className="w-20 bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-xl px-4 py-2 text-xs text-white" placeholder="Count" value={wb.count} onChange={e => {
+                                                <input type="number" className="w-20 bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-xl px-4 py-2 text-xs text-white" placeholder="Count" value={wb.count || ''} onChange={e => {
                                                     const newBreakdown = [...(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || [])];
-                                                    newBreakdown[idx].count = parseInt(e.target.value) || 0;
-                                                    handleUpdateField('stats.workerBreakdown', newBreakdown);
+                                                    newBreakdown[idx] = { ...newBreakdown[idx], count: parseInt(e.target.value) || 0 };
                                                     const total = newBreakdown.reduce((sum, item) => sum + item.count, 0);
-                                                    handleUpdateField('stats.workersOnSite', total);
+                                                    handleUpdateFields({
+                                                        'stats.workerBreakdown': newBreakdown,
+                                                        'stats.workersOnSite': total
+                                                    });
                                                 }} />
                                                 <button className="text-red-500 p-2 hover:bg-red-500/10 rounded-lg transition-colors" onClick={() => {
                                                     const newBreakdown = (activeProject.updates[activeUpdateIndex].stats.workerBreakdown || []).filter((_, i) => i !== idx);
-                                                    handleUpdateField('stats.workerBreakdown', newBreakdown);
                                                     const total = newBreakdown.reduce((sum, item) => sum + item.count, 0);
-                                                    handleUpdateField('stats.workersOnSite', total);
+                                                    handleUpdateFields({
+                                                        'stats.workerBreakdown': newBreakdown,
+                                                        'stats.workersOnSite': total
+                                                    });
                                                 }}><Trash2 className="w-4 h-4" /></button>
                                             </div>
                                         ))}
