@@ -132,6 +132,7 @@ const App: React.FC = () => {
   // Admin Edit State
   const [newMediaCategory, setNewMediaCategory] = useState<'inside' | 'outside' | 'drone' | 'interior' | 'other'>('outside');
   const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
 
   // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -426,6 +427,22 @@ const App: React.FC = () => {
     const updatedProject = { ...activeProject, [field]: value };
     setActiveProject(updatedProject);
     try { await dbService.updateProject(updatedProject); } catch {}
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files.length || !activeProject) return;
+    const file = e.target.files[0];
+    
+    setIsUploadingThumbnail(true);
+    try {
+        const downloadUrl = await dbService.uploadFile(file, activeProject.id);
+        await handleProjectField('thumbnailUrl', downloadUrl);
+    } catch (error) {
+        console.error("Failed to upload thumbnail", error);
+        alert("Failed to upload image");
+    } finally {
+        setIsUploadingThumbnail(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -788,6 +805,30 @@ const App: React.FC = () => {
                             {isAdmin ? (
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-2 gap-6">
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Project Name</label><input className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.name} onChange={e => handleProjectField('name', e.target.value)} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Project Client</label><input className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.clientName} onChange={e => handleProjectField('clientName', e.target.value)} /></div>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5 flex gap-6 items-center">
+                                        <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-lg relative">
+                                            {isUploadingThumbnail && (
+                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 backdrop-blur-sm">
+                                                    <div className="w-6 h-6 border-2 border-white/30 border-t-brand-blue rounded-full animate-spin" />
+                                                </div>
+                                            )}
+                                            <img src={activeProject.thumbnailUrl} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Main Project Photo</label>
+                                            <div className="relative group overflow-hidden inline-block">
+                                                <button className="bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 text-white px-6 py-3 rounded-2xl text-sm font-extrabold tracking-tight hover:border-brand-blue/50 transition-all cursor-pointer inline-flex items-center gap-2">
+                                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                                    Upload New Photo
+                                                </button>
+                                                <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" disabled={isUploadingThumbnail} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
                                         <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Project Location</label><input className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.location} onChange={e => handleProjectField('location', e.target.value)} /></div>
                                         <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Date</label><input type="date" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white [color-scheme:dark]" value={activeProject.updates[activeUpdateIndex].date} onChange={e => handleUpdateField('date', e.target.value)} /></div>
                                     </div>
