@@ -15,6 +15,7 @@ interface MediaGridProps {
   onFullScreenChange?: (isFullScreen: boolean) => void;
   isAdmin?: boolean;
   onMediaUpdate?: (mediaId: string, updatedMedia: MediaItem) => void;
+  onMediaReorder?: (newMediaOrder: MediaItem[]) => void;
 }
 
 type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
@@ -206,10 +207,41 @@ const HotspotEditorOverlay: React.FC<{
 
 // --- Main MediaGrid Component ---
 
-export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange, isAdmin, onMediaUpdate }) => {
+export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange, isAdmin, onMediaUpdate, onMediaReorder }) => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const canReorder = isAdmin && activeFilter === 'all' && activeTab === 'all';
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!canReorder) return;
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canReorder) return;
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    if (!canReorder) return;
+    e.preventDefault();
+    if (draggedId && draggedId !== targetId) {
+      const draggedIndex = media.findIndex(m => m.id === draggedId);
+      const targetIndex = media.findIndex(m => m.id === targetId);
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const newMedia = [...media];
+        const [moved] = newMedia.splice(draggedIndex, 1);
+        newMedia.splice(targetIndex, 0, moved);
+        if (onMediaReorder) onMediaReorder(newMedia);
+      }
+    }
+    setDraggedId(null);
+  };
 
   // Trigger parent full screen state
   useEffect(() => {
@@ -282,21 +314,28 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
           </div>
         </div>
 
-        {/* Filter Scrollable Bar */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveFilter(cat.id)}
-              className={`flex-shrink-0 px-5 py-2 rounded-full text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all border ${
-                activeFilter === cat.id 
-                  ? 'bg-white text-brand-dark border-white' 
-                  : 'bg-white/5 text-slate-500 border-white/5'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveFilter(cat.id)}
+                  className={`flex-shrink-0 px-5 py-2 rounded-full text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all border ${
+                    activeFilter === cat.id 
+                      ? 'bg-white text-brand-dark border-white' 
+                      : 'bg-white/5 text-slate-500 border-white/5'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            {canReorder && (
+                <div className="hidden md:flex text-[10px] text-slate-500 uppercase tracking-widest font-extrabold items-center gap-1">
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9h14M5 15h14" strokeLinecap="round"/></svg>
+                    Drag to reorder
+                </div>
+            )}
         </div>
       </div>
 
@@ -336,13 +375,17 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                     <div 
                                         key={item.id}
                                         onClick={() => setLightboxIndex(index)}
+                                        draggable={canReorder}
+                                        onDragStart={(e) => handleDragStart(e, item.id)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, item.id)}
                                         style={{ width: `${itemSize}px`, height: `${itemSize}px` }}
-                                        className="relative cursor-pointer group overflow-hidden bg-slate-900/90 backdrop-blur-2xl rounded-lg"
+                                        className={`relative cursor-pointer group overflow-hidden bg-slate-900/90 backdrop-blur-2xl rounded-lg transition-transform ${draggedId === item.id ? 'opacity-50 scale-95' : ''} ${canReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
                                     >
                                         <img 
                                             src={thumbUrl} 
                                             alt={item.description}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
                                             loading="lazy"
                                             decoding="async"
                                         />

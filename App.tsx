@@ -769,6 +769,9 @@ const App: React.FC = () => {
                                    const newMedia = activeProject.updates[activeUpdateIndex].media.map(m => m.id === mediaId ? updatedMedia : m);
                                    handleUpdateField('media', newMedia);
                                }}
+                               onMediaReorder={(newMediaOrder) => {
+                                   handleUpdateField('media', newMediaOrder);
+                               }}
                            />
                         </div>
                     </div>
