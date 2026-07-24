@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from "motion/react";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { MediaItem, Hotspot } from '../types';
+import { Edit2, Check, X } from 'lucide-react';
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Video from "yet-another-react-lightbox/plugins/video";
@@ -212,6 +213,8 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'photos'>('all');
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [editingCaptionId, setEditingCaptionId] = useState<string | null>(null);
+  const [editCaptionText, setEditCaptionText] = useState('');
 
   const canReorder = isAdmin && activeFilter === 'all' && activeTab === 'all';
 
@@ -374,8 +377,12 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                 return (
                                     <div 
                                         key={item.id}
-                                        onClick={() => setLightboxIndex(index)}
-                                        draggable={canReorder}
+                                        onClick={() => {
+                                            if (editingCaptionId !== item.id) {
+                                                setLightboxIndex(index);
+                                            }
+                                        }}
+                                        draggable={canReorder && editingCaptionId !== item.id}
                                         onDragStart={(e) => handleDragStart(e, item.id)}
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, item.id)}
@@ -397,6 +404,51 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                             </>
                                         )}
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 ease-in-out" />
+                                        
+                                        {isAdmin && editingCaptionId !== item.id && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingCaptionId(item.id);
+                                                    setEditCaptionText(item.description || '');
+                                                }}
+                                                className="absolute top-2 left-2 p-1.5 bg-black/60 hover:bg-black/80 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+
+                                        {isAdmin && editingCaptionId === item.id && (
+                                            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-30 p-3 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
+                                                <label className="text-[10px] text-brand-blue uppercase font-extrabold tracking-tight mb-2 block">Edit Caption</label>
+                                                <textarea 
+                                                    value={editCaptionText}
+                                                    onChange={(e) => setEditCaptionText(e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-2 text-xs text-white resize-none h-16 focus:border-brand-blue focus:outline-none mb-2"
+                                                    placeholder="Enter description..."
+                                                    autoFocus
+                                                />
+                                                <div className="flex gap-2 justify-end">
+                                                    <button 
+                                                        onClick={() => setEditingCaptionId(null)}
+                                                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            if (onMediaUpdate) {
+                                                                onMediaUpdate(item.id, { ...item, description: editCaptionText });
+                                                            }
+                                                            setEditingCaptionId(null);
+                                                        }}
+                                                        className="p-1.5 bg-brand-blue hover:bg-brand-blue/80 rounded-lg text-white transition-colors shadow-lg shadow-brand-blue/20"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
