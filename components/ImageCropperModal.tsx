@@ -1,0 +1,100 @@
+import React, { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../lib/cropImage';
+import { X } from 'lucide-react';
+
+interface ImageCropperModalProps {
+    imageSrc: string;
+    onClose: () => void;
+    onCropComplete: (croppedFile: File) => void;
+    aspectRatio?: number;
+}
+
+export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ 
+    imageSrc, 
+    onClose, 
+    onCropComplete,
+    aspectRatio = 16 / 9
+}) => {
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const onCropCompleteHandler = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const handleSave = async () => {
+        if (!croppedAreaPixels) return;
+        setIsProcessing(true);
+        try {
+            const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels);
+            if (croppedFile) {
+                onCropComplete(croppedFile);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8">
+            <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col h-[80vh]">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                    <h3 className="text-white font-extrabold tracking-tight uppercase text-sm">Crop Image</h3>
+                    <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                
+                <div className="relative flex-1 bg-black">
+                    <Cropper
+                        image={imageSrc}
+                        crop={crop}
+                        zoom={zoom}
+                        aspect={aspectRatio}
+                        onCropChange={setCrop}
+                        onCropComplete={onCropCompleteHandler}
+                        onZoomChange={setZoom}
+                    />
+                </div>
+                
+                <div className="p-6 border-t border-white/10 flex flex-col md:flex-row items-center gap-6 justify-between bg-slate-900">
+                    <div className="flex-1 w-full flex items-center gap-4">
+                        <label className="text-white text-xs font-bold">Zoom</label>
+                        <input
+                            type="range"
+                            value={zoom}
+                            min={1}
+                            max={3}
+                            step={0.1}
+                            aria-labelledby="Zoom"
+                            onChange={(e) => {
+                                setZoom(Number(e.target.value))
+                            }}
+                            className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                    <div className="flex gap-4 w-full md:w-auto">
+                        <button 
+                            onClick={onClose}
+                            className="flex-1 md:flex-none px-6 py-3 rounded-2xl text-white font-extrabold uppercase text-xs tracking-wider border border-white/10 hover:bg-white/5 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={handleSave}
+                            disabled={isProcessing}
+                            className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-brand-blue text-white font-extrabold uppercase text-xs tracking-wider shadow-lg hover:shadow-brand-blue/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isProcessing ? 'Saving...' : 'Apply Crop'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};

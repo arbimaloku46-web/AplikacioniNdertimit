@@ -21,6 +21,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { BuildingConfigurator } from './components/BuildingConfigurator';
 import { InteractiveViewer } from './components/InteractiveViewer';
 import { UpdateComments } from './components/UpdateComments';
+import { ImageCropperModal } from './components/ImageCropperModal';
 import { WifiOff, ArrowLeft, Map, LayoutGrid, List, Trash2, ArchiveRestore, ChevronDown, ChevronUp } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { CustomTooltip } from './components/ChartTooltip';
@@ -133,6 +134,7 @@ const App: React.FC = () => {
   const [newMediaCategory, setNewMediaCategory] = useState<'inside' | 'outside' | 'drone' | 'interior' | 'other'>('outside');
   const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -433,9 +435,16 @@ const App: React.FC = () => {
     if (!e.target.files || !e.target.files.length || !activeProject) return;
     const file = e.target.files[0];
     
+    // Set for cropping instead of direct upload
+    setCropImageSrc(URL.createObjectURL(file));
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    if (!activeProject) return;
+    setCropImageSrc(null);
     setIsUploadingThumbnail(true);
     try {
-        const downloadUrl = await dbService.uploadFile(file, activeProject.id);
+        const downloadUrl = await dbService.uploadFile(croppedFile, activeProject.id);
         await handleProjectField('thumbnailUrl', downloadUrl);
     } catch (error) {
         console.error("Failed to upload thumbnail", error);
@@ -529,6 +538,13 @@ const App: React.FC = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
     >
+      {cropImageSrc && (
+          <ImageCropperModal
+              imageSrc={cropImageSrc}
+              onClose={() => setCropImageSrc(null)}
+              onCropComplete={handleCropComplete}
+          />
+      )}
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500/90 text-white px-6 py-2.5 text-xs font-extrabold tracking-tight flex items-center justify-center shadow-lg shadow-amber-500/20 backdrop-blur-md">
           <WifiOff className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -827,7 +843,7 @@ const App: React.FC = () => {
                                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                                     Upload New Photo
                                                 </button>
-                                                <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" disabled={isUploadingThumbnail} />
+                                                <input type="file" accept="image/*" onChange={(e) => { handleThumbnailUpload(e); e.target.value = ''; }} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" disabled={isUploadingThumbnail} />
                                             </div>
                                         </div>
                                     </div>
