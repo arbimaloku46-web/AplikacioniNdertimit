@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import http from "http";
 
@@ -11,6 +12,8 @@ process.env.MAPTILER_API_KEY = '2XSQoYHYmYcpza7rCRwj';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://kfodljdnoaapfsocmywl.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -20,6 +23,45 @@ async function startServer() {
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.delete("/api/delete-account", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Missing or invalid authorization header" });
+      }
+
+      if (!SUPABASE_SERVICE_ROLE_KEY) {
+        return res.status(500).json({ error: "SUPABASE_SERVICE_ROLE_KEY is not configured on the server." });
+      }
+
+      const token = authHeader.split(" ")[1];
+      
+      const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+      
+      if (userError || !user) {
+        return res.status(401).json({ error: "Invalid token or user not found" });
+      }
+
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ error: error.message || "Failed to delete account" });
+    }
   });
 
   app.post("/api/geocode-location", async (req, res) => {

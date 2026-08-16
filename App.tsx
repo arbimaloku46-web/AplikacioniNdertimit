@@ -316,6 +316,34 @@ const App: React.FC = () => {
       setCurrentView(AppView.HOME);
   };
 
+  const handleDeleteAccount = async () => {
+      if (!confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) return;
+      
+      try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error("No active session");
+          
+          const response = await fetch('/api/delete-account', {
+              method: 'DELETE',
+              headers: {
+                  'Authorization': `Bearer ${session.access_token}`
+              }
+          });
+          
+          const data = await response.json();
+          if (!response.ok) {
+              throw new Error(data.error || 'Failed to delete account');
+          }
+          
+          // User is deleted from backend, now log out locally
+          await handleLogout();
+          alert("Your account has been permanently deleted.");
+      } catch (err: any) {
+          console.error("Error deleting account:", err);
+          alert(err.message || "An error occurred while deleting your account. Please ensure the server has SUPABASE_SERVICE_ROLE_KEY configured.");
+      }
+  };
+
   const handleProjectSelect = (project: Project) => {
     setActiveProject(project);
     let firstIndex = 0;
@@ -1189,10 +1217,18 @@ const App: React.FC = () => {
 
                         <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-xl">
                              <h3 className="text-xs font-extrabold tracking-tight text-slate-500 uppercase tracking-widest mb-4">Account Security</h3>
-                             <Button variant="secondary" onClick={handleLogout} className="w-full !bg-red-500/10 !text-red-400 !border-red-500/20 hover:!bg-red-500/20 hover:!border-red-500/40 justify-between group">
-                                <span>{text.signOut}</span>
-                                <svg className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
-                             </Button>
+                             <div className="space-y-4">
+                               <Button variant="secondary" onClick={handleLogout} className="w-full !bg-white/5 !text-slate-300 !border-white/10 hover:!bg-white/10 hover:!text-white hover:!border-white/20 justify-between group">
+                                  <span>{text.signOut}</span>
+                                  <svg className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4" /></svg>
+                               </Button>
+                               <div className="pt-4 border-t border-white/5">
+                                   <Button variant="secondary" onClick={handleDeleteAccount} className="w-full !bg-red-500/10 !text-red-400 !border-red-500/20 hover:!bg-red-500/20 hover:!border-red-500/40 justify-between group">
+                                      <span>Delete Account</span>
+                                      <Trash2 className="w-5 h-5 opacity-50 group-hover:scale-110 transition-transform" />
+                                   </Button>
+                               </div>
+                             </div>
                         </div>
                     </div>
 
