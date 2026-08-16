@@ -12,7 +12,7 @@ process.env.MAPTILER_API_KEY = '2XSQoYHYmYcpza7rCRwj';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://kfodljdnoaapfsocmywl.supabase.co";
+const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || "https://kfodljdnoaapfsocmywl.supabase.co").replace(/\/rest\/v1\/?$/, "");
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 async function startServer() {
   const app = express();
@@ -25,7 +25,7 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  app.all("/server-api/delete-account", async (req, res) => {
+  app.all("/api/delete-account", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith("Bearer ")) {

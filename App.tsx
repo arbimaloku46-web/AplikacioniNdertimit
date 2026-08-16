@@ -323,7 +323,7 @@ const App: React.FC = () => {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) throw new Error("No active session");
           
-          const response = await fetch('/server-api/delete-account', {
+          const response = await fetch('/api/delete-account', {
               method: 'POST',
               headers: {
                   'Authorization': `Bearer ${session.access_token}`
