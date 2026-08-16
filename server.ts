@@ -25,7 +25,7 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  app.delete("/api/delete-account", async (req, res) => {
+  app.post("/api/delete-account", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith("Bearer ")) {

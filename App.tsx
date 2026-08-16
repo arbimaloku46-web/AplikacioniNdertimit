@@ -324,7 +324,7 @@ const App: React.FC = () => {
           if (!session) throw new Error("No active session");
           
           const response = await fetch('/api/delete-account', {
-              method: 'DELETE',
+              method: 'POST',
               headers: {
                   'Authorization': `Bearer ${session.access_token}`
               }
