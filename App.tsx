@@ -323,16 +323,24 @@ const App: React.FC = () => {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) throw new Error("No active session");
           
-          const response = await fetch('/api/delete-account', {
+          const response = await fetch('/server-api/delete-account', {
               method: 'POST',
               headers: {
                   'Authorization': `Bearer ${session.access_token}`
               }
           });
           
-          const data = await response.json();
+          let data;
+          const text = await response.text();
+          try {
+              data = JSON.parse(text);
+          } catch (e) {
+              console.error("Non-JSON response from server:", text);
+              throw new Error(`Unexpected server response: ${text.substring(0, 50)}...`);
+          }
+          
           if (!response.ok) {
-              throw new Error(data.error || 'Failed to delete account');
+              throw new Error(data?.error || 'Failed to delete account');
           }
           
           // User is deleted from backend, now log out locally

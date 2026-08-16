@@ -21,11 +21,11 @@ async function startServer() {
 
   app.use(express.json());
 
-  app.get("/api/health", (req, res) => {
+  app.get("/server-api/health", (req, res) => {
     res.json({ status: "ok" });
   });
 
-  app.all("/api/delete-account", async (req, res) => {
+  app.all("/server-api/delete-account", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
