@@ -5,25 +5,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  isLoading, 
-  className = '', 
-  ...props 
-}) => {
-  const baseStyles = "px-8 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+export const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', isLoading, className = '', ...props }) => {
+  const baseStyles = "px-6 py-3 font-semibold transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-base";
   
   const variants = {
-    primary: "bg-brand-blue hover:bg-[#1a4d85] hover:scale-[1.02] active:scale-95 transition-all duration-300 ease-in-out text-white shadow-[0_0_15px_rgba(34,100,171,0.3)] hover:shadow-[0_0_25px_rgba(34,100,171,0.5)]",
-    secondary: "bg-slate-800/80 backdrop-blur-xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 text-white border border-white/5 shadow-2xl shadow-black/40",
-    outline: "border border-brand-blue/50 text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95",
-    ghost: "text-slate-500 hover:text-white hover:bg-white/5"
+    primary: "bg-white text-[#0a0a0a] hover:bg-zinc-200 border border-transparent",
+    secondary: "bg-[#18181b] text-zinc-300 hover:text-white border border-[#27272a] hover:border-[#3f3f46]",
+    outline: "border border-zinc-700 text-zinc-300 hover:bg-[#18181b] hover:text-white",
+    ghost: "text-zinc-400 hover:text-zinc-100 hover:bg-[#18181b]"
   };
 
   return (
     <button 
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${className}`} 
       disabled={isLoading || props.disabled}
       {...props}
     >
