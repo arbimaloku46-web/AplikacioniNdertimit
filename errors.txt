@@ -1,0 +1,363 @@
+App.tsx(593,8): error TS17008: JSX element 'header' has no corresponding closing tag.
+App.tsx(595,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(597,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(626,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(636,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(639,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(655,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(702,9): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(704,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(707,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(712,5): error TS1109: Expression expected.
+App.tsx(713,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(715,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(725,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(735,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(750,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(758,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(760,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(762,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(767,14): error TS17008: JSX element 'form' has no corresponding closing tag.
+App.tsx(772,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(788,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(804,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(820,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(850,15): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(853,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(855,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(858,12): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(860,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(862,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(873,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(875,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(902,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(907,15): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(910,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(919,24): error TS17008: JSX element 'motion.div' has no corresponding closing tag.
+App.tsx(932,56): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(935,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(952,29): error TS1003: Identifier expected.
+App.tsx(954,27): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(956,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(988,29): error TS1003: Identifier expected.
+App.tsx(989,26): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(990,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(991,23): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1021,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1022,17): error TS1003: Identifier expected.
+App.tsx(1023,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1024,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(1027,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1030,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1035,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1038,10): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(1040,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1051,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1053,11): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(1054,8): error TS1005: ':' expected.
+App.tsx(1057,10): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(1059,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1091,11): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(1092,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1095,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1096,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1146,4): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1148,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1152,8): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(1155,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1157,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1185,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1246,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1251,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1253,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1256,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1269,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1309,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1311,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1336,15): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(1339,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1341,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1343,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1345,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1348,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1364,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1389,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1415,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1418,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1423,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1486,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1488,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1490,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1502,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1518,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1520,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1523,34): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1527,32): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1533,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1538,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1570,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1572,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1584,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1600,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1617,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1637,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1657,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1659,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1678,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1698,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1707,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1777,31): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1799,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1815,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1829,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1834,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1859,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1864,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1875,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1877,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1887,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1895,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1897,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1919,34): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1921,36): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1926,40): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1938,39): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1941,32): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1945,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1955,28): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1957,24): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(1961,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1966,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1968,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(1994,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2015,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2037,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2040,34): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2045,36): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2047,38): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2049,40): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2106,36): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2108,33): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2133,32): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2135,28): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2138,22): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2142,17): error TS1003: Identifier expected.
+App.tsx(2147,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(2150,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2153,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2158,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2161,10): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(2163,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2174,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2176,11): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(2177,8): error TS1005: ':' expected.
+App.tsx(2180,10): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(2182,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2214,11): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(2215,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2218,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2219,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2268,4): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2271,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2274,12): error TS17008: JSX element 'main' has no corresponding closing tag.
+App.tsx(2276,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2301,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2304,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2306,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2309,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2311,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2326,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2333,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2350,21): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(2389,23): error TS1003: Identifier expected.
+App.tsx(2390,20): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2392,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2397,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2420,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2435,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2437,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2456,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2466,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2488,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2504,35): error TS17014: JSX fragment has no corresponding closing tag.
+App.tsx(2507,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2514,24): error TS17008: JSX element 'button' has no corresponding closing tag.
+App.tsx(2519,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2521,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2549,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(2551,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2560,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2563,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2568,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2575,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2619,29): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2625,24): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2627,21): error TS1003: Identifier expected.
+App.tsx(2628,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2630,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2650,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2653,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2659,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2666,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2675,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2692,27): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2709,22): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2711,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2714,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App.tsx(2717,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2719,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2722,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App.tsx(2735,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App.tsx(2754,1): error TS1005: '</' expected.
+App_recovered.tsx(128,7): error TS1128: Declaration or statement expected.
+App_recovered.tsx(129,3): error TS1109: Expression expected.
+App_recovered.tsx(593,8): error TS17008: JSX element 'header' has no corresponding closing tag.
+App_recovered.tsx(595,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(597,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(702,9): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(704,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(712,5): error TS1109: Expression expected.
+App_recovered.tsx(713,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(725,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(735,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(760,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(762,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(767,14): error TS17008: JSX element 'form' has no corresponding closing tag.
+App_recovered.tsx(772,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(788,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(804,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(850,15): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(853,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(855,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(858,12): error TS17008: JSX element 'main' has no corresponding closing tag.
+App_recovered.tsx(860,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(862,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(873,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(875,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(906,18): error TS17014: JSX fragment has no corresponding closing tag.
+App_recovered.tsx(910,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(919,24): error TS17008: JSX element 'motion.div' has no corresponding closing tag.
+App_recovered.tsx(952,29): error TS1003: Identifier expected.
+App_recovered.tsx(988,29): error TS1003: Identifier expected.
+App_recovered.tsx(989,26): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(990,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(991,23): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1021,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1022,17): error TS1003: Identifier expected.
+App_recovered.tsx(1023,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1024,13): error TS17015: Expected corresponding closing tag for JSX fragment.
+App_recovered.tsx(1024,17): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+App_recovered.tsx(1027,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1143,13): error TS17015: Expected corresponding closing tag for JSX fragment.
+App_recovered.tsx(1143,16): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+App_recovered.tsx(1146,4): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1148,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1152,8): error TS17008: JSX element 'main' has no corresponding closing tag.
+App_recovered.tsx(1155,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1157,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1185,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1246,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1251,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1253,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1256,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1269,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1309,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1336,15): error TS17014: JSX fragment has no corresponding closing tag.
+App_recovered.tsx(1339,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1341,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1343,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1345,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1348,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1364,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1389,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1415,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1418,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1423,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1486,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1488,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1490,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1502,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1518,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1520,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1533,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1538,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1570,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1572,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1584,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1600,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1617,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1637,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1657,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1659,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1678,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1698,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1799,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1815,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1829,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1834,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1859,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1875,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1877,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1887,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1895,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1897,32): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1941,32): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(1961,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1966,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(1968,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2108,33): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2135,28): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2138,22): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2142,17): error TS1003: Identifier expected.
+App_recovered.tsx(2143,14): error TS1005: ',' expected.
+App_recovered.tsx(2147,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(2150,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2266,7): error TS1005: ')' expected.
+App_recovered.tsx(2268,4): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2271,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2274,12): error TS17008: JSX element 'main' has no corresponding closing tag.
+App_recovered.tsx(2276,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2301,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2304,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2306,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2309,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2311,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2326,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2350,21): error TS17014: JSX fragment has no corresponding closing tag.
+App_recovered.tsx(2389,23): error TS1003: Identifier expected.
+App_recovered.tsx(2390,20): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2392,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2397,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2420,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2435,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2437,18): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2456,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2466,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2488,24): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2504,35): error TS17014: JSX fragment has no corresponding closing tag.
+App_recovered.tsx(2507,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2514,24): error TS17008: JSX element 'button' has no corresponding closing tag.
+App_recovered.tsx(2519,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2521,28): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2549,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(2551,22): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2560,26): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2563,30): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2619,29): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2625,24): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2627,21): error TS1003: Identifier expected.
+App_recovered.tsx(2628,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2630,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2692,27): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2709,22): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2711,18): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2714,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+App_recovered.tsx(2714,18): error TS1005: ')' expected.
+App_recovered.tsx(2714,22): error TS1005: ':' expected.
+App_recovered.tsx(2715,20): error TS1109: Expression expected.
+App_recovered.tsx(2715,25): error TS1005: ':' expected.
+App_recovered.tsx(2716,9): error TS1005: ',' expected.
+App_recovered.tsx(2717,8): error TS1005: ':' expected.
+App_recovered.tsx(2719,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+App_recovered.tsx(2735,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+App_recovered.tsx(2754,1): error TS1005: '</' expected.
