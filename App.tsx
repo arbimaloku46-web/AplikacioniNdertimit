@@ -107,8 +107,7 @@ const App: React.FC = () => {
   
   const isAdmin = user?.isAdmin || false;
   const [showCreateProject, setShowCreateProject] = useState(false);
-  const [showInteractiveBuilding, setShowInteractiveBuilding] = useState(false);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
+    const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isAddingWeek, setIsAddingWeek] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -718,7 +717,7 @@ const App: React.FC = () => {
                         {/* Interactive Building Viewer Button */}
                         {(activeProject.interactiveBuilding || isAdmin) && (
                           <button 
-                            onClick={() => setShowInteractiveBuilding(true)}
+                            onClick={() => setCurrentView(AppView.INTERACTIVE_VIEWER)}
                             className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-6 py-2 rounded-2xl text-sm font-extrabold tracking-tight shadow-lg shadow-emerald-500/20 transition-all group"
                           >
                             <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
@@ -1386,14 +1385,14 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {currentView !== AppView.PROJECT_DETAIL && currentView !== AppView.MAPPER && (
+      {currentView !== AppView.PROJECT_DETAIL && currentView !== AppView.MAPPER && currentView !== AppView.INTERACTIVE_VIEWER && (
         <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} text={text} />
       )}
 
-      {showInteractiveBuilding && activeProject && (
+      {currentView === AppView.INTERACTIVE_VIEWER && activeProject && (
         <InteractiveViewer 
           data={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
-          onClose={() => setShowInteractiveBuilding(false)}
+          onClose={() => setCurrentView(AppView.PROJECT_DETAIL)}
         />
       )}
     </div>

@@ -95,7 +95,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col backdrop-blur-md">
+    <div className="min-h-screen bg-brand-dark flex flex-col">
       {/* Top Bar */}
       <div className="flex items-center justify-between p-6 md:p-8 text-white border-b border-white/10 shrink-0">
         <div>
@@ -243,9 +243,9 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col md:flex-row absolute inset-0"
+              className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden"
             >
-              <div className="w-full md:w-3/4 p-6 md:p-8 flex items-center justify-center relative bg-slate-950/50">
+              <div className="w-full md:w-3/4 h-auto md:h-full p-6 md:p-8 flex items-center justify-center relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">
                 <div className="relative inline-block max-w-full max-h-full">
                   <img 
                     src={activeFloor.floorPlanUrl} 
@@ -283,7 +283,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                 </div>
               </div>
               
-              <div className="w-full md:w-1/4 bg-slate-950 border-l border-white/5 p-8 overflow-y-auto custom-scrollbar">
+              <div className="w-full md:w-1/4 h-auto md:h-full bg-slate-950 border-t md:border-t-0 md:border-l border-white/5 p-6 md:p-8 md:overflow-y-auto custom-scrollbar shrink-0 md:shrink-0 flex-1 md:flex-none">
                 <h3 className="text-brand-blue font-extrabold tracking-tight uppercase tracking-widest text-xs mb-4">Floor Units</h3>
                 <div className="space-y-3">
                   {activeFloor.units.map(unit => (
@@ -330,16 +330,16 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950"
+              className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden"
             >
-              <div className="w-full md:w-2/3 h-full p-6 md:p-12 flex items-center justify-center bg-white">
+              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">
                 <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
                   className="max-w-full max-h-[80vh] object-contain drop-shadow-2xl"
                 />
               </div>
-              <div className="w-full md:w-1/3 p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-l border-white/10">
+              <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">
                 <div className="mb-8">
                   <h3 className="text-4xl font-display font-extrabold tracking-tight text-white mb-4">{activeUnit.name}</h3>
                   <div className={`inline-block px-6 py-1.5 rounded-full text-xs font-extrabold tracking-tight uppercase tracking-wider ${
