@@ -11,23 +11,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Plus Jakarta Sans', 'sans-serif'],
-              display: ['Playfair Display', 'sans-serif'],
+              sans: ['Inter', 'sans-serif'],
+              display: ['Space Grotesk', 'sans-serif'],
             },
             colors: {
               slate: {
-                850: '#18181b',
-                950: '#09090b',
+                850: '#151f32',
+                950: '#020617',
               },
               brand: {
-                dark: '#0a0a0a',
-                blue: '#8c8273',
+                dark: '#002147',
+                blue: '#2264ab',
               }
             }
           },
@@ -36,9 +36,9 @@
     </script>
     <style>
       body {
-        background-color: #0a0a0a;
-        color: #a1a1aa;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #002147;
+        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
       }
       /* Custom scrollbar for dark theme */
       ::-webkit-scrollbar {
@@ -46,22 +46,36 @@
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #000000;
+        background: #00152e;
       }
       ::-webkit-scrollbar-thumb {
-        background: #3f3f46;
+        background: #2264ab;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #52525b;
+        background: #1a4d85;
       }
       .glass-panel {
-        background: rgba(10, 10, 10, 0.8);
+        background: rgba(0, 33, 71, 0.6);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(34, 100, 171, 0.2);
       }
     </style>
-
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
+    "vite-plugin-pwa": "https://aistudiocdn.com/vite-plugin-pwa@^1.2.0",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.87.0"
+  }
+}
+</script>
 </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+const fs = require('fs');
+
+const maptilerDashboardMap = `import React, { useRef, useEffect } from 'react';
 import { Project } from '../types';
 import * as maptilersdk from '@maptiler/sdk';
 import '@maptiler/sdk/dist/maptiler-sdk.css';
@@ -47,25 +49,25 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
         const el = document.createElement('div');
         el.className = 'w-4 h-4 bg-brand-blue rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform';
         
-        const popupHtml = `
+        const popupHtml = \`
           <div class="p-1 min-w-[150px] font-sans">
-              <h4 class="font-extrabold text-slate-800 text-sm mb-1">${project.name}</h4>
-              <p class="text-xs text-slate-500 mb-3">${project.location}</p>
+              <h4 class="font-extrabold text-slate-800 text-sm mb-1">\${project.name}</h4>
+              <p class="text-xs text-slate-500 mb-3">\${project.location}</p>
               <button 
-                  id="btn-project-${project.id}"
+                  id="btn-project-\${project.id}"
                   class="w-full bg-[#0051ff] text-white text-[10px] font-extrabold uppercase tracking-widest py-2 rounded-lg hover:bg-blue-600 transition-all"
               >
                   View Project
               </button>
           </div>
-        `;
+        \`;
 
         const popup = new maptilersdk.Popup({ offset: 15, className: 'custom-maptiler-popup' })
             .setHTML(popupHtml);
 
         popup.on('open', () => {
             setTimeout(() => {
-                const btn = document.getElementById(`btn-project-${project.id}`);
+                const btn = document.getElementById(\`btn-project-\${project.id}\`);
                 if (btn) {
                     btn.addEventListener('click', () => {
                         onProjectClick(project);
@@ -97,13 +99,16 @@ export const DashboardMap: React.FC<DashboardMapProps> = ({ projects, onProjectC
     <div className="w-full h-96 rounded-3xl overflow-hidden border border-white/5 relative z-10 shadow-2xl mt-12 mb-12">
       <div ref={mapContainer} className="w-full h-full bg-[#020617]" />
       
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{__html: \`
         .custom-maptiler-popup .maplibregl-popup-content {
           border-radius: 16px;
           padding: 12px;
           box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
-      `}} />
+      \`}} />
     </div>
   );
 };
+`;
+
+fs.writeFileSync('components/DashboardMap.tsx', maptilerDashboardMap);

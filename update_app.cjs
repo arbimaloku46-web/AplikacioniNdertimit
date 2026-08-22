@@ -1,22 +1,17 @@
 const fs = require('fs');
-let code = fs.readFileSync('App.tsx', 'utf8');
 
-// 1. Add projectTab state
-code = code.replace(
-  /const \[activeProject, setActiveProject\] = useState<Project \| null>\(null\);/,
-  "const [activeProject, setActiveProject] = useState<Project | null>(null);\n  const [projectTab, setProjectTab] = useState<'wall' | 'explore' | 'discussion' | 'calendar'>('wall');"
-);
+let content = fs.readFileSync('App.tsx', 'utf8');
 
-// 2. Remove showInteractiveBuilding
-code = code.replace(
-  /const \[showInteractiveBuilding, setShowInteractiveBuilding\] = useState\(false\);/,
-  ""
-);
+content = content.replace("import { DashboardMap } from './components/DashboardMap';\\n", "");
 
-// 3. Reset projectTab when selecting a project
-code = code.replace(
-  /const handleProjectSelect = \(p: Project\) => \{/,
-  "const handleProjectSelect = (p: Project) => {\n    setProjectTab('wall');"
-);
+const targetBlock = `                {/* Project Map View */}
+                {!loadingProjects && activeProjectsList.length > 0 && (
+                    <DashboardMap 
+                        projects={activeProjectsList} 
+                        onProjectClick={handleProjectSelect} 
+                    />
+                )}`;
 
-fs.writeFileSync('App.tsx', code);
+content = content.replace(targetBlock, "");
+
+fs.writeFileSync('App.tsx', content);
