@@ -4,6 +4,7 @@ import { Project, MediaItem, AppView, WeeklyUpdate, User } from "./types";
 import { GlobalAuth } from "./components/GlobalAuth";
 import { Button } from "./components/Button";
 import { SplatViewer } from "./components/SplatViewer";
+import { DashboardMap } from "./components/DashboardMap";
 import { MediaGrid } from "./components/MediaGrid";
 import { Footer } from "./components/Footer";
 import { InstallButton } from "./components/InstallButton";
@@ -128,6 +129,8 @@ const App: React.FC = () => {
       
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isAddingWeek, setIsAddingWeek] = useState(false);
+  const [isEditingUpdate, setIsEditingUpdate] = useState(false);
+  const [editingUpdateForm, setEditingUpdateForm] = useState<Partial<WeeklyUpdate>>({});
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     if (!isAdmin && currentView === AppView.PROJECT_DETAIL && activeProject) {
@@ -720,19 +723,42 @@ const App: React.FC = () => {
           {/* Wall Tab */}
           {projectTab === 'wall' && (
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-8 py-8 md:py-10">
+              <div className="mb-8 flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                {[...(activeProject.updates || [])]
+                  .map((u, i) => ({ ...u, originalIndex: i }))
+                  .sort((a, b) => a.weekNumber - b.weekNumber)
+                  .map((update) => (
+                    <button
+                      key={update.weekNumber}
+                      onClick={() => setActiveUpdateIndex(update.originalIndex)}
+                      className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all ${activeUpdateIndex === update.originalIndex ? 'bg-brand-blue text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                    >
+                      {update.title}
+                    </button>
+                ))}
+              </div>
+
               <div className="mb-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
                 <div>
                   <h1 className="text-3xl md:text-5xl font-display font-semibold text-white">{activeProject.name}</h1>
                   <p className="text-slate-500 mt-2">{activeProject.location}</p>
                 </div>
                 {isAdmin && (
-                  <Button onClick={() => setIsAddingWeek(true)}>Add Update</Button>
+                  <div className="flex items-center gap-4">
+                    {activeProject.updates && activeProject.updates.length > 0 && (
+                      <Button variant="secondary" onClick={() => {
+                        setEditingUpdateForm(activeProject.updates[activeUpdateIndex]);
+                        setIsEditingUpdate(true);
+                      }}>Edit Update</Button>
+                    )}
+                    <Button onClick={handleAddNewWeek} isLoading={isAddingWeek}>Add Update</Button>
+                  </div>
                 )}
               </div>
               
               {activeProject.updates && activeProject.updates.length > 0 && activeProject.updates[activeUpdateIndex] ? (
                 <div className="space-y-12">
-                  <div className="bg-slate-900/50 rounded-xl p-6 md:p-8 border border-white/5">
+                  <div className="bg-slate-900/50 rounded-xl p-6 md:p-8 border border-white/5 relative">
                     <h2 className="text-xl font-semibold text-white mb-4">{activeProject.updates[activeUpdateIndex].title}</h2>
                     <p className="text-slate-400 mb-6">{activeProject.updates[activeUpdateIndex].summary}</p>
                     
@@ -742,21 +768,34 @@ const App: React.FC = () => {
                       isAdmin={isAdmin}
                     />
                   </div>
+
+                  {activeProject.updates[activeUpdateIndex].splatUrl && (
+                    <div className="bg-slate-900/50 rounded-xl p-6 md:p-8 border border-white/5">
+                      <h3 className="text-xl font-semibold text-white mb-6">3D Render</h3>
+                      <SplatViewer url={activeProject.updates[activeUpdateIndex].splatUrl} title="3D Render" type="3d" onFullScreenChange={setIsFullScreenMode} />
+                    </div>
+                  )}
+
+                  {activeProject.updates[activeUpdateIndex].floorfyUrl && (
+                    <div className="bg-slate-900/50 rounded-xl p-6 md:p-8 border border-white/5">
+                      <h3 className="text-xl font-semibold text-white mb-6">360° Virtual Tour</h3>
+                      <SplatViewer url={activeProject.updates[activeUpdateIndex].floorfyUrl} title="360 View" type="360" onFullScreenChange={setIsFullScreenMode} />
+                    </div>
+                  )}
                   
                   {/* Weather Widget */}
                   {activeProject.updates[activeUpdateIndex].stats && (
                     <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
                   )}
+
+                  <DashboardMap projects={[activeProject]} onProjectClick={() => {}} />
+
                 </div>
               ) : (
                 <div className="text-center py-20 bg-slate-900/50 rounded-xl border border-white/5">
                   <p className="text-slate-500">No updates published yet.</p>
                 </div>
               )}
-              
-              <div className="mt-20">
-                <Footer />
-              </div>
             </main>
           )}
 
