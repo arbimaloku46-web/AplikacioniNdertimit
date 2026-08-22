@@ -1,6 +1,6 @@
 import React, { useState } from'react';
 import { ArrowLeft, Map, X } from'lucide-react';
-import { motion, AnimatePresence } from'framer-motion'; export interface UnitData { id: string; name: string; status:'available' |'sold' |'reserved'; floorPlanUrl: string; svgPath: string; specs?: { beds: number; baths: number; area: number; price: string; };
+import { motion, AnimatePresence } from'motion/react'; export interface UnitData { id: string; name: string; status:'available' |'sold' |'reserved'; floorPlanUrl: string; svgPath: string; specs?: { beds: number; baths: number; area: number; price: string; };
 } export interface FloorData { id: string; name: string; floorPlanUrl: string; svgPath: string; units: UnitData[];
 } export interface BuildingData { id: string; name: string; mainImageUrl: string; floors: FloorData[];
 } interface InteractiveViewerProps { data: BuildingData; onClose?: () => void;

@@ -217,6 +217,7 @@ const App: React.FC = () => {
     const handleOffline = () => setIsOnline(false);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
@@ -225,8 +226,7 @@ const App: React.FC = () => {
           uid: session.user.id,
           email: session.user.email || null,
           name: metadata.full_name || metadata.name || "User",
-          username:
-            metadata.username || session.user.email?.split("@")[0] || "user",
+          username: metadata.username || session.user.email?.split("@")[0] || "user",
           photoURL: metadata.avatar_url || metadata.picture || null,
           isAdmin: appMetadata.is_admin === true || metadata.is_admin === true,
           countryCode: metadata.country_code,
@@ -234,9 +234,8 @@ const App: React.FC = () => {
       }
       setIsAuthChecking(false);
     });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
         const appMetadata = session.user.app_metadata || {};
@@ -244,42 +243,23 @@ const App: React.FC = () => {
           uid: session.user.id,
           email: session.user.email || null,
           name: metadata.full_name || metadata.name || "User",
-          username:
-            metadata.username || session.user.email?.split("@")[0] || "user",
+          username: metadata.username || session.user.email?.split("@")[0] || "user",
           photoURL: metadata.avatar_url || metadata.picture || null,
           isAdmin: appMetadata.is_admin === true || metadata.is_admin === true,
           countryCode: metadata.country_code,
         });
-        if (
-          window.location.hash &&
-          window.location.hash.includes("access_token")
-        ) {
-          window.history.replaceState(null, "", window.location.pathname);
-        }
       } else {
         setUser(null);
         setCurrentView(AppView.HOME);
         setActiveProject(null);
       }
-      setIsAuthChecking(false);
     });
-    const unsubscribeDB = dbService.subscribeProjects((data) => {
-      setProjects(data);
+
+    const unsubscribeDB = dbService.subscribeProjects((updatedProjects) => {
+      setProjects(updatedProjects);
       setLoadingProjects(false);
-      if (activeProjectIdRef.current) {
-        const updated = data.find((p) => p.id === activeProjectIdRef.current);
-        if (updated) {
-          setActiveProject((prev) => {
-            if (JSON.stringify(prev) !== JSON.stringify(updated))
-              return updated;
-            return prev;
-          });
-        }
-      }
     });
-    const storedLang = localStorage.getItem(STORAGE_LANGUAGE_KEY);
-    if (storedLang === "en" || storedLang === "sq")
-      setLanguage(storedLang as Language);
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
@@ -399,11 +379,13 @@ const App: React.FC = () => {
   const handleProjectSelect = (project: Project) => {
     setActiveProject(project);
     let firstIndex = 0;
+    const updates = project.updates || [];
     if (!isAdmin) {
-      firstIndex = project.updates.findIndex((u) => u.status !== "draft");
+      firstIndex = updates.findIndex((u) => u.status !== "draft");
       if (firstIndex === -1) firstIndex = 0;
     }
     setActiveUpdateIndex(firstIndex);
+    setProjectTab('wall');
     setCurrentView(AppView.PROJECT_DETAIL);
   };
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -763,9 +745,7 @@ const App: React.FC = () => {
                   
                   {/* Weather Widget */}
                   {activeProject.updates[activeUpdateIndex].stats && (
-                    <WeatherWidget 
-                      conditions={activeProject.updates[activeUpdateIndex].stats.weatherConditions || 'Clear'} 
-                    />
+                    <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
                   )}
                 </div>
               ) : (
@@ -847,7 +827,7 @@ const App: React.FC = () => {
               ].map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setProjectTab(tab.id)}
+                  onClick={() => setProjectTab(tab.id as any)}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${projectTab === tab.id ? 'text-brand-blue' : 'text-slate-500 hover:text-white'}`}
                 >
                   <tab.icon className="w-5 h-5" />
@@ -864,7 +844,7 @@ const App: React.FC = () => {
           {renderHeader()}
           <div className="pt-20 px-6 md:px-8 pb-12">
             <BuildingConfigurator
-              initialData={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
+              project={activeProject}
               onSave={async (updatedBuilding) => {
                 const updatedProject = { ...activeProject, interactiveBuilding: updatedBuilding };
                 await dbService.updateProject(updatedProject);
