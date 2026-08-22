@@ -44,7 +44,7 @@ const DEMO_INTERACTIVE_BUILDING: any = {
           name: 'Penthouse A',
           svgPath: "M 10 10 L 90 10 L 90 90 L 10 90 Z",
           floorPlanUrl: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop",
-          specs: { beds: 4, baths: 3.5, area: 250, price: "$2,500,000" },
+          specs: { beds: 4, baths: 3.5, totalArea: 250, insideArea: 200, sharedArea: 50, price: "$2,500,000" },
           status: 'available'
         }
       ]

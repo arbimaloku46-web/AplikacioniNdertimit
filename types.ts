@@ -53,7 +53,9 @@ export interface Unit {
   specs?: {
     beds: number;
     baths: number;
-    area: number; // sqm
+    totalArea: number; // sqm
+    insideArea: number; // sqm
+    sharedArea: number; // sqm
     price: string;
   };
   status: 'available' | 'reserved' | 'sold';

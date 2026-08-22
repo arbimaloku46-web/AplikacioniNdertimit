@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { X, Undo, Check, Map, Plus, Trash2, ArrowLeft, Save, ChevronRight, ChevronDown } from 'lucide-react';
 import { Project, InteractiveBuilding, Floor, Unit } from '../types';
+import { dbService } from '../services/db';
+import { Upload } from 'lucide-react';
 
 interface BuildingConfiguratorProps {
   project: Project;
@@ -20,6 +22,22 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   
   const [points, setPoints] = useState<{x: number, y: number}[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      const url = await dbService.uploadFile(file, project.id);
+      callback(url);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert('Failed to upload image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
   const imgRef = useRef<HTMLImageElement>(null);
 
   const handleSave = () => {
@@ -92,7 +110,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
       name: `Unit ${floor.units.length + 1}`,
       svgPath: '',
       floorPlanUrl: '',
-      specs: { beds: 0, baths: 0, area: 0, price: 'TBD' },
+      specs: { beds: 0, baths: 0, totalArea: 0, insideArea: 0, sharedArea: 0, price: 'TBD' },
       status: 'available'
     };
     updateFloor(floorId, { units: [...floor.units, newUnit] });
@@ -130,7 +148,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
     }
 
     return (
-      <div className="flex-1 bg-slate-950 rounded-2xl flex flex-col items-center justify-center p-8 border border-white/5 shadow-inner min-h-[500px]">
+      <div className="flex-1 bg-slate-950 rounded-2xl flex flex-col items-center justify-center p-8 border border-white/5 shadow-inner min-h-[500px] lg:min-h-0 h-full overflow-hidden">
         {imageUrl ? (
           <div className="relative inline-block w-full max-w-full rounded-2xl overflow-hidden shadow-2xl">
             <img 
@@ -201,22 +219,28 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
          </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 lg:h-[calc(100vh-14rem)]">
         {/* Left Sidebar - Structure */}
-        <div className="w-full lg:w-96 shrink-0 flex flex-col gap-6">
+        <div className="w-full lg:w-96 shrink-0 flex flex-col gap-6 h-full">
           <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/5 rounded-2xl p-5 shadow-xl">
             <h3 className="font-extrabold tracking-tight mb-4 text-brand-blue">Main Building</h3>
             <label className="block text-xs font-extrabold tracking-tight text-slate-500 uppercase tracking-wider mb-2">Main Image URL</label>
-            <input 
-              type="text" 
-              value={buildingData.mainImageUrl}
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={buildingData.mainImageUrl}
               onChange={e => setBuildingData(prev => ({ ...prev, mainImageUrl: e.target.value }))}
               placeholder="https://..."
-              className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg p-3 text-sm text-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none transition-all"
-            />
+              className="flex-1 bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg p-3 text-sm text-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none transition-all"
+              />
+              <label className="cursor-pointer bg-brand-blue/20 hover:bg-brand-blue/30 text-brand-blue p-3 rounded-lg flex items-center justify-center transition-all">
+                <Upload className="w-4 h-4" />
+                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, url => setBuildingData(prev => ({ ...prev, mainImageUrl: url })))} />
+              </label>
+            </div>
           </div>
 
-          <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/5 rounded-2xl p-5 shadow-xl flex-1 overflow-y-auto">
+          <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/5 rounded-2xl p-5 shadow-xl flex-1 overflow-y-auto min-h-0">
             <div className="flex items-center justify-between mb-4">
                <h3 className="font-extrabold tracking-tight text-brand-blue">Floors</h3>
                <button onClick={addFloor} className="p-1.5 bg-brand-blue/10 text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 rounded-md transition-all duration-300 ease-in-out"><Plus className="w-4 h-4" /></button>
@@ -246,7 +270,13 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
                       </div>
                       <div>
                         <label className="block text-[10px] font-extrabold tracking-tight text-slate-500 uppercase tracking-wider mb-1">Floor Plan Image URL</label>
-                        <input type="text" value={floor.floorPlanUrl} onChange={e => updateFloor(floor.id, { floorPlanUrl: e.target.value })} className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg p-2 text-xs text-white" />
+                        <div className="flex gap-2">
+                          <input type="text" value={floor.floorPlanUrl} onChange={e => updateFloor(floor.id, { floorPlanUrl: e.target.value })} className="flex-1 bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg p-2 text-xs text-white" />
+                          <label className="cursor-pointer bg-brand-blue/20 hover:bg-brand-blue/30 text-brand-blue p-2 rounded-lg flex items-center justify-center transition-all">
+                            <Upload className="w-4 h-4" />
+                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, url => updateFloor(floor.id, { floorPlanUrl: url }))} />
+                          </label>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button 
@@ -272,13 +302,45 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
                                   <input type="text" value={unit.name} onChange={e => updateUnit(floor.id, unit.id, { name: e.target.value })} className="bg-transparent border-none outline-none text-sm font-extrabold tracking-tight text-white w-2/3" />
                                   <button onClick={() => deleteUnit(floor.id, unit.id)} className="text-slate-500 hover:text-red-400"><X className="w-4 h-4" /></button>
                                </div>
-                               <input 
-                                 type="text" 
-                                 placeholder="Unit Plan URL" 
-                                 value={unit.floorPlanUrl} 
-                                 onChange={e => updateUnit(floor.id, unit.id, { floorPlanUrl: e.target.value })} 
-                                 className="w-full bg-slate-900/90 backdrop-blur-2xl border border-white/5 rounded-md p-2 text-[10px] text-white mb-2" 
-                               />
+                               <div className="flex gap-2 mb-2">
+                                 <input 
+                                   type="text" 
+                                   placeholder="Unit Plan URL" 
+                                   value={unit.floorPlanUrl} 
+                                   onChange={e => updateUnit(floor.id, unit.id, { floorPlanUrl: e.target.value })} 
+                                   className="flex-1 bg-slate-900/90 backdrop-blur-2xl border border-white/5 rounded-md p-2 text-[10px] text-white" 
+                                 />
+                                 <label className="cursor-pointer bg-brand-blue/20 hover:bg-brand-blue/30 text-brand-blue p-2 rounded-md flex items-center justify-center transition-all">
+                                   <Upload className="w-4 h-4" />
+                                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, url => updateUnit(floor.id, unit.id, { floorPlanUrl: url }))} />
+                                 </label>
+                               </div>
+                               <div className="grid grid-cols-2 gap-2 mb-2">
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Beds</label>
+                                   <input type="number" value={unit.specs?.beds || 0} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, beds: Number(e.target.value) } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Baths</label>
+                                   <input type="number" value={unit.specs?.baths || 0} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, baths: Number(e.target.value) } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Total Area (m²)</label>
+                                   <input type="number" value={unit.specs?.totalArea || 0} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, totalArea: Number(e.target.value) } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Inside (m²)</label>
+                                   <input type="number" value={unit.specs?.insideArea || 0} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, insideArea: Number(e.target.value) } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Shared (m²)</label>
+                                   <input type="number" value={unit.specs?.sharedArea || 0} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, sharedArea: Number(e.target.value) } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                                 <div>
+                                   <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Price</label>
+                                   <input type="text" value={unit.specs?.price || ''} onChange={e => updateUnit(floor.id, unit.id, { specs: { ...unit.specs!, price: e.target.value } })} className="w-full bg-slate-900/90 border border-white/5 rounded p-1 text-[10px] text-white" />
+                                 </div>
+                               </div>
                                <select 
                                  value={unit.status} 
                                  onChange={e => updateUnit(floor.id, unit.id, { status: e.target.value as any })}

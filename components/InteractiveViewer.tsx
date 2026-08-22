@@ -11,7 +11,9 @@ export interface UnitData {
   specs?: {
     beds: number;
     baths: number;
-    area: number;
+    totalArea: number;
+    insideArea: number;
+    sharedArea: number;
     price: string;
   };
 }
@@ -310,7 +312,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                            <span className="opacity-30">•</span>
                            <span>{unit.specs.baths} Baths</span>
                            <span className="opacity-30">•</span>
-                           <span>{unit.specs.area} m²</span>
+                           <span>{unit.specs.totalArea} m²</span>
                         </div>
                       )}
                     </button>
@@ -350,7 +352,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                 </div>
 
                 {activeUnit.specs && (
-                  <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-slate-950 border border-white/5 p-6 md:p-5 rounded-2xl">
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-extrabold tracking-tight mb-1">Bedrooms</p>
                       <p className="text-2xl font-medium text-white">{activeUnit.specs.beds}</p>
@@ -361,7 +363,15 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                     </div>
                     <div className="bg-slate-950 border border-white/5 p-6 md:p-5 rounded-2xl">
                       <p className="text-slate-500 text-[10px] uppercase tracking-widest font-extrabold tracking-tight mb-1">Total Area</p>
-                      <p className="text-2xl font-medium text-white">{activeUnit.specs.area} <span className="text-sm text-slate-500">m²</span></p>
+                      <p className="text-xl font-medium text-white">{activeUnit.specs.totalArea} <span className="text-sm text-slate-500">m²</span></p>
+                    </div>
+                    <div className="bg-slate-950 border border-white/5 p-6 md:p-5 rounded-2xl">
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-extrabold tracking-tight mb-1">Inside Area</p>
+                      <p className="text-xl font-medium text-white">{activeUnit.specs.insideArea} <span className="text-sm text-slate-500">m²</span></p>
+                    </div>
+                    <div className="bg-slate-950 border border-white/5 p-6 md:p-5 rounded-2xl">
+                      <p className="text-slate-500 text-[10px] uppercase tracking-widest font-extrabold tracking-tight mb-1">Shared Area</p>
+                      <p className="text-xl font-medium text-white">{activeUnit.specs.sharedArea} <span className="text-sm text-slate-500">m²</span></p>
                     </div>
                     <div className="bg-brand-blue/10 border border-brand-blue/20 p-6 md:p-5 rounded-2xl">
                       <p className="text-brand-blue text-[10px] uppercase tracking-widest font-extrabold tracking-tight mb-1">Price</p>
