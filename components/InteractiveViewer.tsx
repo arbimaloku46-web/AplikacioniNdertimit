@@ -150,13 +150,13 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0"
+              className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0 min-h-0 min-w-0"
             >
-              <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl">
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
-                  className="block max-w-full max-h-full w-auto h-auto object-contain"
+                  className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
                 />
                 <svg 
                   className="absolute top-0 left-0 w-full h-full" 
@@ -243,14 +243,14 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden"
+              className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">
-                <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white">
+              <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0 min-w-0">
+                <div className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl bg-white">
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
-                    className="block max-w-full max-h-full w-auto h-auto object-contain"
+                    className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
                   />
                   <svg 
                     className="absolute top-0 left-0 w-full h-full" 
@@ -328,13 +328,13 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden"
+              className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">
+              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0 min-w-0">
                 <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
-                  className="block max-w-full max-h-full w-auto h-auto object-contain"
+                  className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
                 />
               </div>
               <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">
