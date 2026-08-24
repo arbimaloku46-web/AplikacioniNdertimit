@@ -510,8 +510,9 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                 <iframe 
                                     src={(slide as any).embedUrl} 
                                     className="w-full h-full relative z-10" 
-                                    allow="autoplay; encrypted-media" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
                                     allowFullScreen 
+                                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
                                 />
                                 {mediaItem && (
                                     <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
