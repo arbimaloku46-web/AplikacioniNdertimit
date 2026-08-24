@@ -112,7 +112,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ initialPosition,
   };
 
   return (
-    <div className="w-full h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40 relative z-10 group">
+    <div className={`w-full relative z-10 group ${readOnly ? "h-[300px] rounded-none border-none shadow-none" : "h-64 rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/40"}`}>
       {!readOnly && (
         <form onSubmit={handleSearch} className="absolute top-4 left-4 right-14 z-[400] flex gap-2 max-w-sm">
           <input 

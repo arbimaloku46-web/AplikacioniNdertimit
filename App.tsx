@@ -832,7 +832,7 @@ const App: React.FC = () => {
                         <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 md:p-8 backdrop-blur-xl relative z-30 shadow-2xl">
                             <h3 className="text-xs uppercase font-extrabold tracking-tight text-brand-blue mb-6 tracking-widest">Executive Update</h3>
                             
-                            <div className="h-48 w-full mb-8">
+                            <div className="h-32 w-full mb-6">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={[...(isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft'))].sort((a, b) => a.weekNumber - b.weekNumber)}>
                                         <XAxis dataKey="weekNumber" stroke="#64748b" fontSize={10} tickFormatter={(tick) => `W${tick}`} axisLine={false} tickLine={false} />
@@ -985,7 +985,7 @@ const App: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 md:gap-6 pt-6 md:pt-8 border-t border-white/5">
                                         <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
-                                        <div className="bg-white/5 p-3 md:p-6 rounded-2xl md:rounded-2xl flex flex-col justify-between h-full min-h-[80px] relative group cursor-pointer border border-transparent hover:border-white/10 transition-colors">
+                                        <div className="bg-slate-800/80 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/40 p-4 md:p-6 rounded-2xl flex flex-col justify-between h-full min-h-[100px] w-full relative group cursor-pointer hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 transition-all duration-300 ease-in-out">
                                           <div className="flex justify-between items-center w-full mb-1">
                                             <span className="text-[10px] text-slate-500 font-extrabold tracking-tight uppercase">Workforce</span>
                                             {(activeProject.updates[activeUpdateIndex].stats.workerBreakdown?.length || 0) > 0 && (
@@ -1010,8 +1010,10 @@ const App: React.FC = () => {
                                         </div>
                                     </div>
                                     {activeProject.coordinates && (
-                                        <div className="pt-6 md:pt-8 border-t border-white/5">
-                                            <span className="text-[10px] text-slate-500 font-extrabold tracking-tight uppercase tracking-widest block mb-4">Exact Location</span>
+                                        <div className="-mx-8 -mb-8 mt-8 border-t border-white/5 relative overflow-hidden rounded-b-3xl">
+                                            <div className="absolute top-4 left-6 z-20 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 pointer-events-none">
+                                                <span className="text-[10px] text-white font-extrabold tracking-tight uppercase tracking-widest block">Exact Location</span>
+                                            </div>
                                             <LocationPicker 
                                                 initialPosition={activeProject.coordinates}
                                                 readOnly={true}

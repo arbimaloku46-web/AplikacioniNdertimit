@@ -10,6 +10,7 @@ interface UpdateCommentsProps {
 
 export const UpdateComments: React.FC<UpdateCommentsProps> = ({ comments, currentUser, onAddComment }) => {
   const [newComment, setNewComment] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,16 @@ export const UpdateComments: React.FC<UpdateCommentsProps> = ({ comments, curren
         {(!comments || comments.length === 0) ? (
           <p className="text-sm text-slate-500 italic text-center py-6">No comments yet. Start the discussion!</p>
         ) : (
-          comments.map((comment) => (
+          (() => {
+            const visibleComments = showAll ? comments : comments.slice(-3);
+            return (
+              <>
+                {!showAll && comments.length > 3 && (
+                  <button onClick={() => setShowAll(true)} className="w-full py-2 mb-4 text-xs font-extrabold tracking-tight text-slate-500 hover:text-brand-blue bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                    View previous comments ({comments.length - 3})
+                  </button>
+                )}
+                {visibleComments.map((comment) => (
             <div key={comment.id} className={`flex flex-col ${comment.isAdmin ? 'items-start' : 'items-end'}`}>
               <div className={`flex items-end gap-3 max-w-[85%] ${comment.isAdmin ? 'flex-row' : 'flex-row-reverse'}`}>
                 <div className="w-8 h-8 rounded-full bg-slate-800/80 backdrop-blur-xl flex items-center justify-center shrink-0 border border-white/5 shadow-2xl shadow-black/40">
@@ -54,7 +64,10 @@ export const UpdateComments: React.FC<UpdateCommentsProps> = ({ comments, curren
                 </div>
               </div>
             </div>
-          ))
+          ))}
+              </>
+            );
+          })()
         )}
       </div>
 
