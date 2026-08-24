@@ -156,7 +156,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
-                  className="w-full h-[85vh] object-contain drop-shadow-2xl"
+                  className="block w-auto h-auto max-w-full max-h-[85vh] drop-shadow-2xl"
                 />
                 <svg 
                   className="absolute top-0 left-0 w-full h-full" 
@@ -250,7 +250,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
-                    className="w-full h-[85vh] object-contain shadow-2xl bg-white"
+                    className="block w-auto h-auto max-w-full max-h-[85vh] shadow-2xl bg-white"
                   />
                   <svg 
                     className="absolute top-0 left-0 w-full h-full" 
@@ -336,7 +336,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                 <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
-                  className="w-full h-[85vh] object-contain drop-shadow-2xl"
+                  className="block w-auto h-auto max-w-full max-h-[85vh] drop-shadow-2xl"
                 />
               </div>
               <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">

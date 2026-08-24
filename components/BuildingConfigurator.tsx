@@ -150,12 +150,12 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
     return (
       <div className="flex-1 bg-slate-950 rounded-2xl flex flex-col items-center justify-center p-8 border border-white/5 shadow-inner min-h-[500px] lg:min-h-0 h-full overflow-hidden">
         {imageUrl ? (
-          <div className="relative inline-block w-full max-w-full rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">
             <img 
               ref={imgRef}
               src={imageUrl} 
               alt="Reference" 
-              className={`w-full h-auto object-contain block select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`}
+              className={`block w-auto h-auto max-w-full max-h-[75vh] select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`}
               draggable={false}
               onClick={handleImageClick}
             />
