@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  body, html { margin: 0; height: 100%; background: #333; overflow: hidden; }
+  .viewer-container {
+    position: absolute; inset: 0; 
+    /* using flex with overflow: auto causes issues when content is larger than container, it can cut off top/left. 
+       so we use a wrapper for scrolling or set margin: auto */
+    padding: 2rem; box-sizing: border-box; 
+    overflow: auto; 
+    text-align: center;
+  }
+  
+  /* hack to center content in overflow: auto container */
+  .viewer-container::before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+  }
+  
+  .image-wrapper {
+    position: relative;
+    display: inline-block; 
+    max-width: 200%; /* zoom 2x */
+    max-height: 200%; /* zoom 2x */
+    vertical-align: middle;
+  }
+  
+  .img {
+    display: block;
+    max-width: 100%; /* respects wrapper's 200% */
+    max-height: 100%; 
+    width: auto;
+    height: auto;
+  }
+</style>
+</head>
+<body>
+  <div style="position: relative; width: 100vw; height: 100vh; background: #222;">
+    <div class="viewer-container">
+      <div class="image-wrapper">
+        <img src="https://fastly.picsum.photos/id/111/400/2000.jpg?hmac=X-oR08B0D7D06vM84f18n598R58Y5C4aB97w53z03W0" class="img" />
+      </div>
+    </div>
+  </div>
+</body>
+</html>

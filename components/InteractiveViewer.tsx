@@ -139,7 +139,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 relative flex bg-slate-900/50 min-h-[500px]">
+      <div className="flex-1 relative flex bg-slate-900/50 min-h-[500px] overflow-hidden">
         <AnimatePresence mode="wait">
           
           {/* LEVEL 1: EXTERIOR */}
@@ -150,13 +150,13 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0 min-h-0 min-w-0"
+              className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0 min-h-0 min-w-0 overflow-hidden"
             >
-              <div className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl" style={{ lineHeight: 0 }}>
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
-                  className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
+                  className="block max-w-full max-h-full w-auto h-auto"
                 />
                 <svg 
                   className="absolute top-0 left-0 w-full h-full" 
@@ -245,12 +245,12 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0 min-w-0">
-                <div className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl bg-white">
+              <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0 min-w-0 overflow-hidden">
+                <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white" style={{ lineHeight: 0 }}>
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
-                    className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
+                    className="block max-w-full max-h-full w-auto h-auto"
                   />
                   <svg 
                     className="absolute top-0 left-0 w-full h-full" 
@@ -278,6 +278,38 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                       />
                     ))}
                   </svg>
+                  {/* Unit Labels Overlay */}
+                  {activeFloor.units.map(unit => {
+                    const center = getPathCenter(unit.svgPath);
+                    const isHovered = hoveredPath === unit.id;
+                    const statusColor = unit.status === 'available' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' 
+                                      : unit.status === 'reserved' ? 'text-amber-400 bg-amber-400/10 border-amber-400/20'
+                                      : 'text-red-400 bg-red-400/10 border-red-400/20';
+                    const badgeBg = unit.status === 'available' ? 'bg-emerald-500' 
+                                  : unit.status === 'reserved' ? 'bg-amber-500' 
+                                  : 'bg-red-500';
+
+                    return (
+                      <div 
+                        key={`label-${unit.id}`}
+                        className="absolute flex flex-col items-center justify-center pointer-events-none transition-all duration-300"
+                        style={{ 
+                          left: `${center.x}%`, 
+                          top: `${center.y}%`, 
+                          transform: `translate(-50%, -50%) scale(${isHovered ? 1.1 : 1})`,
+                          opacity: hoveredPath && !isHovered ? 0.3 : 1,
+                          zIndex: isHovered ? 20 : 10
+                        }}
+                      >
+                        <div className="bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-xl border border-white/10 flex flex-col items-center gap-1 min-w-[80px]">
+                          <span className="text-white font-bold text-sm leading-none">{unit.name}</span>
+                          <span className={`text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${statusColor}`}>
+                            {unit.status}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               
@@ -330,12 +362,14 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0 min-w-0">
-                <img 
+              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0 min-w-0 overflow-hidden">
+                <div className="relative inline-block max-w-full max-h-full" style={{ lineHeight: 0 }}>
+                  <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
-                  className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}
+                  className="block max-w-full max-h-full w-auto h-auto"
                 />
+                </div>
               </div>
               <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">
                 <div className="mb-8">

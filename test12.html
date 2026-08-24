@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  body, html { margin: 0; height: 100%; background: #333; overflow: hidden; }
+  .screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 2rem; box-sizing: border-box; }
+  
+  .wrapper { 
+    position: relative; 
+    /* using block or inline-block with max dimensions works perfectly for images */
+    display: block; 
+    max-width: 100%; 
+    max-height: 100%; 
+    border: 2px solid green; 
+    border-radius: 1rem;
+    /* overflow: hidden; */
+  }
+  
+  .img { 
+    display: block; 
+    max-width: 100%; 
+    max-height: 100%; 
+    width: auto; 
+    height: auto; 
+    /* no object-fit */
+  }
+  
+  .svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+</style>
+</head>
+<body>
+  <!-- Ultra Portrait Image in a Landscape Screen -->
+  <div style="position: relative; width: 100vw; height: 100vh; background: #222;">
+    <div class="screen">
+      <div class="wrapper">
+        <img src="https://fastly.picsum.photos/id/111/400/2000.jpg?hmac=X-oR08B0D7D06vM84f18n598R58Y5C4aB97w53z03W0" class="img" />
+        <svg class="svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <rect x="0" y="0" width="100" height="100" fill="rgba(255,0,0,0.3)" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
