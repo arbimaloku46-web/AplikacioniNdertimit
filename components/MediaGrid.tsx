@@ -8,6 +8,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Video from "yet-another-react-lightbox/plugins/video";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import Download from "yet-another-react-lightbox/plugins/download";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 
@@ -464,13 +465,14 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
         open={lightboxIndex !== null}
         close={() => setLightboxIndex(null)}
         index={lightboxIndex || 0}
-        plugins={[Captions, Video, Zoom]}
+        plugins={[Captions, Video, Zoom, Download]}
         zoom={{ scrollToZoom: true, maxZoomPixelRatio: 5, supports: ["custom-image"] }}
         slides={filteredMedia.map(item => {
           const baseProps = {
             mediaId: item.id,
             title: item.description,
             description: `${item.category} • ${item.type}`,
+            downloadUrl: item.url,
           };
           
           if (item.type === 'video') {
@@ -505,8 +507,8 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
 
                 if ((slide as any).type === "custom-video") {
                     return (
-                        <div className="w-full h-full flex items-center justify-center p-6 md:p-12">
-                            <div className="relative w-full max-w-[1280px] aspect-video max-h-[80vh] shadow-2xl">
+                        <div className="w-full h-full flex items-center justify-center">
+                            <div className="relative w-full h-[90vh] md:h-screen flex items-center justify-center">
                                 <iframe 
                                     src={(slide as any).embedUrl} 
                                     className="w-full h-full relative z-10" 
@@ -524,11 +526,11 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
 
                 if ((slide as any).type === "custom-image") {
                     return (
-                        <div className="relative inline-flex items-center justify-center max-w-full max-h-full shadow-2xl">
+                        <div className="relative w-full h-full flex items-center justify-center">
                             <img 
                                 src={(slide as any).src} 
                                 alt={(slide as any).title} 
-                                className="max-w-full max-h-[80vh] w-auto h-auto object-contain pointer-events-none" 
+                                className="w-full h-[90vh] md:h-screen object-contain pointer-events-none" 
                                 draggable={false}
                             />
                             {mediaItem && (
@@ -541,13 +543,13 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                 // Fallback for native videos (using container wrapper)
                 if (slide.type === "video") {
                      return (
-                        <div className="w-full h-full flex items-center justify-center p-6 md:p-12 relative">
-                             <div className="relative max-w-full max-h-full inline-block flex items-center justify-center">
+                        <div className="w-full h-full flex items-center justify-center relative">
+                             <div className="relative w-full h-full flex items-center justify-center">
                                  <video 
                                      controls 
                                      autoPlay 
                                      playsInline 
-                                     className="max-w-full max-h-[80vh] object-contain shadow-2xl relative z-10" 
+                                     className="w-full h-[90vh] md:h-screen object-contain relative z-10" 
                                      src={(slide as any).sources[0].src} 
                                  />
                                  {mediaItem && (

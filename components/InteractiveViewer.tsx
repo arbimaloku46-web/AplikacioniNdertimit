@@ -97,9 +97,9 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
   return (
     <div className="min-h-screen bg-brand-dark flex flex-col">
       {/* Top Bar */}
-      <div className="flex items-center justify-between p-6 md:p-8 text-white border-b border-white/10 shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 text-white border-b border-white/10 shrink-0 bg-slate-950 z-20">
         <div>
-          <h2 className="font-display font-extrabold tracking-tight text-xl md:text-2xl flex items-center gap-2">
+          <h2 className="font-display font-bold tracking-tight text-lg md:text-xl flex items-center gap-2">
             <Map className="w-5 h-5 md:w-6 md:h-6 text-brand-blue" />
             {level === 'exterior' && data.name}
             {level === 'floor' && `Floor Plan: ${activeFloor?.name}`}
@@ -108,15 +108,15 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
         </div>
         <button 
           onClick={onClose}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 ease-in-out"
+          className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 ease-in-out"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
       <div className="w-full bg-slate-900/90 backdrop-blur-2xl overflow-hidden flex flex-col relative flex-1">
         {/* Navigation Header */}
-        <div className="bg-slate-950 p-6 flex items-center justify-between border-b border-white/5 z-10 relative">
+        <div className="bg-slate-950 px-4 py-3 md:px-6 md:py-4 flex items-center justify-between border-b border-white/5 z-10 relative">
         <div className="flex items-center gap-6">
           <AnimatePresence mode="popLayout">
             {level !== 'exterior' && (
@@ -156,7 +156,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
-                  className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
+                  className="w-full h-[85vh] object-contain drop-shadow-2xl"
                 />
                 <svg 
                   className="absolute top-0 left-0 w-full h-full" 
@@ -245,12 +245,12 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden"
             >
-              <div className="w-full md:w-3/4 h-auto md:h-full p-6 md:p-8 flex items-center justify-center relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">
+              <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">
                 <div className="relative inline-block max-w-full max-h-full">
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
-                    className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl bg-white"
+                    className="w-full h-[85vh] object-contain shadow-2xl bg-white"
                   />
                   <svg 
                     className="absolute top-0 left-0 w-full h-full" 
@@ -332,11 +332,11 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden"
             >
-              <div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">
+              <div className="w-full md:w-2/3 h-auto md:h-full p-2 md:p-4 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">
                 <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
-                  className="max-w-full max-h-[80vh] object-contain drop-shadow-2xl"
+                  className="w-full h-[85vh] object-contain drop-shadow-2xl"
                 />
               </div>
               <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">
