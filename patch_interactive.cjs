@@ -1,39 +1,45 @@
 const fs = require('fs');
 let code = fs.readFileSync('components/InteractiveViewer.tsx', 'utf8');
 
-// LEVEL 2
-// Replace motion.div classes
+// For InteractiveViewer, we need the parent div of the images to be `relative flex` and the images to be `object-contain`.
+
+// Exterior View
 code = code.replace(
-  'className="w-full h-full flex flex-col md:flex-row absolute inset-0"',
-  'className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden"'
+  '<div className="w-full h-full flex items-center justify-center absolute inset-0">',
+  '<div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 absolute inset-0">'
 );
-// Replace image container classes
 code = code.replace(
-  'className="w-full md:w-3/4 p-6 md:p-8 flex items-center justify-center relative bg-slate-950/50"',
-  'className="w-full md:w-3/4 h-auto md:h-full p-6 md:p-8 flex items-center justify-center relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0"'
+  '<div className="relative inline-block max-w-full max-h-full">',
+  '<div className="relative flex max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">'
 );
-// Replace sidebar classes
 code = code.replace(
-  'className="w-full md:w-1/4 bg-slate-950 border-l border-white/5 p-8 overflow-y-auto custom-scrollbar"',
-  'className="w-full md:w-1/4 h-auto md:h-full bg-slate-950 border-t md:border-t-0 md:border-l border-white/5 p-6 md:p-8 md:overflow-y-auto custom-scrollbar shrink-0 md:shrink"'
+  'className="block w-auto h-auto max-w-full max-h-[85vh] drop-shadow-2xl"',
+  'className="block max-w-full max-h-full w-auto h-auto object-contain"'
 );
 
-// LEVEL 3
-// Replace motion.div classes
+// Floor View
 code = code.replace(
-  'className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950"',
-  'className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden"'
+  '<div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">',
+  '<div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">'
 );
-// Replace image container classes
 code = code.replace(
-  'className="w-full md:w-2/3 h-full p-6 md:p-12 flex items-center justify-center bg-white"',
-  'className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0"'
+  '<div className="relative inline-block max-w-full max-h-full">',
+  '<div className="relative flex max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white">'
 );
-// Replace sidebar classes
 code = code.replace(
-  'className="w-full md:w-1/3 p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-l border-white/10"',
-  'className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink"'
+  'className="block w-auto h-auto max-w-full max-h-[85vh] shadow-2xl bg-white"',
+  'className="block max-w-full max-h-full w-auto h-auto object-contain"'
+);
+
+// Unit View
+code = code.replace(
+  '<div className="w-full md:w-2/3 h-auto md:h-full p-2 md:p-4 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">',
+  '<div className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0">'
+);
+code = code.replace(
+  'className="block w-auto h-auto max-w-full max-h-[85vh] drop-shadow-2xl"',
+  'className="block max-w-full max-h-full w-auto h-auto object-contain"'
 );
 
 fs.writeFileSync('components/InteractiveViewer.tsx', code);
-console.log("Patched InteractiveViewer.tsx layouts");
+console.log("Patched interactive");
