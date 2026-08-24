@@ -1009,21 +1009,24 @@ const App: React.FC = () => {
                                           )}
                                         </div>
                                     </div>
-                                    {activeProject.coordinates && (
-                                        <div className="-mx-8 -mb-8 mt-8 border-t border-white/5 relative overflow-hidden rounded-b-3xl">
-                                            <div className="absolute top-4 left-6 z-20 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 pointer-events-none">
-                                                <span className="text-[10px] text-white font-extrabold tracking-tight uppercase tracking-widest block">Exact Location</span>
-                                            </div>
-                                            <LocationPicker 
-                                                initialPosition={activeProject.coordinates}
-                                                readOnly={true}
-                                            />
-                                        </div>
-                                    )}
+
                                 </div>
                             )}
                         </div>
 
+
+                        {/* Map Container */}
+                        {activeProject.coordinates && (
+                            <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl relative z-10">
+                                <div className="absolute top-6 left-6 z-20 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 pointer-events-none">
+                                    <span className="text-[10px] text-white font-extrabold tracking-tight uppercase tracking-widest block">Exact Location</span>
+                                </div>
+                                <LocationPicker 
+                                    initialPosition={activeProject.coordinates}
+                                    readOnly={true}
+                                />
+                            </div>
+                        )}
                         {/* Admin Media Uploader */}
                         {isAdmin && (
                            <div className="bg-slate-900/80 border border-brand-blue/20 rounded-3xl p-8 md:p-8">
