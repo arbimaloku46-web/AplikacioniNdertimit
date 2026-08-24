@@ -152,7 +152,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0"
             >
-              <div className="relative flex max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
@@ -246,7 +246,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden"
             >
               <div className="w-full md:w-3/4 h-auto md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-h-[50vh] md:min-h-0">
-                <div className="relative flex max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white">
+                <div className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white">
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
@@ -264,12 +264,10 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
                         fill={
                           hoveredPath === unit.id 
                             ? (unit.status === 'available' ? "rgba(16, 185, 129, 0.4)" : unit.status === 'reserved' ? "rgba(245, 158, 11, 0.4)" : "rgba(239, 68, 68, 0.4)")
-                            : (unit.status === 'available' ? "rgba(16, 185, 129, 0.15)" : unit.status === 'reserved' ? "rgba(245, 158, 11, 0.15)" : "rgba(239, 68, 68, 0.15)")
+                            : (unit.status === 'available' ? "rgba(16, 185, 129, 0.25)" : unit.status === 'reserved' ? "rgba(245, 158, 11, 0.25)" : "rgba(239, 68, 68, 0.25)")
                         }
                         stroke={
-                          hoveredPath === unit.id 
-                            ? (unit.status === 'available' ? "#10b981" : unit.status === 'reserved' ? "#f59e0b" : "#ef4444")
-                            : "transparent"
+                          unit.status === 'available' ? "#10b981" : unit.status === 'reserved' ? "#f59e0b" : "#ef4444"
                         }
                         strokeWidth="0.5"
                         vectorEffect="non-scaling-stroke"
