@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; background: #333; height: 100vh; display: flex; flex-direction: column; }
+    
+    .outer {
+      display: flex; flex-direction: row; height: calc(100vh - 100px);
+    }
+    
+    .bg111 {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; min-height: 0; background: #111;
+    }
+    
+    .centerer {
+      flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0;
+      padding: 2rem; box-sizing: border-box;
+    }
+    
+    .wrapper { 
+      position: relative;
+      /* Force the wrapper to preserve the aspect ratio, while being contained */
+      aspect-ratio: 4000 / 2000; /* or 2000/4000 */
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%; /* try to fill */
+      height: 100%; /* try to fill */
+      /* but wait, if we set width and height 100%, and max-width/height 100%, aspect-ratio will override whichever dimension is not constrained? */
+      border: 4px solid yellow;
+      box-sizing: border-box;
+    }
+    
+    /* Actually, a better aspect-ratio trick for flex containers: */
+    /* If the wrapper is a flex child and we just want it to fit, we can just let flex handle it? No, flex doesn't respect aspect-ratio natively without some tweaking. */
+    
+    img { 
+      width: 100%; height: 100%; display: block; object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="bg111">
+      <div class="centerer">
+        <!-- 4000x2000 image (2:1) -->
+        <div class="wrapper" style="aspect-ratio: 2/1; max-width: 100%; max-height: 100%;">
+          <img src="https://fastly.picsum.photos/id/111/4000/2000.jpg?hmac=X" />
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg111">
+      <div class="centerer">
+        <!-- 400x2000 image (1:5) -->
+        <div class="wrapper" style="aspect-ratio: 1/5; max-width: 100%; max-height: 100%;">
+          <img src="https://fastly.picsum.photos/id/111/400/2000.jpg?hmac=X" />
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

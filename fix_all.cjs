@@ -1,58 +1,48 @@
 const fs = require('fs');
+let code = fs.readFileSync('components/InteractiveViewer.tsx', 'utf8');
 
-// ----------------------------------------------------
-// 1. Fix InteractiveViewer layouts
-// ----------------------------------------------------
-let iv = fs.readFileSync('components/InteractiveViewer.tsx', 'utf8');
-
-// Replace level 1 wrapper
-iv = iv.replace(
-  'className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl"',
-  'className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl" style={{ lineHeight: 0 }}'
-);
-// In case it wasn't replaced properly before:
-iv = iv.replace(
-  'className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl"',
-  'className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl" style={{ lineHeight: 0 }}'
-);
-// img
-iv = iv.replace(
-  'className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}',
-  'className="block max-w-full max-h-full w-auto h-auto"'
-);
-
-// Replace level 2 wrapper
-iv = iv.replace(
-  'className="relative inline-flex justify-center items-center max-w-full max-h-full min-h-0 min-w-0 rounded-2xl overflow-hidden shadow-2xl bg-white"',
-  'className="relative inline-block max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white" style={{ lineHeight: 0 }}'
-);
-// img
-iv = iv.replace(
-  'className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}',
-  'className="block max-w-full max-h-full w-auto h-auto"'
-);
-
-// Replace level 3 wrapper
-iv = iv.replace(
-  'className="block max-w-full max-h-full w-auto h-auto" style={{ minHeight: 0, minWidth: 0 }}',
-  'className="block max-w-full max-h-full w-auto h-auto"'
-);
-
-// Ensure the image wrapper in level 3 is inline-block (it was just the img inside a div)
-iv = iv.replace(
-  'className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0 min-w-0 overflow-hidden"',
-  'className="w-full md:w-2/3 h-auto md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-h-[40vh] md:min-h-0 min-w-0 overflow-hidden"'
-);
-// Wait, level 3 img was just inside the flex container directly?
-// Let's wrap it in inline-block if it wasn't
-if(iv.includes('<img \n                  src={activeUnit.floorPlanUrl}')) {
-  iv = iv.replace(
-    /<img \s*src={activeUnit\.floorPlanUrl}[\s\S]*?\/>/,
-    `<div className="relative inline-block max-w-full max-h-full" style={{ lineHeight: 0 }}>
-                  $&
-                </div>`
+// The easiest way is to just grab the raw text of InteractiveViewer, find the issues, and fix them.
+// Let's replace the loop body that renders floor labels:
+const searchString = `                      <div 
+                        className="bg-slate-900/80 backdrop-blur-md border text-white text-[10px] sm:text-xs font-extrabold tracking-tight px-2.5 py-1 sm:py-1.5 rounded-lg shadow-xl whitespace-nowrap transition-all duration-300 ease-in-out"
+                        style={{ borderColor: isHovered ? colorScheme.border : 'rgba(255,255,255,0.2)' }}
+                      >
+                        {floor.name}
+                      </div>
+                            </div>
+    </div>
   );
-}
+})}`;
 
-fs.writeFileSync('components/InteractiveViewer.tsx', iv);
-console.log('Fixed InteractiveViewer layouts');
+const fixedString = `                      <div 
+                        className="bg-slate-900/80 backdrop-blur-md border text-white text-[10px] sm:text-xs font-extrabold tracking-tight px-2.5 py-1 sm:py-1.5 rounded-lg shadow-xl whitespace-nowrap transition-all duration-300 ease-in-out"
+                        style={{ borderColor: isHovered ? colorScheme.border : 'rgba(255,255,255,0.2)' }}
+                      >
+                        {floor.name}
+                      </div>
+                    </div>
+                  );
+                })}`;
+
+code = code.replace(searchString, fixedString);
+
+// Also at the end of the file, it had
+/*
+411|                    </AnimatePresence>
+412|          </div>
+413|      );
+414|  }
+*/
+const searchString2 = `                  </AnimatePresence>
+        </div>
+    );
+}`;
+
+const fixedString2 = `                  </AnimatePresence>
+        </div>
+      </div>
+    );
+}`;
+code = code.replace(searchString2, fixedString2);
+
+fs.writeFileSync('components/InteractiveViewer.tsx', code);

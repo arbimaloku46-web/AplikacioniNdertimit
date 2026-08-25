@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; background: #333; height: 100vh; display: flex; flex-direction: column; }
+    
+    .container { 
+      flex: 1; min-height: 0; min-width: 0; 
+      display: flex; align-items: center; justify-content: center; 
+      background: #111; overflow: hidden; padding: 2rem; box-sizing: border-box; 
+      border: 1px solid green; 
+    }
+    
+    .wrapper { 
+      position: relative; 
+      /* The magic shrink-wrap for bounded images */
+      display: block; 
+      max-width: 100%; max-height: 100%;
+      font-size: 0; /* remove inline gap */
+      border: 2px solid yellow;
+    }
+    
+    img { 
+      display: block; 
+      max-width: 100%; max-height: 100%; 
+      width: auto; height: auto;
+      min-width: 0; min-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="wrapper" id="w1">
+      <img id="img1" src="https://fastly.picsum.photos/id/111/400/2000.jpg?hmac=X" />
+    </div>
+  </div>
+  <div class="container">
+    <div class="wrapper" id="w2">
+      <img id="img2" src="https://fastly.picsum.photos/id/111/2000/400.jpg?hmac=X" />
+    </div>
+  </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Undo, Check, Map, Plus, Minus, Trash2, ArrowLeft, Save, ChevronRight, ChevronDown } from 'lucide-react';
 import { Project, InteractiveBuilding, Floor, Unit } from '../types';
 import { dbService } from '../services/db';
@@ -39,17 +39,63 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
     }
   };
   const imgRef = useRef<HTMLImageElement>(null);
+  const [imageBounds, setImageBounds] = useState({ top: 0, left: 0, width: 100, height: 100 });
+
+  const updateImageBounds = () => {
+    if (imgRef.current) {
+      const img = imgRef.current;
+      const containerRatio = img.offsetWidth / img.offsetHeight;
+      const imageRatio = img.naturalWidth / img.naturalHeight;
+      
+      let renderedWidth, renderedHeight;
+      
+      if (imageRatio > containerRatio) {
+         renderedWidth = img.offsetWidth;
+         renderedHeight = img.offsetWidth / imageRatio;
+      } else {
+         renderedHeight = img.offsetHeight;
+         renderedWidth = img.offsetHeight * imageRatio;
+      }
+      
+      setImageBounds({
+         top: (img.offsetHeight - renderedHeight) / 2,
+         left: (img.offsetWidth - renderedWidth) / 2,
+         width: renderedWidth,
+         height: renderedHeight
+      });
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', updateImageBounds);
+    return () => window.removeEventListener('resize', updateImageBounds);
+  }, []);
+
 
   const handleSave = () => {
     onSave({ ...project, interactiveBuilding: buildingData });
   };
 
-  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imgRef.current || mode === 'idle') return;
-    // Use nativeEvent offset to get exact coordinates relative to the element, regardless of scrolling or bounding box edge cases
-    const x = (e.nativeEvent.offsetX / e.currentTarget.offsetWidth) * 100;
-    const y = (e.nativeEvent.offsetY / e.currentTarget.offsetHeight) * 100;
-    setPoints([...points, { x, y }]);
+    
+    // Get click relative to the img element
+    const rect = imgRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    
+    // Convert to click relative to the actual rendered image pixels
+    const clickXOnImage = clickX - imageBounds.left;
+    const clickYOnImage = clickY - imageBounds.top;
+    
+    // Convert to percentage
+    const percentX = (clickXOnImage / imageBounds.width) * 100;
+    const percentY = (clickYOnImage / imageBounds.height) * 100;
+    
+    // Clamp
+    if (percentX >= 0 && percentX <= 100 && percentY >= 0 && percentY <= 100) {
+      setPoints([...points, { x: percentX, y: percentY }]);
+    }
   };
 
   const currentSvgPath = points.length > 0 
@@ -179,20 +225,22 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
     return (
       <div className="flex-1 bg-slate-950 rounded-2xl border border-white/5 shadow-inner min-h-[60vh] lg:min-h-0 min-w-0 h-full overflow-hidden flex flex-col relative">
         {imageUrl ? (
-          <div className="w-full h-full overflow-hidden custom-scrollbar relative bg-[#111]">
+          <div className="flex-1 w-full h-full min-h-0 min-w-0 overflow-hidden relative bg-[#111] flex flex-col">
             <div 
-              className="flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center w-full h-full"
+              className="flex-1 flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center w-full h-full min-h-0 min-w-0"
             >
-              <div className="relative flex items-center justify-center min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
+              <div className="relative w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-slate-900/50" style={{ lineHeight: 0 }}>
                 <img 
                   ref={imgRef}
                   src={imageUrl} 
                   alt="Reference" 
-                  className={`block min-w-0 min-h-0 max-w-full max-h-full w-auto h-auto rounded-2xl select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`} 
+                  className={`w-full h-full object-contain rounded-2xl select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`} 
                   draggable={false}
                   onClick={handleImageClick}
+                  onLoad={updateImageBounds}
                 />
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <div className="absolute pointer-events-none" style={{ top: imageBounds.top, left: imageBounds.left, width: imageBounds.width, height: imageBounds.height }}>
+                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                   {/* Existing paths for building */}
                   {currentViewMode === 'building' && buildingData.floors.map(f => {
                     const isBeingDrawn = mode !== 'idle' && f.id === activeFloorId;
@@ -293,10 +341,9 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
                   );
                 })}
 
+                </div>
               </div>
             </div>
-
-
 
             {mode !== 'idle' && (
               <div className="absolute top-4 left-4 right-4 flex justify-between items-center bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl border border-brand-blue/30 shadow-xl pointer-events-auto z-20">

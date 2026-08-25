@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ArrowLeft } from 'lucide-react';
 import { BuildingData, FloorData, UnitData } from './BuildingConfigurator';
@@ -63,7 +65,7 @@ function ImageWithOverlay({ src, alt, children }: { src: string; alt: string; ch
   );
 }
 
-export function InteractiveViewer({ data }: InteractiveViewerProps) {
+export default function InteractiveViewer({ data }: InteractiveViewerProps) {
   const [level, setLevel] = useState<'building' | 'floor' | 'unit'>('building');
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
@@ -185,9 +187,9 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
                         key={"label-"+floor.id}
                         className="absolute pointer-events-none origin-center"
                         style={{ 
-                          left: `${center.x}%`, 
-                          top: `${center.y}%`, 
-                          transform: `translate(-50%, -50%) scale(${isHovered ? 1.1 : 1})`,
+                          left: \`\${center.x}%\`, 
+                          top: \`\${center.y}%\`, 
+                          transform: \`translate(-50%, -50%) scale(\${isHovered ? 1.1 : 1})\`,
                           opacity: hoveredPath && !isHovered ? 0.3 : 1,
                           zIndex: isHovered ? 20 : 10
                         }}
@@ -218,9 +220,9 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
                         onClick={() => handleFloorClick(floor)}
                         onMouseEnter={() => setHoveredPath(floor.id)}
                         onMouseLeave={() => setHoveredPath(null)}
-                        className={`w-full text-left p-5 rounded-2xl border transition-all ${
+                        className={\`w-full text-left p-5 rounded-2xl border transition-all \${
                           isHovered ? 'bg-slate-800/80 backdrop-blur-xl scale-[1.02] shadow-xl' : 'bg-slate-900/90 backdrop-blur-2xl border-white/5'
-                        }`}
+                        }\`}
                         style={{ borderColor: isHovered ? colorScheme.border : undefined }}
                       >
                          <div className="flex justify-between items-center mb-1">
@@ -286,16 +288,16 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
                         key={"ulabel-"+unit.id}
                         className="absolute pointer-events-none origin-center"
                         style={{ 
-                          left: `${center.x}%`, 
-                          top: `${center.y}%`, 
-                          transform: `translate(-50%, -50%) scale(${isHovered ? 1.1 : 1})`,
+                          left: \`\${center.x}%\`, 
+                          top: \`\${center.y}%\`, 
+                          transform: \`translate(-50%, -50%) scale(\${isHovered ? 1.1 : 1})\`,
                           opacity: hoveredPath && !isHovered ? 0.3 : 1,
                           zIndex: isHovered ? 20 : 10
                         }}
                       >
                         <div className="bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-xl border border-white/10 flex flex-col items-center gap-1 min-w-[80px]">
                           <span className="text-white font-bold text-sm leading-none">{unit.name}</span>
-                          <span className={`text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${statusColor}`}>
+                          <span className={\`text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md border \${statusColor}\`}>
                             {unit.status}
                           </span>
                         </div>
@@ -314,17 +316,17 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
                       onClick={() => handleUnitClick(unit)}
                       onMouseEnter={() => setHoveredPath(unit.id)}
                       onMouseLeave={() => setHoveredPath(null)}
-                      className={`w-full text-left p-6 rounded-2xl border transition-all ${
+                      className={\`w-full text-left p-6 rounded-2xl border transition-all \${
                         hoveredPath === unit.id ? 'bg-slate-800/80 backdrop-blur-xl border-white/20 scale-[1.02] shadow-xl' : 'bg-slate-900/90 backdrop-blur-2xl border-white/5'
-                      }`}
+                      }\`}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <span className="font-extrabold tracking-tight text-white text-lg">{unit.name}</span>
-                        <span className={`text-[10px] uppercase tracking-widest font-extrabold tracking-tight px-2.5 py-1 rounded-full ${
+                        <span className={\`text-[10px] uppercase tracking-widest font-extrabold tracking-tight px-2.5 py-1 rounded-full \${
                           unit.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
                           unit.status === 'reserved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
                           'bg-red-500/10 text-red-400 border border-red-500/20'
-                        }`}>
+                        }\`}>
                           {unit.status}
                         </span>
                       </div>
@@ -362,11 +364,11 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
               <div className="w-full md:w-1/3 h-auto md:h-full p-8 md:p-10 flex flex-col bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto shrink-0 md:shrink-0 flex-1 md:flex-none">
                 <div className="mb-8">
                   <h3 className="text-4xl font-display font-extrabold tracking-tight text-white mb-4">{activeUnit.name}</h3>
-                  <div className={`inline-block px-6 py-1.5 rounded-full text-xs font-extrabold tracking-tight uppercase tracking-wider ${
+                  <div className={\`inline-block px-6 py-1.5 rounded-full text-xs font-extrabold tracking-tight uppercase tracking-wider \${
                     activeUnit.status === 'available' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' : 
                     activeUnit.status === 'reserved' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' :
                     'bg-red-500/20 text-red-400 border border-red-500/20'
-                  }`}>
+                  }\`}>
                     {activeUnit.status}
                   </div>
                 </div>
@@ -414,3 +416,7 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('components/InteractiveViewer.tsx', code);
+console.log('Rewrote InteractiveViewer!');
