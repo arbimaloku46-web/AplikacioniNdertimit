@@ -183,7 +183,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
             <div 
               className="flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center w-full h-full"
             >
-              <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
+              <div className="relative flex items-center justify-center min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
                 <img 
                   ref={imgRef}
                   src={imageUrl} 
