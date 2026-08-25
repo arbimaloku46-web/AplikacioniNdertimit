@@ -189,7 +189,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
                 height: zoomLevel > 1 ? `${100 * zoomLevel}%` : '100%'
               }}
             >
-              <div className="relative flex min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl">
+              <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
                 <img 
                   ref={imgRef}
                   src={imageUrl} 

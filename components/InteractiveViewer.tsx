@@ -152,7 +152,7 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex items-center justify-center p-6 md:p-8 absolute inset-0 min-h-0 min-w-0 overflow-hidden"
             >
-              <div className="relative flex min-h-0 min-w-0 max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl" style={{ lineHeight: 0 }}>
                 <img 
                   src={data.mainImageUrl} 
                   alt={data.name} 
@@ -245,8 +245,8 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-3/4 h-[50vh] md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-w-0 overflow-hidden">
-                <div className="relative flex min-h-0 min-w-0 max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white">
+              <div className="w-full md:w-3/4 h-[50vh] md:h-full flex items-center justify-center p-4 md:p-8 relative bg-slate-950/50 shrink-0 min-w-0 min-h-0 overflow-hidden">
+                <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl bg-white" style={{ lineHeight: 0 }}>
                   <img 
                     src={activeFloor.floorPlanUrl} 
                     alt={activeFloor.name} 
@@ -362,8 +362,8 @@ export const InteractiveViewer: React.FC<InteractiveViewerProps> = ({ data, onCl
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 bg-slate-950 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
-              <div className="w-full md:w-2/3 h-[50vh] md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-w-0 overflow-hidden">
-                <div className="relative flex min-h-0 min-w-0 max-w-full max-h-full">
+              <div className="w-full md:w-2/3 h-[50vh] md:h-full p-6 md:p-12 flex items-center justify-center bg-white shrink-0 min-w-0 min-h-0 overflow-hidden">
+                <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full" style={{ lineHeight: 0 }}>
                   <img 
                   src={activeUnit.floorPlanUrl} 
                   alt={activeUnit.name} 
