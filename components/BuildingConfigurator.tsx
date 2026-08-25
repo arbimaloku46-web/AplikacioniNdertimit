@@ -20,7 +20,6 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
   const [mode, setMode] = useState<Mode>('idle');
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
   
   const [points, setPoints] = useState<{x: number, y: number}[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -47,8 +46,9 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imgRef.current || mode === 'idle') return;
-    const x = (e.nativeEvent.offsetX / imgRef.current.clientWidth) * 100;
-    const y = (e.nativeEvent.offsetY / imgRef.current.clientHeight) * 100;
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
     setPoints([...points, { x, y }]);
   };
 
@@ -181,13 +181,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
         {imageUrl ? (
           <div className="w-full h-full overflow-auto custom-scrollbar relative bg-[#111]">
             <div 
-              className="flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center"
-              style={{ 
-                minWidth: '100%', 
-                minHeight: '100%',
-                width: zoomLevel > 1 ? `${100 * zoomLevel}%` : '100%',
-                height: zoomLevel > 1 ? `${100 * zoomLevel}%` : '100%'
-              }}
+              className="flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center w-full h-full"
             >
               <div className="relative inline-block min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
                 <img 
@@ -302,12 +296,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
               </div>
             </div>
 
-            {/* Zoom Controls */}
-            <div className="absolute bottom-6 right-6 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-white/10 shadow-xl z-20">
-              <button onClick={() => setZoomLevel(Math.max(1, zoomLevel - 0.5))} className="p-2 text-white hover:bg-white/10 rounded-lg"><Minus className="w-4 h-4" /></button>
-              <span className="text-white text-xs font-bold w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
-              <button onClick={() => setZoomLevel(Math.min(4, zoomLevel + 0.5))} className="p-2 text-white hover:bg-white/10 rounded-lg"><Plus className="w-4 h-4" /></button>
-            </div>
+
 
             {mode !== 'idle' && (
               <div className="absolute top-4 left-4 right-4 flex justify-between items-center bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl border border-brand-blue/30 shadow-xl pointer-events-auto z-20">
