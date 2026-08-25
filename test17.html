@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: #333; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: auto;}
+    #scroll { width: 100%; height: 100%; overflow: auto; text-align: center; }
+    #scroll::before { content: ''; display: inline-block; height: 100%; vertical-align: middle; }
+    #wrapper { position: relative; display: inline-block; vertical-align: middle; transform-origin: center; border: 2px solid green; line-height: 0;}
+    img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; }
+    .pt { position: absolute; width: 4px; height: 4px; background: red; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="scroll">
+    <div id="wrapper" style="transform: scale(2.0)">
+      <img id="img" src="https://fastly.picsum.photos/id/111/400/300.jpg?hmac=1" />
+    </div>
+  </div>
+  <script>
+    const wrapper = document.getElementById('wrapper');
+    const img = document.getElementById('img');
+    img.addEventListener('click', (e) => {
+      const rect = img.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      const pt = document.createElement('div');
+      pt.className = 'pt';
+      pt.style.left = x + '%';
+      pt.style.top = y + '%';
+      wrapper.appendChild(pt);
+      console.log('Clicked', x, y);
+    });
+  </script>
+</body>
+</html>

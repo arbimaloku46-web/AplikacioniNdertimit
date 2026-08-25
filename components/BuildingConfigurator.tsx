@@ -47,9 +47,8 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imgRef.current || mode === 'idle') return;
-    const rect = imgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = (e.nativeEvent.offsetX / imgRef.current.clientWidth) * 100;
+    const y = (e.nativeEvent.offsetY / imgRef.current.clientHeight) * 100;
     setPoints([...points, { x, y }]);
   };
 
@@ -190,12 +189,12 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
                 height: zoomLevel > 1 ? `${100 * zoomLevel}%` : '100%'
               }}
             >
-              <div className="relative inline-block max-w-full max-h-full rounded-2xl shadow-2xl" style={{ lineHeight: 0 }}>
+              <div className="relative flex min-h-0 min-w-0 max-w-full max-h-full rounded-2xl shadow-2xl">
                 <img 
                   ref={imgRef}
                   src={imageUrl} 
                   alt="Reference" 
-                  className={`block max-w-full max-h-full w-auto h-auto rounded-2xl select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`} 
+                  className={`block min-w-0 min-h-0 max-w-full max-h-full w-auto h-auto rounded-2xl select-none ${mode !== 'idle' ? 'cursor-crosshair' : ''}`} 
                   draggable={false}
                   onClick={handleImageClick}
                 />

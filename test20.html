@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; background: #333; height: 100vh; display: flex; flex-direction: column; }
+    .main { flex: 1; min-height: 0; position: relative; display: flex; }
+    
+    .scroll-container {
+      width: 100%; height: 100%;
+      overflow: auto;
+      background: #111;
+      position: relative;
+    }
+    
+    .flex-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem; /* p-8 */
+      transition: all 300ms;
+      transform-origin: center;
+    }
+    
+    .wrapper { 
+      position: relative; 
+      display: inline-block; 
+      max-width: 100%; max-height: 100%; 
+      border-radius: 1rem; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      line-height: 0;
+    }
+    
+    img { 
+      display: block; 
+      max-width: 100%; max-height: 100%; 
+      width: auto; height: auto; 
+      border-radius: 1rem; 
+    }
+    
+    svg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+    }
+    
+    .btn { position: absolute; top: 10px; right: 10px; z-index: 100; }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="scroll-container">
+      <div class="flex-center" id="flex-center" style="width: 100%; height: 100%;">
+        <div class="wrapper" id="wrapper">
+          <img id="img" src="https://fastly.picsum.photos/id/111/800/1200.jpg?hmac=2" />
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" id="svg">
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="btn" onclick="zoomIn()">Zoom In</button>
+  <script>
+    let zoomLevel = 1;
+    function zoomIn() {
+      zoomLevel += 0.5;
+      const fc = document.getElementById('flex-center');
+      fc.style.width = (100 * zoomLevel) + '%';
+      fc.style.height = (100 * zoomLevel) + '%';
+    }
+    
+    const img = document.getElementById('img');
+    const svg = document.getElementById('svg');
+    img.addEventListener('click', (e) => {
+      const rect = img.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', y);
+      circle.setAttribute('r', '2');
+      circle.setAttribute('fill', 'red');
+      svg.appendChild(circle);
+      
+      console.log('Clicked', x, y);
+    });
+  </script>
+</body>
+</html>
