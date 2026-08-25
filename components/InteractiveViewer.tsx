@@ -5,6 +5,7 @@ import { BuildingData, FloorData, UnitData } from './BuildingConfigurator';
 
 interface InteractiveViewerProps {
   data: BuildingData;
+  onClose?: () => void;
 }
 
 const FLOOR_COLORS = [
@@ -63,7 +64,7 @@ function ImageWithOverlay({ src, alt, children }: { src: string; alt: string; ch
   );
 }
 
-export function InteractiveViewer({ data }: InteractiveViewerProps) {
+export function InteractiveViewer({ data, onClose }: InteractiveViewerProps) {
   const [level, setLevel] = useState<'building' | 'floor' | 'unit'>('building');
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
@@ -114,8 +115,9 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
         {/* Navigation Header */}
         <div className="h-16 px-6 border-b border-white/5 flex items-center bg-slate-900/50 backdrop-blur-md shrink-0 relative z-10">
           <AnimatePresence mode="popLayout">
-            {level !== 'building' && (
+            {level !== 'building' ? (
               <motion.button
+                key="back"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -127,7 +129,21 @@ export function InteractiveViewer({ data }: InteractiveViewerProps) {
                   {level === 'unit' ? 'Back to Floor' : 'Back to Building'}
                 </span>
               </motion.button>
-            )}
+            ) : onClose ? (
+              <motion.button
+                key="close"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                onClick={onClose}
+                className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-extrabold tracking-tight uppercase tracking-wider">
+                  Back to Project
+                </span>
+              </motion.button>
+            ) : null}
           </AnimatePresence>
           <div className="ml-auto text-sm font-extrabold tracking-tight text-white flex items-center gap-2 uppercase tracking-wider">
             <span className={level === 'building' ? 'text-brand-blue' : 'text-slate-500'}>Building</span>
