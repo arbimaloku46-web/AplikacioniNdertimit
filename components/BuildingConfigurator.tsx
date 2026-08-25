@@ -46,9 +46,9 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imgRef.current || mode === 'idle') return;
-    const rect = imgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    // Use nativeEvent offset to get exact coordinates relative to the element, regardless of scrolling or bounding box edge cases
+    const x = (e.nativeEvent.offsetX / e.currentTarget.offsetWidth) * 100;
+    const y = (e.nativeEvent.offsetY / e.currentTarget.offsetHeight) * 100;
     setPoints([...points, { x, y }]);
   };
 
@@ -179,7 +179,7 @@ export const BuildingConfigurator: React.FC<BuildingConfiguratorProps> = ({ proj
     return (
       <div className="flex-1 bg-slate-950 rounded-2xl border border-white/5 shadow-inner min-h-[60vh] lg:min-h-0 min-w-0 h-full overflow-hidden flex flex-col relative">
         {imageUrl ? (
-          <div className="w-full h-full overflow-auto custom-scrollbar relative bg-[#111]">
+          <div className="w-full h-full overflow-hidden custom-scrollbar relative bg-[#111]">
             <div 
               className="flex items-center justify-center p-4 md:p-8 transition-all duration-300 origin-center w-full h-full"
             >
