@@ -11,6 +11,7 @@ interface EmbedViewerProps {
 
 export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFullScreenChange }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
   const [isCssFullscreen, setIsCssFullscreen] = useState(false);
@@ -89,6 +90,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
     } else {
         setIsCssFullscreen(true);
         setIsInteracting(true);
+        setHasStarted(true);
     }
   };
 
@@ -152,7 +154,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
         </button>
       )}
 
-      {isLoading && (
+      {isLoading && hasStarted && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-900/80 backdrop-blur-md pointer-events-none">
           <div className="flex flex-col items-center">
              <div className="relative">
@@ -165,11 +167,17 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
           </div>
         </div>
       )}
+      
+      {!hasStarted && (
+        <div className="absolute inset-0 z-0 bg-slate-900 flex items-center justify-center">
+            <svg className="w-24 h-24 opacity-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" /></svg>
+        </div>
+      )}
 
-      {!isLoading && !isInteracting && !isFullscreen && (
+      {!isInteracting && !isFullscreen && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[1px] transition-all duration-300">
             <Button 
-                onClick={() => setIsInteracting(true)}
+                onClick={() => { setIsInteracting(true); setHasStarted(true); }}
                 className="shadow-2xl !bg-white !text-slate-950 hover:scale-105"
             >
                 {type === '3d' ? 'Tap to Explore' : 'Start Tour'}
@@ -177,7 +185,8 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
         </div>
       )}
 
-      <iframe 
+      {hasStarted && (
+        <iframe 
         src={url}
         title={title}
         className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting || isFullscreen ? 'pointer-events-auto' : 'pointer-events-none'}`}
@@ -187,6 +196,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
         sandbox="allow-scripts allow-same-origin"
       ></iframe>
+      )}
       
       {/* Controls Hint */}
       {isInteracting && !isFullscreen && (
