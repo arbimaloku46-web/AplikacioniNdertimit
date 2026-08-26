@@ -185,7 +185,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
         allowFullScreen
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+        sandbox="allow-scripts allow-same-origin"
       ></iframe>
       
       {/* Controls Hint */}
