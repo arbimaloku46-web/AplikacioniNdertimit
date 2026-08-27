@@ -402,8 +402,19 @@ const App: React.FC = () => {
 
   const extractUrlFromEmbed = (input: string) => {
     if (!input) return '';
+    let extracted = input;
     const srcMatch = input.match(/src=["']([^"']+)["']/);
-    return srcMatch ? srcMatch[1] : input;
+    if (srcMatch) {
+      extracted = srcMatch[1];
+    }
+    
+    // Polycam formatting
+    if (extracted.includes('poly.cam/capture/') && !extracted.includes('/embed') && !extracted.includes('embed=')) {
+      // Remove trailing slash if exists
+      extracted = extracted.replace(/\/$/, '');
+      extracted = extracted + '/embed';
+    }
+    return extracted;
   };
 
   const handleUpdateField = async (field: string, value: any) => {

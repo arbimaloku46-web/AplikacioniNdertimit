@@ -94,6 +94,11 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
     }
   };
 
+  let displayUrl = url;
+  if (displayUrl && displayUrl.includes('poly.cam/capture/') && !displayUrl.includes('/embed') && !displayUrl.includes('embed=')) {
+      displayUrl = displayUrl.replace(/\/$/, '') + '/embed';
+  }
+
   if (!url) {
     return (
       <div className="w-full h-full min-h-[350px] bg-slate-900/40 rounded-2xl border border-white/5/50 flex flex-col items-center justify-center text-slate-600 p-8 text-center">
@@ -187,14 +192,14 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
 
       {hasStarted && (
         <iframe 
-        src={url}
+        src={displayUrl}
         title={title}
         className={`absolute inset-0 w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'} ${isInteracting || isFullscreen ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onLoad={() => setIsLoading(false)}
         allowFullScreen
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-        sandbox="allow-scripts allow-presentation"
+        sandbox="allow-scripts allow-presentation allow-same-origin"
       ></iframe>
       )}
       
