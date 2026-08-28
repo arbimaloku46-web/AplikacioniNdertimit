@@ -514,7 +514,6 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                     className="w-full h-full relative z-10" 
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
                                     allowFullScreen 
-                                    sandbox="allow-scripts allow-presentation allow-same-origin"
                                 />
                                 {mediaItem && (
                                     <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
