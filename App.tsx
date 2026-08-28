@@ -391,7 +391,7 @@ const App: React.FC = () => {
         const newUpdate: WeeklyUpdate = {
             weekNumber: latestWeek + 1, date: new Date().toISOString().split('T')[0], title: `Week ${latestWeek + 1}`, summary: '', media: [],
             status: 'draft',
-            stats: { completion: activeProject.updates[0]?.stats.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
+            stats: { completion: activeProject.updates[0]?.stats?.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
         };
         const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
         setActiveProject(updatedProject);
@@ -769,9 +769,9 @@ const App: React.FC = () => {
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
                         <span className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-0 md:mb-1 mr-4 md:mr-0">Total Progress</span>
                         <div className="flex items-center gap-6">
-                           <div className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white">{activeProject.updates[activeUpdateIndex].stats.completion}%</div>
+                           <div className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white">{activeProject.updates[activeUpdateIndex]?.stats?.completion || 0}%</div>
                            <div className="w-20 md:w-24 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-brand-blue transition-all duration-1000" style={{ width: `${activeProject.updates[activeUpdateIndex].stats.completion}%` }} />
+                              <div className="h-full bg-brand-blue transition-all duration-1000" style={{ width: `${activeProject.updates[activeUpdateIndex]?.stats?.completion || 0}%` }} />
                            </div>
                         </div>
                     </div>
@@ -791,13 +791,13 @@ const App: React.FC = () => {
                     )})}
                 </div>
 
-                {!isAdmin && (!activeProject.updates[activeUpdateIndex] || activeProject.updates[activeUpdateIndex].status === 'draft') ? (
+                {(!activeProject.updates[activeUpdateIndex] || (!isAdmin && activeProject.updates[activeUpdateIndex].status === 'draft')) ? (
                     <div className="text-center py-24 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
                         <div className="inline-block p-6 rounded-full bg-slate-800/80 backdrop-blur-xl mb-4">
                             <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
-                        <h3 className="text-xl font-extrabold tracking-tight text-white mb-2">No Updates Published</h3>
-                        <p className="text-slate-500 max-w-md mx-auto">The project manager has not published any weekly updates for this project yet. Please check back later.</p>
+                        <h3 className="text-xl font-extrabold tracking-tight text-white mb-2">{isAdmin ? "No Updates Yet" : "No Updates Published"}</h3>
+                        <p className="text-slate-500 max-w-md mx-auto">{isAdmin ? "Click the '+' button above to create the first weekly update for this project." : "The project manager has not published any weekly updates for this project yet. Please check back later."}</p>
                     </div>
                 ) : (
                 <>
