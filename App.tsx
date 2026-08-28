@@ -412,7 +412,7 @@ const App: React.FC = () => {
     if (extracted.includes('poly.cam/capture/') && !extracted.includes('/embed') && !extracted.includes('embed=')) {
       // Remove trailing slash if exists
       extracted = extracted.replace(/\/$/, '');
-      extracted = extracted + '/embed';
+      extracted = extracted + '/embed?gdpr=0&cookie_consent=true';
     }
     return extracted;
   };

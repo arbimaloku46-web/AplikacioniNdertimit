@@ -510,8 +510,11 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="relative w-full h-[90vh] md:h-screen flex items-center justify-center">
                                 <iframe 
-                                    src={(slide as any).embedUrl} 
+                                    src={((slide as any).embedUrl && (slide as any).embedUrl.includes('poly.cam/capture/')) 
+                                        ? ((slide as any).embedUrl.includes('cookie_consent') ? (slide as any).embedUrl : (slide as any).embedUrl + ((slide as any).embedUrl.includes('?') ? '&' : '?') + 'gdpr=0&cookie_consent=true')
+                                        : (slide as any).embedUrl} 
                                     className="w-full h-full relative z-10" 
+                                    sandbox="allow-scripts allow-same-origin allow-presentation"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
                                     allowFullScreen 
                                 />
