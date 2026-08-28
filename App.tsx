@@ -95,6 +95,7 @@ const App: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [projectListView, setProjectListView] = useState<'grid' | 'list'>('grid');
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
+  const [projectTab, setProjectTab] = useState<'overview' | 'models' | 'discussion'>('overview');
   const [heroTab, setHeroTab] = useState<'3d' | '360'>('3d');
   
   const activeProjectsList = projects.filter(p => !p.deletedAt);
@@ -800,10 +801,61 @@ const App: React.FC = () => {
                     </div>
                 ) : (
                 <>
-                {/* Hero Experience Suite */}
+                
+{/* Mobile Bottom Navigation */}
+<div className="fixed bottom-0 left-0 right-0 bg-brand-dark/95 backdrop-blur-xl border-t border-white/5 z-50 md:hidden pb-safe">
+    <div className="flex items-center justify-around p-2">
+        <button 
+            onClick={() => setProjectTab('overview')} 
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${projectTab === 'overview' ? 'text-brand-blue' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            <span className="text-[10px] font-extrabold uppercase tracking-tight">Overview</span>
+        </button>
+        <button 
+            onClick={() => setProjectTab('models')} 
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${projectTab === 'models' ? 'text-brand-blue' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            <span className="text-[10px] font-extrabold uppercase tracking-tight">3D & 360</span>
+        </button>
+        <button 
+            onClick={() => setProjectTab('discussion')} 
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${projectTab === 'discussion' ? 'text-brand-blue' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            <span className="text-[10px] font-extrabold uppercase tracking-tight">Discussion</span>
+        </button>
+    </div>
+</div>
+
+{/* Desktop Tabs */}
+<div className="hidden md:flex items-center gap-4 mb-8">
+    <button 
+        onClick={() => setProjectTab('overview')}
+        className={`px-6 py-2.5 rounded-2xl text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all ${projectTab === 'overview' ? 'bg-brand-blue text-white shadow-lg' : 'bg-slate-900/50 text-slate-500 hover:text-white'}`}
+    >
+        Overview
+    </button>
+    <button 
+        onClick={() => setProjectTab('models')}
+        className={`px-6 py-2.5 rounded-2xl text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all ${projectTab === 'models' ? 'bg-brand-blue text-white shadow-lg' : 'bg-slate-900/50 text-slate-500 hover:text-white'}`}
+    >
+        3D & 360 Models
+    </button>
+    <button 
+        onClick={() => setProjectTab('discussion')}
+        className={`px-6 py-2.5 rounded-2xl text-[10px] font-extrabold tracking-tight uppercase tracking-widest transition-all ${projectTab === 'discussion' ? 'bg-brand-blue text-white shadow-lg' : 'bg-slate-900/50 text-slate-500 hover:text-white'}`}
+    >
+        Weekly Discussion
+    </button>
+</div>
+
+{/* Hero Experience Suite */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 mb-16 relative z-10">
                     <div className="lg:col-span-8 space-y-6 md:space-y-8">
-                        <div className="flex flex-col gap-6 md:gap-8">
+                        {projectTab === 'models' && (
+<div className="flex flex-col gap-6 md:gap-8">
                            <div className="flex items-center justify-between">
                               {/* Mobile Optimized Segmented Control */}
                               <div className="flex bg-slate-900/80 p-1 rounded-2xl md:rounded-2xl border border-white/5 w-full md:w-auto">
@@ -819,8 +871,9 @@ const App: React.FC = () => {
                               )}
                            </div>
                         </div>
-
-                        {/* Gallery Section */}
+)}
+{projectTab === 'overview' && (
+<>
                         <div id="media-gallery" className="pt-8 md:pt-10 border-t border-white/5">
                            <h2 className="text-lg md:text-xl font-display font-extrabold tracking-tight text-white mb-6 md:mb-8">Site Footage Gallery</h2>
                            <MediaGrid 
@@ -835,7 +888,9 @@ const App: React.FC = () => {
                                    handleUpdateField('media', newMediaOrder);
                                }}
                            />
-                        </div>
+                                                </div>
+                    </>
+                    )}
                     </div>
 
                     <div className="lg:col-span-4 space-y-8 relative z-20">
@@ -1122,20 +1177,16 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-12">
-                    {/* Weekly Discussion Tab */}
-                    <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
-                        <button 
-                            onClick={() => setIsDiscussionExpanded(!isDiscussionExpanded)}
-                            className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-white/[0.02] transition-colors"
-                        >
+                    {projectTab === 'discussion' && (
+<div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
+                        <div className="w-full flex items-center justify-between p-6 md:p-8">
                             <h3 className="text-sm uppercase font-extrabold tracking-tight text-brand-blue tracking-widest flex items-center gap-2">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                                 Weekly Discussion
                             </h3>
-                            {isDiscussionExpanded ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
-                        </button>
+                        </div>
                         
-                        {isDiscussionExpanded && user && activeProject.updates[activeUpdateIndex] && (
+                        { user && activeProject.updates[activeUpdateIndex] && (
                             <div className="p-6 md:p-8 pt-0 border-t border-white/5">
                                 <UpdateComments
                                     comments={activeProject.updates[activeUpdateIndex].comments || []}
@@ -1145,6 +1196,7 @@ const App: React.FC = () => {
                             </div>
                         )}
                     </div>
+)}
 
                     {/* Project Calendar Tab */}
                     <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
