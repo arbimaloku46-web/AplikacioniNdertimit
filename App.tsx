@@ -289,7 +289,7 @@ const App: React.FC = () => {
             category: newMediaCategory
         };
 
-        const updatedUpdates = [...activeProject.updates];
+        const updatedUpdates = [...(activeProject.updates || [])];
         updatedUpdates[activeUpdateIndex] = {
             ...updatedUpdates[activeUpdateIndex],
             media: [newItem, ...updatedUpdates[activeUpdateIndex].media]
@@ -356,7 +356,7 @@ const App: React.FC = () => {
     setActiveProject(project);
     let firstIndex = 0;
     if (!isAdmin) {
-      firstIndex = project.updates.findIndex(u => u.status !== 'draft');
+      firstIndex = (project.updates || []).findIndex(u => u.status !== 'draft');
       if (firstIndex === -1) firstIndex = 0;
     }
     setActiveUpdateIndex(firstIndex);
@@ -387,13 +387,13 @@ const App: React.FC = () => {
     if (!activeProject) return;
     setIsAddingWeek(true);
     try {
-        const latestWeek = activeProject.updates.length > 0 ? Math.max(...activeProject.updates.map(u => u.weekNumber)) : 0;
+        const latestWeek = (activeProject.updates || []).length > 0 ? Math.max(...(activeProject.updates || []).map(u => u.weekNumber)) : 0;
         const newUpdate: WeeklyUpdate = {
             weekNumber: latestWeek + 1, date: new Date().toISOString().split('T')[0], title: `Week ${latestWeek + 1}`, summary: '', media: [],
             status: 'draft',
-            stats: { completion: activeProject.updates[0]?.stats?.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
+            stats: { completion: (activeProject.updates || [])[0]?.stats?.completion || 0, workersOnSite: 0, weatherConditions: 'Sunny' }
         };
-        const updatedProject = { ...activeProject, updates: [newUpdate, ...activeProject.updates] };
+        const updatedProject = { ...activeProject, updates: [newUpdate, ...(activeProject.updates || [])] };
         setActiveProject(updatedProject);
         await dbService.updateProject(updatedProject);
         setActiveUpdateIndex(0);
@@ -420,7 +420,7 @@ const App: React.FC = () => {
 
   const handleUpdateField = async (field: string, value: any) => {
     if (!activeProject) return;
-    const updatedUpdates = [...activeProject.updates];
+    const updatedUpdates = [...(activeProject.updates || [])];
     const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
     
     if (field.startsWith('stats.')) {
@@ -436,7 +436,7 @@ const App: React.FC = () => {
 
   const handleUpdateFields = async (updates: Record<string, any>) => {
     if (!activeProject) return;
-    const updatedUpdates = [...activeProject.updates];
+    const updatedUpdates = [...(activeProject.updates || [])];
     const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
     
     Object.entries(updates).forEach(([field, value]) => {
@@ -454,7 +454,7 @@ const App: React.FC = () => {
 
   const handleAddComment = async (text: string) => {
     if (!activeProject || !user) return;
-    const updatedUpdates = [...activeProject.updates];
+    const updatedUpdates = [...(activeProject.updates || [])];
     const currentUpdate = { ...updatedUpdates[activeUpdateIndex] };
     const newComment = {
       id: Math.random().toString(),
@@ -769,9 +769,9 @@ const App: React.FC = () => {
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
                         <span className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-0 md:mb-1 mr-4 md:mr-0">Total Progress</span>
                         <div className="flex items-center gap-6">
-                           <div className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white">{activeProject.updates[activeUpdateIndex]?.stats?.completion || 0}%</div>
+                           <div className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white">{(activeProject.updates || [])[activeUpdateIndex]?.stats?.completion || 0}%</div>
                            <div className="w-20 md:w-24 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-brand-blue transition-all duration-1000" style={{ width: `${activeProject.updates[activeUpdateIndex]?.stats?.completion || 0}%` }} />
+                              <div className="h-full bg-brand-blue transition-all duration-1000" style={{ width: `${(activeProject.updates || [])[activeUpdateIndex]?.stats?.completion || 0}%` }} />
                            </div>
                         </div>
                     </div>
@@ -780,7 +780,7 @@ const App: React.FC = () => {
                 {/* Week Selector - Swipable */}
                 <div className="flex gap-3 overflow-x-auto pb-6 mb-8 no-scrollbar snap-x">
                     {isAdmin && <button onClick={handleAddNewWeek} disabled={isAddingWeek} className="min-w-[80px] md:min-w-[120px] h-16 md:h-20 border-2 border-dashed border-brand-blue/30 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all text-xl shrink-0 snap-start">+</button>}
-                    {activeProject.updates.map((u, i) => {
+                    {(activeProject.updates || []).map((u, i) => {
                         if (!isAdmin && u.status === 'draft') return null;
                         return (
                         <button key={i} onClick={() => setActiveUpdateIndex(i)} className={`relative min-w-[130px] md:min-w-[160px] p-6 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-2xl'}`}>
@@ -791,7 +791,7 @@ const App: React.FC = () => {
                     )})}
                 </div>
 
-                {(!activeProject.updates[activeUpdateIndex] || (!isAdmin && activeProject.updates[activeUpdateIndex].status === 'draft')) ? (
+                {(!(activeProject.updates || [])[activeUpdateIndex] || (!isAdmin && (activeProject.updates || [])[activeUpdateIndex].status === 'draft')) ? (
                     <div className="text-center py-24 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
                         <div className="inline-block p-6 rounded-full bg-slate-800/80 backdrop-blur-xl mb-4">
                             <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -865,9 +865,9 @@ const App: React.FC = () => {
                            </div>
                            <div id="splat-viewer" className="relative">
                               {heroTab === '3d' ? (
-                                <SplatViewer type="3d" url={activeProject.updates[activeUpdateIndex].splatUrl} title="Polycam 3D Render" onFullScreenChange={setIsFullScreenMode} />
+                                <SplatViewer type="3d" url={(activeProject.updates || [])[activeUpdateIndex].splatUrl} title="Polycam 3D Render" onFullScreenChange={setIsFullScreenMode} />
                               ) : (
-                                <SplatViewer type="360" url={activeProject.updates[activeUpdateIndex].floorfyUrl} title="Floorfy 360 Tour" onFullScreenChange={setIsFullScreenMode} />
+                                <SplatViewer type="360" url={(activeProject.updates || [])[activeUpdateIndex].floorfyUrl} title="Floorfy 360 Tour" onFullScreenChange={setIsFullScreenMode} />
                               )}
                            </div>
                         </div>
@@ -877,11 +877,11 @@ const App: React.FC = () => {
                         <div id="media-gallery" className="pt-8 md:pt-10 border-t border-white/5">
                            <h2 className="text-lg md:text-xl font-display font-extrabold tracking-tight text-white mb-6 md:mb-8">Site Footage Gallery</h2>
                            <MediaGrid 
-                               media={activeProject.updates[activeUpdateIndex].media} 
+                               media={(activeProject.updates || [])[activeUpdateIndex]?.media || []} 
                                onFullScreenChange={setIsFullScreenMode} 
                                isAdmin={isAdmin}
                                onMediaUpdate={(mediaId, updatedMedia) => {
-                                   const newMedia = activeProject.updates[activeUpdateIndex].media.map(m => m.id === mediaId ? updatedMedia : m);
+                                   const newMedia = (activeProject.updates || [])[activeUpdateIndex].media.map(m => m.id === mediaId ? updatedMedia : m);
                                    handleUpdateField('media', newMedia);
                                }}
                                onMediaReorder={(newMediaOrder) => {
@@ -900,7 +900,7 @@ const App: React.FC = () => {
                             
                             <div className="h-32 w-full mb-6">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={[...(isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft'))].sort((a, b) => a.weekNumber - b.weekNumber)}>
+                                    <LineChart data={[...(isAdmin ? (activeProject.updates || []) : (activeProject.updates || []).filter(u => u.status !== 'draft'))].sort((a, b) => a.weekNumber - b.weekNumber)}>
                                         <XAxis dataKey="weekNumber" stroke="#64748b" fontSize={10} tickFormatter={(tick) => `W${tick}`} axisLine={false} tickLine={false} />
                                         <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(tick) => `${tick}%`} width={35} />
                                         <Tooltip 
@@ -950,7 +950,7 @@ const App: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
                                         <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Project Location</label><input className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.location} onChange={e => handleProjectField('location', e.target.value)} /></div>
-                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Date</label><input type="date" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white [color-scheme:dark]" value={activeProject.updates[activeUpdateIndex].date} onChange={e => handleUpdateField('date', e.target.value)} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Date</label><input type="date" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white [color-scheme:dark]" value={(activeProject.updates || [])[activeUpdateIndex].date} onChange={e => handleUpdateField('date', e.target.value)} /></div>
                                     </div>
                                     <div>
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-2">Exact Map Location</label>
@@ -965,7 +965,7 @@ const App: React.FC = () => {
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-2">3D Polycam Embed</label>
                                         <input 
                                             className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-xs font-mono text-brand-blue" 
-                                            value={activeProject.updates[activeUpdateIndex].splatUrl || ''} 
+                                            value={(activeProject.updates || [])[activeUpdateIndex].splatUrl || ''} 
                                             onChange={e => handleUpdateField('splatUrl', extractUrlFromEmbed(e.target.value))} 
                                             placeholder="URL..." 
                                         />
@@ -974,27 +974,27 @@ const App: React.FC = () => {
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-2">360 Floorfy Embed</label>
                                         <input 
                                             className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-xs font-mono text-brand-blue" 
-                                            value={activeProject.updates[activeUpdateIndex].floorfyUrl || ''} 
+                                            value={(activeProject.updates || [])[activeUpdateIndex].floorfyUrl || ''} 
                                             onChange={e => handleUpdateField('floorfyUrl', extractUrlFromEmbed(e.target.value))} 
                                             placeholder="URL..." 
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-6">
-                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Completion %</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.completion} onChange={e => handleUpdateField('stats.completion', parseInt(e.target.value))} /></div>
-                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Total Workers</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].stats.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Completion %</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={(activeProject.updates || [])[activeUpdateIndex].stats?.completion} onChange={e => handleUpdateField('stats.completion', parseInt(e.target.value))} /></div>
+                                        <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Total Workers</label><input type="number" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={(activeProject.updates || [])[activeUpdateIndex].stats?.workersOnSite} onChange={e => handleUpdateField('stats.workersOnSite', parseInt(e.target.value))} /></div>
                                     </div>
                                     
                                     <div className="pt-4 border-t border-white/5">
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Worker Breakdown</label>
-                                        {(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || []).map((wb, idx) => (
+                                        {((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown || []).map((wb, idx) => (
                                             <div key={idx} className="flex gap-2 mb-2 items-center">
                                                 <input className="flex-1 bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-xl px-4 py-2 text-xs text-white" placeholder="Type (e.g. Facade)" value={wb.type} onChange={e => {
-                                                    const newBreakdown = [...(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || [])];
+                                                    const newBreakdown = [...((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown || [])];
                                                     newBreakdown[idx] = { ...newBreakdown[idx], type: e.target.value };
                                                     handleUpdateField('stats.workerBreakdown', newBreakdown);
                                                 }} />
                                                 <input type="number" className="w-20 bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-xl px-4 py-2 text-xs text-white" placeholder="Count" value={wb.count || ''} onChange={e => {
-                                                    const newBreakdown = [...(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || [])];
+                                                    const newBreakdown = [...((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown || [])];
                                                     newBreakdown[idx] = { ...newBreakdown[idx], count: parseInt(e.target.value) || 0 };
                                                     const total = newBreakdown.reduce((sum, item) => sum + item.count, 0);
                                                     handleUpdateFields({
@@ -1003,7 +1003,7 @@ const App: React.FC = () => {
                                                     });
                                                 }} />
                                                 <button className="text-red-500 p-2 hover:bg-red-500/10 rounded-lg transition-colors" onClick={() => {
-                                                    const newBreakdown = (activeProject.updates[activeUpdateIndex].stats.workerBreakdown || []).filter((_, i) => i !== idx);
+                                                    const newBreakdown = ((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown || []).filter((_, i) => i !== idx);
                                                     const total = newBreakdown.reduce((sum, item) => sum + item.count, 0);
                                                     handleUpdateFields({
                                                         'stats.workerBreakdown': newBreakdown,
@@ -1013,25 +1013,25 @@ const App: React.FC = () => {
                                             </div>
                                         ))}
                                         <button className="text-brand-blue text-[10px] font-extrabold uppercase tracking-widest mt-2 flex items-center hover:text-blue-400 transition-colors" onClick={() => {
-                                            const newBreakdown = [...(activeProject.updates[activeUpdateIndex].stats.workerBreakdown || []), { type: '', count: 0 }];
+                                            const newBreakdown = [...((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown || []), { type: '', count: 0 }];
                                             handleUpdateField('stats.workerBreakdown', newBreakdown);
                                         }}>+ Add Worker Type</button>
                                         <p className="text-[10px] text-slate-500 mt-2">Will auto-calculate total workers when breakdown is provided.</p>
                                     </div>
-                                    <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Title</label><input type="text" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={activeProject.updates[activeUpdateIndex].title || ''} onChange={e => handleUpdateField('title', e.target.value)} /></div>
-                                    <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 h-32 resize-none text-sm text-white" value={activeProject.updates[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
+                                    <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Title</label><input type="text" className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 text-sm text-white" value={(activeProject.updates || [])[activeUpdateIndex].title || ''} onChange={e => handleUpdateField('title', e.target.value)} /></div>
+                                    <div><label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Narrative</label><textarea className="w-full bg-brand-dark border border-white/5 shadow-2xl shadow-black/40 rounded-2xl px-6 py-3 h-32 resize-none text-sm text-white" value={(activeProject.updates || [])[activeUpdateIndex].summary} onChange={e => handleUpdateField('summary', e.target.value)} /></div>
                                     <div className="pt-4 border-t border-white/5">
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Update Visibility Status</label>
                                         <div className="flex bg-slate-900/80 p-1 rounded-2xl border border-white/5 w-full">
                                             <button 
                                                 onClick={() => handleUpdateField('status', 'draft')} 
-                                                className={`flex-1 px-6 py-3 rounded-lg text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${activeProject.updates[activeUpdateIndex].status === 'draft' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-500'}`}
+                                                className={`flex-1 px-6 py-3 rounded-lg text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${(activeProject.updates || [])[activeUpdateIndex].status === 'draft' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-500'}`}
                                             >
                                                 Draft
                                             </button>
                                             <button 
                                                 onClick={() => handleUpdateField('status', 'published')} 
-                                                className={`flex-1 px-6 py-3 rounded-lg text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${activeProject.updates[activeUpdateIndex].status !== 'draft' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-500'}`}
+                                                className={`flex-1 px-6 py-3 rounded-lg text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${(activeProject.updates || [])[activeUpdateIndex].status !== 'draft' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-500'}`}
                                             >
                                                 Published
                                             </button>
@@ -1040,31 +1040,31 @@ const App: React.FC = () => {
                                     </div>
                                     <div className="pt-4 border-t border-white/5">
                                         <label className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight mb-2 block">Weather Preview</label>
-                                        <div className="h-24"><WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} /></div>
+                                        <div className="h-24"><WeatherWidget location={activeProject.location} date={(activeProject.updates || [])[activeUpdateIndex].date} /></div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="space-y-6 md:space-y-8">
                                     <div>
-                                       <h2 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight text-white leading-snug">{activeProject.updates[activeUpdateIndex].title}</h2>
-                                       <p className="text-base text-slate-500 mt-4 leading-relaxed whitespace-pre-line">{activeProject.updates[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
+                                       <h2 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight text-white leading-snug">{(activeProject.updates || [])[activeUpdateIndex].title}</h2>
+                                       <p className="text-base text-slate-500 mt-4 leading-relaxed whitespace-pre-line">{(activeProject.updates || [])[activeUpdateIndex].summary || 'No summary notes for this week.'}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 md:gap-6 pt-6 md:pt-8 border-t border-white/5">
-                                        <WeatherWidget location={activeProject.location} date={activeProject.updates[activeUpdateIndex].date} />
+                                        <WeatherWidget location={activeProject.location} date={(activeProject.updates || [])[activeUpdateIndex].date} />
                                         <div className="bg-slate-800/80 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/40 p-4 md:p-6 rounded-2xl flex flex-col justify-between h-full min-h-[100px] w-full relative group cursor-pointer hover:bg-slate-700/80 hover:scale-[1.02] active:scale-95 transition-all duration-300 ease-in-out">
                                           <div className="flex justify-between items-center w-full mb-1">
                                             <span className="text-[10px] text-slate-500 font-extrabold tracking-tight uppercase">Workforce</span>
-                                            {(activeProject.updates[activeUpdateIndex].stats.workerBreakdown?.length || 0) > 0 && (
+                                            {((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown?.length || 0) > 0 && (
                                               <ChevronDown className="w-4 h-4 text-slate-500 opacity-50 group-hover:opacity-100 transition-opacity" />
                                             )}
                                           </div>
-                                          <span className="text-white text-2xl md:text-3xl font-display font-extrabold tracking-tight leading-none">{activeProject.updates[activeUpdateIndex].stats.workersOnSite} <span className="text-sm text-slate-500 font-sans font-medium">Active</span></span>
+                                          <span className="text-white text-2xl md:text-3xl font-display font-extrabold tracking-tight leading-none">{(activeProject.updates || [])[activeUpdateIndex].stats?.workersOnSite} <span className="text-sm text-slate-500 font-sans font-medium">Active</span></span>
                                           
                                           {/* Dropdown content */}
-                                          {(activeProject.updates[activeUpdateIndex].stats.workerBreakdown?.length || 0) > 0 && (
+                                          {((activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown?.length || 0) > 0 && (
                                             <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-slate-800 border border-white/10 rounded-xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 shadow-2xl pointer-events-none group-hover:pointer-events-auto">
                                               <div className="flex flex-col gap-2">
-                                                {activeProject.updates[activeUpdateIndex].stats.workerBreakdown!.map((wb, idx) => (
+                                                {(activeProject.updates || [])[activeUpdateIndex].stats?.workerBreakdown!.map((wb, idx) => (
                                                   <div key={idx} className="flex justify-between items-center text-xs text-white border-b border-white/5 pb-2 last:border-0 last:pb-0">
                                                     <span className="text-slate-400 font-medium">{wb.type || 'Unknown'}</span>
                                                     <span className="font-extrabold">{wb.count}</span>
@@ -1186,10 +1186,10 @@ const App: React.FC = () => {
                             </h3>
                         </div>
                         
-                        { user && activeProject.updates[activeUpdateIndex] && (
+                        { user && (activeProject.updates || [])[activeUpdateIndex] && (
                             <div className="p-6 md:p-8 pt-0 border-t border-white/5">
                                 <UpdateComments
-                                    comments={activeProject.updates[activeUpdateIndex].comments || []}
+                                    comments={(activeProject.updates || [])[activeUpdateIndex].comments || []}
                                     currentUser={user}
                                     onAddComment={handleAddComment}
                                 />
@@ -1214,14 +1214,14 @@ const App: React.FC = () => {
                         {isCalendarExpanded && (
                             <div className="p-6 md:p-8 pt-0 border-t border-white/5">
                                 <ProjectCalendar 
-                                    updates={isAdmin ? activeProject.updates : activeProject.updates.filter(u => u.status !== 'draft')}
-                                    activeIndex={isAdmin ? activeUpdateIndex : activeProject.updates.filter(u => u.status !== 'draft').findIndex(u => u.weekNumber === activeProject.updates[activeUpdateIndex]?.weekNumber)}
+                                    updates={isAdmin ? (activeProject.updates || []) : (activeProject.updates || []).filter(u => u.status !== 'draft')}
+                                    activeIndex={isAdmin ? activeUpdateIndex : (activeProject.updates || []).filter(u => u.status !== 'draft').findIndex(u => u.weekNumber === (activeProject.updates || [])[activeUpdateIndex]?.weekNumber)}
                                     onSelect={(idx) => {
                                         if (isAdmin) {
                                             setActiveUpdateIndex(idx);
                                         } else {
-                                            const visible = activeProject.updates.filter(u => u.status !== 'draft');
-                                            const originalIdx = activeProject.updates.findIndex(u => u.weekNumber === visible[idx].weekNumber);
+                                            const visible = (activeProject.updates || []).filter(u => u.status !== 'draft');
+                                            const originalIdx = (activeProject.updates || []).findIndex(u => u.weekNumber === visible[idx].weekNumber);
                                             setActiveUpdateIndex(originalIdx);
                                         }
                                     }}
