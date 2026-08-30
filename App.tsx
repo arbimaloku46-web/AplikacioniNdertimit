@@ -766,6 +766,8 @@ const App: React.FC = () => {
                         </div>
                     </div>
                     {/* Progress Bar - Compact on Mobile */}
+{projectTab !== 'discussion' && (
+<React.Fragment>
                     <div className="bg-white/5 border border-white/5 px-5 py-3 rounded-2xl backdrop-blur-sm flex items-center justify-between md:block w-full md:w-auto">
                         <span className="text-[10px] text-slate-500 uppercase font-extrabold tracking-tight tracking-widest block mb-0 md:mb-1 mr-4 md:mr-0">Total Progress</span>
                         <div className="flex items-center gap-6">
@@ -775,9 +777,13 @@ const App: React.FC = () => {
                            </div>
                         </div>
                     </div>
+</React.Fragment>
+)}
                 </div>
 
                 {/* Week Selector - Swipable */}
+{projectTab !== 'discussion' && (
+<React.Fragment>
                 <div className="flex gap-3 overflow-x-auto pb-6 mb-8 no-scrollbar snap-x">
                     {isAdmin && <button onClick={handleAddNewWeek} disabled={isAddingWeek} className="min-w-[80px] md:min-w-[120px] h-16 md:h-20 border-2 border-dashed border-brand-blue/30 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all text-xl shrink-0 snap-start">+</button>}
                     {(Array.isArray(activeProject?.updates) ? activeProject.updates : []).map((u, i) => {
@@ -790,6 +796,8 @@ const App: React.FC = () => {
                         </button>
                     )})}
                 </div>
+</React.Fragment>
+)}
 
                 {(!(Array.isArray(activeProject?.updates) ? activeProject.updates : [])[activeUpdateIndex] || (!isAdmin && (Array.isArray(activeProject?.updates) ? activeProject.updates : [])[activeUpdateIndex]?.status === 'draft')) ? (
                     <div className="text-center py-24 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
@@ -853,7 +861,7 @@ const App: React.FC = () => {
 
 {/* Hero Experience Suite */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 mb-16 relative z-10">
-                    <div className="lg:col-span-8 space-y-6 md:space-y-8">
+                    <div className={`space-y-6 md:space-y-8 ${projectTab === 'overview' ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
                         {projectTab === 'models' && (
 <div className="flex flex-col gap-6 md:gap-8">
                            <div className="flex items-center justify-between">
@@ -893,6 +901,7 @@ const App: React.FC = () => {
                     )}
                     </div>
 
+                    {projectTab === 'overview' && (
                     <div className="lg:col-span-4 space-y-8 relative z-20">
                         {/* Site Stats & Summary */}
                         <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 md:p-8 backdrop-blur-xl relative z-30 shadow-2xl">
@@ -1174,9 +1183,9 @@ const App: React.FC = () => {
                            </div>
                         )}
                     </div>
+                    )}
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-12">
+                <div className={`grid grid-cols-1 ${projectTab === 'overview' ? 'lg:grid-cols-2' : ''} gap-6 mt-12`}>
                     {projectTab === 'discussion' && (
 <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
                         <div className="w-full flex items-center justify-between p-6 md:p-8">
@@ -1198,7 +1207,7 @@ const App: React.FC = () => {
                     </div>
 )}
 
-                    {/* Project Calendar Tab */}
+                    {projectTab === 'overview' && (
                     <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl transition-all duration-300">
                         <button 
                             onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
@@ -1229,6 +1238,7 @@ const App: React.FC = () => {
                             </div>
                         )}
                     </div>
+                    )}
                 </div>
 
                 </>
