@@ -126,7 +126,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
             transition-all duration-300 bg-black group shadow-2xl overflow-hidden
             ${isFullscreen 
                 ? 'fixed inset-0 z-[5000] w-[100dvw] h-[100dvh] rounded-none' 
-                : 'relative w-full aspect-video rounded-3xl border border-white/5'
+                : 'relative w-full h-[60vh] md:h-auto md:aspect-video rounded-3xl border border-white/5'
             }
         `}
         onMouseLeave={() => !isFullscreen && setIsInteracting(false)}
@@ -208,17 +208,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
       ></iframe>
       )}
       
-      {/* Controls Hint and Mobile Lock */}
-      {isInteracting && !isFullscreen && (
-         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
-             <button 
-                onClick={() => setIsInteracting(false)}
-                className="bg-brand-blue/90 backdrop-blur-md border border-white/20 text-white px-6 py-2.5 rounded-full text-xs font-extrabold tracking-tight uppercase tracking-wider hover:bg-brand-blue shadow-xl transition-all"
-             >
-                Done Exploring
-             </button>
-         </div>
-      )}
+      
     </div>
   );
 };

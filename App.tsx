@@ -717,7 +717,7 @@ const App: React.FC = () => {
             {renderHeader()}
             <main className="max-w-7xl mx-auto px-6 md:px-8 py-8 md:py-10 relative z-0">
                 {/* Project Header - Mobile Optimized */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8 md:mb-12">
+                <div className={`flex flex-col md:flex-row md:items-end justify-between gap-8 md:mb-12 ${projectTab === 'models' ? 'mb-4' : 'mb-8'}`}>
                     <div>
                         <h1 className="text-3xl md:text-5xl font-display font-extrabold tracking-tight text-white leading-tight mb-2">{activeProject.name}</h1>
                         <p className="text-slate-500 text-sm flex items-center gap-2 mb-4">
@@ -784,7 +784,7 @@ const App: React.FC = () => {
                 {/* Week Selector - Swipable */}
 {projectTab !== 'discussion' && (
 <React.Fragment>
-                <div className="flex gap-3 overflow-x-auto pb-6 mb-8 no-scrollbar snap-x">
+                <div className={`flex gap-3 overflow-x-auto no-scrollbar snap-x ${projectTab === 'models' ? 'pb-2 mb-4' : 'pb-6 mb-8'}`}>
                     {isAdmin && <button onClick={handleAddNewWeek} disabled={isAddingWeek} className="min-w-[80px] md:min-w-[120px] h-16 md:h-20 border-2 border-dashed border-brand-blue/30 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all text-xl shrink-0 snap-start">+</button>}
                     {(Array.isArray(activeProject?.updates) ? activeProject.updates : []).map((u, i) => {
                         if (!isAdmin && u?.status === 'draft') return null;
@@ -860,10 +860,10 @@ const App: React.FC = () => {
 </div>
 
 {/* Hero Experience Suite */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 mb-16 relative z-10">
-                    <div className={`space-y-6 md:space-y-8 ${projectTab === 'overview' ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
+                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 relative z-10 ${projectTab === 'models' ? 'mb-4' : 'mb-16'}`}>
+                    <div className={`md:space-y-8 ${projectTab === 'overview' ? 'space-y-6 lg:col-span-8' : 'space-y-3 lg:col-span-12'}`}>
                         {projectTab === 'models' && (
-<div className="flex flex-col gap-6 md:gap-8">
+<div className="flex flex-col gap-3 md:gap-8">
                            <div className="flex items-center justify-between">
                               {/* Mobile Optimized Segmented Control */}
                               <div className="flex bg-slate-900/80 p-1 rounded-2xl md:rounded-2xl border border-white/5 w-full md:w-auto">
