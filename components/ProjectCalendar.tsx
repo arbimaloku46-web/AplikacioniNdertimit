@@ -37,7 +37,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ updates, activ
     const map = new Map<string, { update: WeeklyUpdate; index: number }>();
     updates.forEach((update, idx) => {
       // Assuming update.date is YYYY-MM-DD or full ISO
-      const dateStr = (update.date || new Date().toISOString()).split('T')[0];
+      const dateStr = (update?.date || new Date().toISOString()).split('T')[0];
       map.set(dateStr, { update, index: idx });
     });
     return map;

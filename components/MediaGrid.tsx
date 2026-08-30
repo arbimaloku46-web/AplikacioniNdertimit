@@ -22,7 +22,9 @@ interface MediaGridProps {
 type FilterType = 'all' | 'inside' | 'outside' | 'drone' | 'interior';
 
 // --- Helper Functions ---
-const getVideoInfo = (url: string) => {if (ytMatch) {
+const getVideoInfo = (url: string) => {
+  const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  if (ytMatch) {
     return {
       type: 'youtube',
       id: ytMatch[1],

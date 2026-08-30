@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ArrowLeft } from 'lucide-react';
-import { BuildingData, FloorData, UnitData } from './BuildingConfigurator';
+import { InteractiveBuilding, Floor, Unit } from '../types';
 
 interface InteractiveViewerProps {
-  data: BuildingData;
+  data: InteractiveBuilding;
   onClose?: () => void;
 }
 
@@ -87,13 +87,13 @@ export function InteractiveViewer({ data, onClose }: InteractiveViewerProps) {
     return { x: minX + (maxX - minX) / 2, y: minY + (maxY - minY) / 2 };
   };
 
-  const handleFloorClick = (floor: FloorData) => {
+  const handleFloorClick = (floor: Floor) => {
     setActiveFloorId(floor.id);
     setLevel('floor');
     setHoveredPath(null);
   };
 
-  const handleUnitClick = (unit: UnitData) => {
+  const handleUnitClick = (unit: Unit) => {
     setActiveUnitId(unit.id);
     setLevel('unit');
     setHoveredPath(null);
@@ -171,7 +171,7 @@ export function InteractiveViewer({ data, onClose }: InteractiveViewerProps) {
               className="w-full h-full flex flex-col md:flex-row absolute inset-0 overflow-y-auto md:overflow-hidden min-h-0 min-w-0"
             >
               <div className="w-full md:w-3/4 h-[50vh] md:h-full flex items-center justify-center p-4 md:p-8 relative bg-[#111] shrink-0 min-w-0 min-h-0 overflow-hidden">
-                <ImageWithOverlay src={data.mainImageUrl} alt={data.name}>
+                <ImageWithOverlay src={data.mainImageUrl} alt={data.name || 'Building'}>
                   <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     {data.floors.map((floor, index) => {
                       const colorScheme = FLOOR_COLORS[index % FLOOR_COLORS.length];
