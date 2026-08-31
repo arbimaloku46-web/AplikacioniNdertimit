@@ -277,7 +277,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
     return () => observer.disconnect();
   }, []);
 
-  const gap = columns >= 4 ? 4 : 2;
+  const gap = containerWidth < 768 ? 1 : 2;
   const itemSize = containerWidth > 0 ? (containerWidth - (columns - 1) * gap) / columns : 150;
 
   const rowVirtualizer = useVirtualizer({
@@ -346,7 +346,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
           No footage found in this category.
         </div>
       ) : (
-        <div ref={parentRef} className="h-[60vh] max-h-[600px] overflow-y-auto bg-slate-950/50 rounded-2xl p-0.5 no-scrollbar">
+        <div ref={parentRef} className="h-[60vh] max-h-[600px] overflow-y-auto bg-slate-950/50 no-scrollbar">
             <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                     const startIndex = virtualRow.index * columns;
@@ -385,15 +385,25 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, item.id)}
                                         style={{ width: `${itemSize}px`, height: `${itemSize}px` }}
-                                        className={`relative cursor-pointer group overflow-hidden bg-slate-900/90 backdrop-blur-2xl rounded-lg transition-transform ${draggedId === item.id ? 'opacity-50 scale-95' : ''} ${canReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                                        className={`relative cursor-pointer group overflow-hidden bg-slate-900/90 backdrop-blur-2xl transition-transform ${draggedId === item.id ? 'opacity-50 scale-95' : ''} ${canReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
                                     >
-                                        <img 
-                                            src={thumbUrl} 
-                                            alt={item.description}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
+                                        {isVideo && !vidInfo?.thumbnail ? (
+                                            <video 
+                                                src={item.url}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+                                                preload="metadata"
+                                                muted
+                                                playsInline
+                                            />
+                                        ) : (
+                                            <img 
+                                                 src={thumbUrl} 
+                                                 alt={item.description}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                        )}
                                         {isVideo && (
                                             <>
                                                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300 ease-in-out" />
@@ -501,20 +511,18 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
         render={{
             slide: ({ slide }) => {
                 const mediaItem = media.find(m => m.id === (slide as any).mediaId);
-
-                                if ((slide as any).type === "custom-video") {
+                
+                if ((slide as any).type === "custom-video") {
                     return (
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="relative w-full h-[90vh] md:h-screen flex items-center justify-center">
                                 <iframe 
-                                    src={((slide as any).embedUrl && (slide as any).embedUrl.includes('poly.cam/capture/')) 
-                                        ? ((slide as any).embedUrl.includes('cookie_consent') ? (slide as any).embedUrl : (slide as any).embedUrl + ((slide as any).embedUrl.includes('?') ? '&' : '?') + 'gdpr=0&cookie_consent=true')
-                                        : (slide as any).embedUrl} 
-                                    className="w-full h-full relative z-10" 
-                                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                                     src={(slide as any).embedUrl}
+                                     className="w-full h-full relative z-10"
+                                     sandbox="allow-scripts allow-same-origin allow-presentation"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-                                    allowFullScreen 
-                                />
+                                    allowFullScreen
+                                 />
                                 {mediaItem && (
                                     <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
                                 )}
@@ -522,15 +530,14 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                         </div>
                     );
                 }
-
                 if ((slide as any).type === "custom-image") {
                     return (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <img 
-                                src={(slide as any).src} 
-                                alt={(slide as any).title} 
-                                className="w-full h-[90vh] md:h-screen object-contain pointer-events-none" 
-                                draggable={false}
+                                 src={(slide as any).src} 
+                                 alt={(slide as any).title}
+                                 className="w-full h-[90vh] md:h-screen object-contain pointer-events-none"
+                                 draggable={false}
                             />
                             {mediaItem && (
                                 <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
@@ -540,17 +547,17 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                 }
                 
                 // Fallback for native videos (using container wrapper)
-                if (slide.type === "video") {
+                if (slide.type === "video") { 
                      return (
-                        <div className="w-full h-full flex items-center justify-center relative">
+                        <div className="w-full h-full flex items-center justify-center relative"> 
                              <div className="relative w-full h-full flex items-center justify-center">
                                  <video 
-                                     controls 
-                                     autoPlay 
-                                     playsInline 
-                                     className="w-full h-[90vh] md:h-screen object-contain relative z-10" 
-                                     src={(slide as any).sources[0].src} 
-                                 />
+                                      controls 
+                                      autoPlay 
+                                      playsInline 
+                                      className="w-full h-[90vh] md:h-screen object-contain relative z-10"
+                                      src={(slide as any).sources[0].src} 
+                                  />
                                  {mediaItem && (
                                     <HotspotEditorOverlay mediaItem={mediaItem} isAdmin={isAdmin} onUpdate={updated => onMediaUpdate && onMediaUpdate(updated.id, updated)} />
                                  )}
@@ -558,7 +565,6 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                         </div>
                      );
                 }
-
                 return undefined;
             }
         }}
@@ -566,3 +572,5 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
     </div>
   );
 };
+
+export default MediaGrid;

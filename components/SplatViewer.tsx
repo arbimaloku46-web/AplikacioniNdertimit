@@ -99,9 +99,7 @@ export const SplatViewer: React.FC<EmbedViewerProps> = ({ url, title, type, onFu
       if (!displayUrl.includes('/embed') && !displayUrl.includes('embed=')) {
           displayUrl = displayUrl.replace(/\/$/, '') + '/embed';
       }
-      if (!displayUrl.includes('cookie_consent')) {
-          displayUrl += (displayUrl.includes('?') ? '&' : '?') + 'gdpr=0&cookie_consent=true';
-      }
+      
   }
 
   if (!url) {
