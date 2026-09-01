@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from "motion/react";
 import { Project, MediaItem, AppView, WeeklyUpdate, User } from './types';
 import { GlobalAuth } from './components/GlobalAuth';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { Button } from './components/Button';
 import { SplatViewer } from './components/SplatViewer';
 import { MediaGrid } from './components/MediaGrid';
@@ -92,6 +93,7 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [currentView, setCurrentView] = useState<AppView>(AppView.HOME);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [projectListView, setProjectListView] = useState<'grid' | 'list'>('grid');
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
@@ -578,20 +580,16 @@ const App: React.FC = () => {
   if (!isOnline) return <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white"><h1>Offline</h1></div>;
   
   if (isAuthChecking) {
-      return (
-        <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 text-white">
-            <div className="mb-6 animate-pulse">
-                <Logo className="h-16" />
-            </div>
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mb-4"></div>
-            <p className="text-slate-500 text-sm font-medium animate-pulse">Establishing Secure Connection...</p>
-        </div>
-      );
+      return <LoadingSpinner message="Establishing Secure Connection..." fullScreen />;
   }
 
   if (!user) return <GlobalAuth onLogin={(u) => setUser(u)} language={language} setLanguage={setLanguage} />;
 
   return (
+    <div className="relative">
+      {isNavigating && (
+        <LoadingSpinner message="Loading..." fullScreen />
+      )}
     <div 
         className="bg-brand-dark min-h-screen font-sans text-slate-500"
         onTouchStart={onTouchStart}
@@ -766,8 +764,12 @@ const App: React.FC = () => {
                                 if(window.confirm('Are you sure you want to move this project to the bin? It will be permanently deleted after 30 days.')) {
                                     const pCopy = {...activeProject, deletedAt: new Date().toISOString()};
                                     await dbService.updateProject(pCopy);
-                                    setActiveProject(null);
-                                    setCurrentView(AppView.HOME);
+                                    setIsNavigating(true);
+                                    setTimeout(() => {
+                                      setActiveProject(null);
+                                      setCurrentView(AppView.HOME);
+                                      setIsNavigating(false);
+                                    }, 400);
                                 }
                             }}
                             className="flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 px-6 py-2 rounded-2xl text-sm font-extrabold tracking-tight transition-all hover:scale-[1.02] active:scale-95"
@@ -1487,6 +1489,7 @@ const App: React.FC = () => {
           onClose={() => setCurrentView(AppView.PROJECT_DETAIL)}
         />
       )}
+    </div>
     </div>
   );
 };
