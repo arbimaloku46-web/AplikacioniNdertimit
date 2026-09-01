@@ -51,7 +51,55 @@ const VideoDuration = () => (
     </div>
 );
 
-// --- Hotspot Components ---
+
+
+
+const ProgressiveImage = ({ src, alt, className, ...props }: any) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [lqipSrc, setLqipSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (src && src.includes('supabase.co')) {
+      try {
+        const url = new URL(src);
+        url.searchParams.set('width', '20');
+        url.searchParams.set('quality', '20');
+        url.searchParams.set('blur', '10');
+        setLqipSrc(url.toString());
+      } catch (e) {
+        // Invalid URL, ignore
+      }
+    }
+  }, [src]);
+
+  return (
+    <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
+      <div className={`absolute inset-0 bg-slate-800/80 transition-opacity duration-700 ${isLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`} />
+      
+      {lqipSrc && (
+        <img 
+          src={lqipSrc} 
+          alt="" 
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 blur-md scale-110 ${isLoaded ? 'opacity-0' : 'opacity-100'}`} 
+          aria-hidden="true" 
+        />
+      )}
+
+      <img
+        src={src}
+        alt={alt}
+        className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${isLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-xl scale-105'}`}
+        onLoad={() => setIsLoaded(true)}
+        loading="lazy"
+        decoding="async"
+        {...props}
+      />
+    </div>
+  );
+};
+
+
+
 
 const HotspotEditorOverlay: React.FC<{
   mediaItem: MediaItem;
@@ -62,7 +110,6 @@ const HotspotEditorOverlay: React.FC<{
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [editingHotspot, setEditingHotspot] = useState<Partial<Hotspot> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
   const hotspots = mediaItem.hotspots || [];
 
   const handleImageClick = (e: React.MouseEvent) => {
@@ -72,12 +119,10 @@ const HotspotEditorOverlay: React.FC<{
     }
     
     if (editingHotspot) return; // Currently editing one
-
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
     setEditingHotspot({
       id: Math.random().toString(36).substr(2, 9),
       x,
@@ -118,9 +163,9 @@ const HotspotEditorOverlay: React.FC<{
             <div className="absolute top-4 right-4 z-[130]">
                 <button 
                     onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); setEditingHotspot(null); setActiveHotspot(null); }}
-                    className={`px-6 py-2 rounded-2xl text-xs font-extrabold tracking-tight uppercase tracking-widest transition-all ${isEditing ? 'bg-emerald-500 text-white' : 'bg-brand-blue text-white shadow-lg'}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg ${isEditing ? 'bg-brand-blue text-white' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-md'}`}
                 >
-                    {isEditing ? 'Done' : 'Add Hotspots'}
+                    {isEditing ? 'Done Editing' : 'Edit Hotspots'}
                 </button>
             </div>
         )}
@@ -128,10 +173,10 @@ const HotspotEditorOverlay: React.FC<{
         {hotspots.map(hotspot => (
             <div 
                 key={hotspot.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-[125]"
                 style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
-                onClick={(e) => { 
-                    e.stopPropagation(); 
+                onClick={(e) => {
+                    e.stopPropagation();
                     if (isEditing) {
                         setEditingHotspot(hotspot);
                     } else {
@@ -139,70 +184,74 @@ const HotspotEditorOverlay: React.FC<{
                     }
                 }}
             >
-                <div className={`w-6 h-6 rounded-full border-2 border-white/50 flex items-center justify-center cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-transform hover:scale-110 ${hotspot.status === 'completed' ? 'bg-emerald-500/50' : hotspot.status === 'in-progress' ? 'bg-amber-500/50' : 'bg-brand-blue/50'}`}>
-                    <div className="w-2 h-2 bg-white/70 rounded-full" />
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-transform hover:scale-110 ${
+                    hotspot.status === 'completed' ? 'bg-emerald-500 text-white' :
+                    hotspot.status === 'in-progress' ? 'bg-amber-500 text-white' :
+                    'bg-brand-blue text-white'
+                }`}>
+                    <div className="w-2 h-2 bg-white rounded-full" />
                 </div>
-
-                {/* Info Card */}
-                {activeHotspot?.id === hotspot.id && !isEditing && (
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/40 rounded-2xl p-6 w-64 shadow-2xl z-[150] cursor-default" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-white font-extrabold tracking-tight text-sm">{hotspot.title}</h4>
-                            <span className={`text-[9px] font-extrabold tracking-tight uppercase tracking-widest px-2 py-0.5 rounded-full ${hotspot.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : hotspot.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-blue/20 text-brand-blue'}`}>
-                                {hotspot.status}
-                            </span>
-                        </div>
-                        <p className="text-slate-500 text-xs">{hotspot.description}</p>
+                
+                {!isEditing && activeHotspot?.id === hotspot.id && (
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-[130]">
+                        <h4 className="text-white font-bold mb-1">{hotspot.title}</h4>
+                        <p className="text-slate-400 text-xs">{hotspot.description}</p>
                     </div>
                 )}
             </div>
         ))}
 
-        {/* Editing Modal */}
-        {editingHotspot && (
+        {isEditing && editingHotspot && (
             <div 
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/90 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/40 rounded-2xl p-6 w-72 shadow-2xl z-[150]"
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-[140]"
                 style={{ left: `${editingHotspot.x}%`, top: `${editingHotspot.y}%` }}
                 onClick={e => e.stopPropagation()}
             >
-                <h4 className="text-white text-xs font-extrabold tracking-tight uppercase tracking-widest mb-4">Edit Hotspot</h4>
-                <div className="space-y-3">
-                    <input 
-                        type="text" 
-                        placeholder="Title (e.g. HVAC Installation)" 
-                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white"
-                        value={editingHotspot.title || ''}
+                <div className="w-64 bg-slate-900 border border-brand-blue/50 rounded-2xl p-4 shadow-2xl">
+                    <input
+                        autoFocus
+                        type="text"
+                        placeholder="Title"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white mb-2 focus:outline-none focus:border-brand-blue"
+                        value={editingHotspot.title}
                         onChange={e => setEditingHotspot({...editingHotspot, title: e.target.value})}
                     />
-                    <textarea 
-                        placeholder="Details or materials used..." 
-                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white resize-none h-20"
-                        value={editingHotspot.description || ''}
+                    <textarea
+                        placeholder="Description..."
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white mb-3 focus:outline-none focus:border-brand-blue h-20 resize-none"
+                        value={editingHotspot.description}
                         onChange={e => setEditingHotspot({...editingHotspot, description: e.target.value})}
                     />
-                    <select 
-                        className="w-full bg-slate-950 border border-white/5 shadow-2xl shadow-black/40 rounded-lg px-3 py-2 text-xs text-white"
-                        value={editingHotspot.status || 'pending'}
-                        onChange={e => setEditingHotspot({...editingHotspot, status: e.target.value as any})}
-                    >
-                        <option value="pending">Pending</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                    <div className="flex gap-2 pt-2">
-                        <button onClick={saveHotspot} className="flex-1 bg-brand-blue text-white text-xs font-extrabold tracking-tight py-2 rounded-lg">Save</button>
-                        <button onClick={() => setEditingHotspot(null)} className="flex-1 bg-white/10 text-white text-xs font-extrabold tracking-tight py-2 rounded-lg">Cancel</button>
+                    <div className="flex gap-2">
+                        <select
+                            className="bg-white/5 border border-white/10 rounded-lg px-2 text-xs text-white focus:outline-none"
+                            value={editingHotspot.status}
+                            onChange={e => setEditingHotspot({...editingHotspot, status: e.target.value as any})}
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <div className="flex-1" />
+                        <button 
+                            onClick={() => deleteHotspot(editingHotspot.id!)}
+                            className="p-2 text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                        <button 
+                            onClick={saveHotspot}
+                            className="p-2 bg-brand-blue hover:bg-brand-blue/80 text-white rounded-lg transition-colors"
+                        >
+                            <Check className="w-4 h-4" />
+                        </button>
                     </div>
-                    {editingHotspot.id && (
-                        <button onClick={() => deleteHotspot(editingHotspot.id!)} className="w-full text-red-400 text-xs font-extrabold tracking-tight mt-2 hover:underline">Delete Hotspot</button>
-                    )}
                 </div>
             </div>
         )}
     </div>
   );
 };
-
 
 // --- Main MediaGrid Component ---
 
@@ -396,12 +445,10 @@ export const MediaGrid: React.FC<MediaGridProps> = ({ media, onFullScreenChange,
                                                 playsInline
                                             />
                                         ) : (
-                                            <img 
-                                                 src={thumbUrl} 
-                                                 alt={item.description}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-                                                loading="lazy"
-                                                decoding="async"
+                                            <ProgressiveImage 
+                                                  src={thumbUrl} 
+                                                  alt={item.description}
+                                                  className="transition-transform duration-500 group-hover:scale-105 pointer-events-none"
                                             />
                                         )}
                                         {isVideo && (

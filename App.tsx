@@ -97,6 +97,19 @@ const App: React.FC = () => {
   const [activeUpdateIndex, setActiveUpdateIndex] = useState<number>(0);
   const [projectTab, setProjectTab] = useState<'overview' | 'models' | 'discussion'>('overview');
   const [heroTab, setHeroTab] = useState<'3d' | '360'>('3d');
+  const weekSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (weekSelectorRef.current && activeUpdateIndex !== null) {
+      const container = weekSelectorRef.current;
+      const activeBtn = container.querySelector(`#week-btn-${activeUpdateIndex}`) as HTMLElement;
+      if (activeBtn) {
+        const scrollLeft = activeBtn.offsetLeft - (container.offsetWidth / 2) + (activeBtn.offsetWidth / 2);
+        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    }
+  }, [activeUpdateIndex]);
+
   
   const activeProjectsList = projects.filter(p => !p.deletedAt);
   const binnedProjectsList = projects.filter(p => p.deletedAt);
@@ -785,12 +798,12 @@ const App: React.FC = () => {
                 {/* Week Selector - Swipable */}
 {projectTab !== 'discussion' && (
 <React.Fragment>
-                <div className={`flex gap-3 overflow-x-auto no-scrollbar snap-x pb-2 mb-4 md:pb-4 md:mb-6`}>
+                <div ref={weekSelectorRef} className={`flex gap-3 overflow-x-auto no-scrollbar snap-x pb-2 mb-4 md:pb-4 md:mb-6`}>
                     {isAdmin && <button onClick={handleAddNewWeek} disabled={isAddingWeek} className="min-w-[80px] md:min-w-[120px] h-16 md:h-20 border-2 border-dashed border-brand-blue/30 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-blue hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all text-xl shrink-0 snap-start">+</button>}
                     {(Array.isArray(activeProject?.updates) ? activeProject.updates : []).map((u, i) => {
                         if (!isAdmin && u?.status === 'draft') return null;
                         return (
-                        <button key={i} onClick={() => setActiveUpdateIndex(i)} className={`relative min-w-[130px] md:min-w-[160px] p-6 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-2xl'}`}>
+                        <button id={`week-btn-${i}`} key={i} onClick={() => setActiveUpdateIndex(i)} className={`relative min-w-[130px] md:min-w-[160px] p-6 md:p-5 rounded-2xl md:rounded-3xl border transition-all text-left group shrink-0 snap-start ${i === activeUpdateIndex ? 'border-brand-blue bg-brand-blue/10 shadow-[0_10px_30px_rgba(34,100,171,0.1)]' : 'border-white/5 bg-slate-900/40 hover:bg-slate-900/90 backdrop-blur-2xl'}`}>
                             {isAdmin && u?.status === 'draft' && <span className="absolute top-2 right-3 text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-extrabold tracking-tight uppercase">Draft</span>}
                             <span className="text-[8px] md:text-[9px] block text-slate-500 font-extrabold tracking-tight uppercase tracking-widest mb-1">Week {u?.weekNumber} • {u?.date}</span>
                             <span className={`text-xs md:text-sm font-extrabold tracking-tight block truncate ${i === activeUpdateIndex ? 'text-white' : 'text-slate-500 group-hover:text-slate-500'}`}>{u?.title || `Update ${u?.weekNumber}`}</span>
