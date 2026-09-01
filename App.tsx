@@ -375,7 +375,11 @@ const App: React.FC = () => {
       if (firstIndex === -1) firstIndex = 0;
     }
     setActiveUpdateIndex(firstIndex);
-    setCurrentView(AppView.PROJECT_DETAIL);
+    setIsNavigating(true);
+    setTimeout(() => {
+      setIsNavigating(false);
+      setCurrentView(AppView.PROJECT_DETAIL);
+    }, 600);
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -537,14 +541,28 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-3">
                     {currentView !== AppView.HOME ? (
                         <button 
-                            onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}
+                            onClick={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setActiveProject(null);
+        setCurrentView(AppView.HOME);
+        setIsNavigating(false);
+    }, 400);
+}}
                             className="p-2 -ml-2 rounded-full text-white hover:bg-white/10 transition-all flex items-center gap-2"
                         >
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                             <span className="text-sm font-extrabold tracking-tight md:hidden">Back</span>
                         </button>
                     ) : (
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }}>
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setActiveProject(null);
+        setCurrentView(AppView.HOME);
+        setIsNavigating(false);
+    }, 400);
+}}>
                             <Logo className="h-8 md:h-10" />
                         </div>
                     )}
@@ -552,7 +570,14 @@ const App: React.FC = () => {
                     {/* Desktop Breadcrumb for Non-Home */}
                     {currentView !== AppView.HOME && (
                         <div className="hidden md:flex items-center gap-2 text-slate-500 text-sm border-l border-white/10 pl-4 ml-2">
-                            <span onClick={() => { setActiveProject(null); setCurrentView(AppView.HOME); }} className="cursor-pointer hover:text-white transition-all duration-300 ease-in-out">Home</span>
+                            <span onClick={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setActiveProject(null);
+        setCurrentView(AppView.HOME);
+        setIsNavigating(false);
+    }, 400);
+}} className="cursor-pointer hover:text-white transition-all duration-300 ease-in-out">Home</span>
                             <span>/</span>
                             <span className="text-white font-medium truncate max-w-[200px]">{activeProject ? activeProject.name : text.profileTitle}</span>
                         </div>
@@ -663,8 +688,8 @@ const App: React.FC = () => {
 
 
                 {loadingProjects ? (
-                    <div className="flex items-center justify-center py-20">
-                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
+                    <div className="flex items-center justify-center py-20 h-64">
+                      <LoadingSpinner message="Loading Projects..." />
                     </div>
                 ) : (
                     <>
@@ -956,9 +981,7 @@ const App: React.FC = () => {
                                     <div className="pt-4 border-t border-white/5 flex gap-6 items-center">
                                         <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-lg relative">
                                             {isUploadingThumbnail && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 backdrop-blur-sm">
-                                                    <div className="w-6 h-6 border-2 border-white/30 border-t-brand-blue rounded-full animate-spin" />
-                                                </div>
+                                                <div className="absolute inset-0 bg-black/60 z-10 backdrop-blur-sm" />
                                             )}
                                             <img src={activeProject.thumbnailUrl} className="w-full h-full object-cover" />
                                         </div>
@@ -1270,7 +1293,13 @@ const App: React.FC = () => {
             {renderHeader()}
             <main className="flex-1 max-w-5xl mx-auto w-full px-6 md:px-8 pt-8 pb-24 md:pt-12 md:pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-6 mb-8 md:mb-10">
-                    <button onClick={() => setCurrentView(AppView.HOME)} className="p-2 rounded-full bg-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all duration-300 ease-in-out">
+                    <button onClick={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setCurrentView(AppView.HOME);
+        setIsNavigating(false);
+    }, 400);
+}} className="p-2 rounded-full bg-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all duration-300 ease-in-out">
                         <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     </button>
                     <h1 className="text-2xl md:text-4xl font-display font-extrabold tracking-tight text-white">{text.profileTitle}</h1>
@@ -1448,7 +1477,13 @@ const App: React.FC = () => {
                                 ) : (
                                     <div className="text-center py-8 md:py-10 px-8 rounded-2xl bg-slate-950/50 border border-dashed border-white/10">
                                         <p className="text-sm text-slate-500 mb-4">{text.noProjectsAccess}</p>
-                                        <Button variant="primary" onClick={() => setCurrentView(AppView.HOME)} className="!py-2 !px-8 !text-xs">
+                                        <Button variant="primary" onClick={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setCurrentView(AppView.HOME);
+        setIsNavigating(false);
+    }, 400);
+}} className="!py-2 !px-8 !text-xs">
                                             {text.browseProjects}
                                         </Button>
                                     </div>
@@ -1473,7 +1508,13 @@ const App: React.FC = () => {
                 setActiveProject(updatedProject);
                 setCurrentView(AppView.PROJECT_DETAIL);
               }}
-              onClose={() => setCurrentView(AppView.PROJECT_DETAIL)}
+              onClose={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setCurrentView(AppView.PROJECT_DETAIL);
+        setIsNavigating(false);
+    }, 400);
+}}
             />
           </div>
         </div>
@@ -1486,7 +1527,13 @@ const App: React.FC = () => {
       {currentView === AppView.INTERACTIVE_VIEWER && activeProject && (
         <InteractiveViewer 
           data={activeProject.interactiveBuilding || DEMO_INTERACTIVE_BUILDING}
-          onClose={() => setCurrentView(AppView.PROJECT_DETAIL)}
+          onClose={() => {
+    setIsNavigating(true);
+    setTimeout(() => {
+        setCurrentView(AppView.PROJECT_DETAIL);
+        setIsNavigating(false);
+    }, 400);
+}}
         />
       )}
     </div>

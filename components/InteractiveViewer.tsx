@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ArrowLeft } from 'lucide-react';
 import { InteractiveBuilding, Floor, Unit } from '../types';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface InteractiveViewerProps {
   data: InteractiveBuilding;
@@ -69,6 +70,8 @@ export function InteractiveViewer({ data, onClose }: InteractiveViewerProps) {
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionTarget, setTransitionTarget] = useState<'building' | 'floor' | 'unit'>('building');
 
   const activeFloor = data.floors.find(f => f.id === activeFloorId);
   const activeUnit = activeFloor?.units.find(u => u.id === activeUnitId);
@@ -88,24 +91,43 @@ export function InteractiveViewer({ data, onClose }: InteractiveViewerProps) {
   };
 
   const handleFloorClick = (floor: Floor) => {
-    setActiveFloorId(floor.id);
-    setLevel('floor');
+    setIsTransitioning(true);
+    setTransitionTarget('floor');
     setHoveredPath(null);
+    setTimeout(() => {
+      setActiveFloorId(floor.id);
+      setLevel('floor');
+      setIsTransitioning(false);
+    }, 500);
   };
 
   const handleUnitClick = (unit: Unit) => {
-    setActiveUnitId(unit.id);
-    setLevel('unit');
+    setIsTransitioning(true);
+    setTransitionTarget('unit');
     setHoveredPath(null);
+    setTimeout(() => {
+      setActiveUnitId(unit.id);
+      setLevel('unit');
+      setIsTransitioning(false);
+    }, 500);
   };
 
   const goBack = () => {
+    setIsTransitioning(true);
     if (level === 'unit') {
-      setLevel('floor');
-      setActiveUnitId(null);
+      setTransitionTarget('floor');
+      setTimeout(() => {
+        setLevel('floor');
+        setActiveUnitId(null);
+        setIsTransitioning(false);
+      }, 500);
     } else if (level === 'floor') {
-      setLevel('building');
-      setActiveFloorId(null);
+      setTransitionTarget('building');
+      setTimeout(() => {
+        setLevel('building');
+        setActiveFloorId(null);
+        setIsTransitioning(false);
+      }, 500);
     }
   };
 
